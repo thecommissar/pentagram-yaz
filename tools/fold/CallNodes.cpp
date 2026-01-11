@@ -23,11 +23,7 @@
 #include "CallNodes.h"
 #include "Folder.h"
 #include "VarNodes.h"
-#include <sstream>
-#include <iomanip>
 #include <cstdio>
-
-extern const char *const *fold_intrinsics();
 
 static std::string format_function_name(const uint32 uclass, const uint32 targetOffset)
 {
@@ -63,6 +59,9 @@ static std::string format_intrinsic_name(const uint32 intrinsic)
 	if(params != std::string::npos)
 		name = name.substr(0, params);
 	return name;
+	char buf[16];
+	snprintf(buf, sizeof(buf), "Intrinsic%04X", intrinsic);
+	return buf;
 }
 
 // FIXME: Fix this
