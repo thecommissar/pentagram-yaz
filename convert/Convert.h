@@ -24,12 +24,14 @@
 #include "Console.h"
 #include <vector>
 #include <string>
+#include "CallNodes.h"
 #include <map>
 #include <fstream>
 #include <cstdlib>
 #include <cstring>
 #include "GenericNodes.h"
 #include "LoopScriptNodes.h"
+#include "VarNodes.h"
 
 class DebugSymbol
 {
@@ -942,6 +944,11 @@ Node *ConvertUsecode::readOpGeneric(IDataSource *ucfile, uint32 &dbg_symbol_offs
 			}
 			break;
 		case 0x0E: // create list
+			{
+				uint32 elemSize = read1(ucfile);
+				uint32 elemCount = read1(ucfile);
+				n = new ListLiteralNode(opcode, offset, elemSize, elemCount);
+			}
 			n = new CreateListNode(opcode, offset, read1(ucfile));
 			break;
 		case 0x10: // call
@@ -1049,7 +1056,7 @@ Node *ConvertUsecode::readOpGeneric(IDataSource *ucfile, uint32 &dbg_symbol_offs
 				uint32 tint1 = read1(ucfile);
 				uint32 tint2 = read1(ucfile);
 				uint32 tint3 = read2(ucfile);
-				n = new DCCallNode(opcode, offset, tint1, tint2, tint3, read2(ucfile));
+				n = new DCSpawnNode(opcode, offset, tint1, tint2, tint3, read2(ucfile));
 			}
 			break;
 		case 0x59: // push pid
@@ -1111,6 +1118,22 @@ Node *ConvertUsecode::readOpGeneric(IDataSource *ucfile, uint32 &dbg_symbol_offs
 			break;
 		case 0x74: // loopscr
 			n = new LoopScriptNode(opcode, offset, read1(ucfile));
+			break;
+		case 0x75: // foreach list
+			{
+				uint32 loopVar = read1(ucfile);
+				uint32 elemSize = read1(ucfile);
+				uint32 target = offset + 5 + static_cast<uint16>(read2(ucfile));
+				n = new ForeachNode(opcode, offset, loopVar, elemSize, target);
+			}
+			break;
+		case 0x76: // foreach slist
+			{
+				uint32 loopVar = read1(ucfile);
+				uint32 elemSize = read1(ucfile);
+				uint32 target = offset + 5 + static_cast<uint16>(read2(ucfile));
+				n = new ForeachNode(opcode, offset, loopVar, elemSize, target);
+			}
 			break;
 		case 0x77: // set info
 			n = new DCCallMutatorNode(opcode, offset);

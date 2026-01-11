@@ -24,6 +24,47 @@
 #include "Folder.h"
 #include "VarNodes.h"
 
+#include <cstdio>
+
+extern ConvertUsecode *convert;
+
+static std::string format_function_name(const uint32 uclass, const uint32 targetOffset)
+{
+	std::map<uint32, std::string>::const_iterator found = FoldClassNames.find(uclass);
+	if(found != FoldClassNames.end())
+	{
+		char buf[16];
+		snprintf(buf, sizeof(buf), "%04X", targetOffset);
+		return found->second + "::" + buf;
+	}
+	char buf[32];
+	snprintf(buf, sizeof(buf), "class_%04X_function_%04X", uclass, targetOffset);
+	return buf;
+}
+
+static std::string format_intrinsic_name(const uint32 intrinsic)
+{
+	if(convert==0)
+	{
+		char buf[16];
+		snprintf(buf, sizeof(buf), "Intrinsic%04X", intrinsic);
+		return buf;
+	}
+	std::string name = convert->intrinsics()[intrinsic];
+	if(name.find("process ") == 0)
+		name = name.substr(8);
+	else
+	{
+		std::string::size_type pos = name.find(' ');
+		if(pos != std::string::npos)
+			name = name.substr(pos + 1);
+	}
+	std::string::size_type params = name.find('(');
+	if(params != std::string::npos)
+		name = name.substr(0, params);
+	return name;
+}
+
 // FIXME: Fix this
 /* 'cause we don't have dynamic binding. c++ sucks. */
 void AddSpToDCCallNode(DCCallPostfixNode *cpn, Node *node)
@@ -358,7 +399,7 @@ void DCCallNode::print_extern_unk(Console &o, const uint32 /*isize*/) const
 				{
 					o.Print(rtype().name()); o.Putchar('\t');
 				}
-				o.Printf("Intrinsic%04X(", intrinsic);
+				o.Printf("%s(", format_intrinsic_name(intrinsic).c_str());
 				for(std::deque<Node *>::const_reverse_iterator i=pnode.rbegin(); i!=pnode.rend(); ++i)
 				{
 					if(i!=pnode.rbegin()) o.Print(", ");
@@ -373,7 +414,7 @@ void DCCallNode::print_extern_unk(Console &o, const uint32 /*isize*/) const
 				{
 					o.Print(rtype().name()); o.Putchar('\t');
 				}
-				o.Printf("class_%04X_function_%04X(", uclass, targetOffset);
+				o.Printf("%s(", format_function_name(uclass, targetOffset).c_str());
 				for(std::deque<Node *>::const_reverse_iterator i=pnode.rbegin(); i!=pnode.rend(); ++i)
 				{
 					if(i!=pnode.rbegin()) o.Print(", ");
@@ -405,7 +446,7 @@ void DCCallNode::print_extern_unk(Console &o, const uint32 /*isize*/) const
 					o.Print(rtype().name()); o.Putchar('\t');
 				}
 				if(thisP!=0) o.Print(thisP->rtype().name());
-				o.Printf("->class_%04X_function_%04X(", uclass, targetOffset);
+				o.Printf("->%s(", format_function_name(uclass, targetOffset).c_str());
 				for(std::deque<Node *>::const_reverse_iterator i=pnode.rbegin(); i!=pnode.rend(); ++i)
 				{
 					if(i!=pnode.rbegin()) o.Print(", ");
@@ -431,7 +472,7 @@ void DCCallNode::print_unk(Console &o, const uint32 isize) const
 					rtype().print_unk(o); o.Putchar(' ');
 				}
 				#endif
-				o.Printf("Intrinsic%04X(", intrinsic);
+				o.Printf("%s(", format_intrinsic_name(intrinsic).c_str());
 				for(std::deque<Node *>::const_reverse_iterator i=pnode.rbegin(); i!=pnode.rend(); ++i)
 				{
 					if(i!=pnode.rbegin()) o.Print(", ");
@@ -448,7 +489,7 @@ void DCCallNode::print_unk(Console &o, const uint32 isize) const
 					rtype().print_unk(o); o.Putchar(' ');
 				}
 				#endif
-				o.Printf("class_%04X_function_%04X(", uclass, targetOffset);
+				o.Printf("%s(", format_function_name(uclass, targetOffset).c_str());
 				for(std::deque<Node *>::const_reverse_iterator i=pnode.rbegin(); i!=pnode.rend(); ++i)
 				{
 					if(i!=pnode.rbegin()) o.Print(", ");
@@ -490,13 +531,15 @@ void DCCallNode::print_unk(Console &o, const uint32 isize) const
 				assert(thispsize>0 || thisP!=0 || print_assert(this));
 				if(thispsize) // only if we have a this we should worry about it.
 					thisP->print_unk(o, isize);
-				o.Printf("->class_%04X_function_%04X(", uclass, targetOffset);
+				o.Printf("->%s(", format_function_name(uclass, targetOffset).c_str());
 				for(std::deque<Node *>::const_reverse_iterator i=pnode.rbegin(); i!=pnode.rend(); ++i)
 				{
 					if(i!=pnode.rbegin()) o.Print(", ");
 					(*i)->print_unk(o, isize);
 				}
 				o.Putchar(')');
+				if(retVal!=0)
+					o.Print(" -> return");
 				break;
 			}
 		default: assert(print_assert(this)); // can't happen

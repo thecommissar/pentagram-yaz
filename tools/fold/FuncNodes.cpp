@@ -22,10 +22,13 @@
 
 #include "FuncNodes.h"
 #include "Folder.h"
+#include "IfNode.h"
+#include "OperatorNodes.h"
 #include "VarNodes.h"
 
 #include <deque>
 using	std::deque;
+#include <cstdio>
 
 /****************************************************************************
 	FuncMutatorNode
@@ -130,19 +133,78 @@ bool FuncMutatorNode::fold(DCUnit *unit, std::deque<Node *> &nodes)
 }
 
 /****************************************************************************
+	StartupNode
+ ****************************************************************************/
+
+void StartupNode::print_unk(Console &o, const uint32 isize) const
+{
+	indent(o, isize);
+	o.Print("startup");
+}
+
+void StartupNode::print_asm(Console &o) const
+{
+	Node::print_asm(o);
+	o.Printf("startup");
+}
+
+void StartupNode::print_bin(ODequeDataSource &o) const
+{
+	(void)o;
+}
+
+/****************************************************************************
 	DCFuncNode
  ****************************************************************************/
 #define DEBUG_COMMENTS
 
-void DCFuncNode::print_unk_funcheader(Console &o, const uint32 isize) const
+static std::string format_process_type(uint32 process_type)
+{
+	switch(process_type)
+	{
+		case 0x0000: return "PT_DEFAULT";
+		case 0x00F0: return "PT_ANIM";
+		default:
+			{
+				char buf[16];
+				snprintf(buf, sizeof(buf), "PT_%04X", process_type);
+				return buf;
+			}
+	}
+}
+
+static std::string format_function_name(const std::string &className, const uint32 classId, const uint32 offset)
+{
+	char buf[16];
+	snprintf(buf, sizeof(buf), "%04X", offset);
+	if(!className.empty())
+		return className + "::" + buf;
+	snprintf(buf, sizeof(buf), "class_%04X_function_%04X", classId, offset);
+	return buf;
+}
+
+void DCFuncNode::print_unk_funcheader(Console &o, const uint32 isize, const std::string &className, const uint32 classId) const
 {
 	// do the obvious and spit out 'process'
 	// for obvious reason's we're just assuming if a function has a 'process exclude'
 	// op at the beginning, it's... a process!
 	indent(o, isize);
-	if(has_procexclude)
-		o.Printf("process ");
-
+	if(is_startup)
+	{
+		if(startupnode!=0)
+			startupnode->print_unk(o, isize);
+		else
+			o.Print("startup");
+	}
+	else if(has_procexclude)
+	{
+		o.Printf("process [[%s, referent]] %s()", format_process_type(process_type).c_str(),
+			format_function_name(className, classId, func_start_offset).c_str());
+	}
+	else
+	{
+		o.Printf("%s()", format_function_name(className, classId, func_start_offset).c_str());
+	}
 	o.Putchar('\n');
 }
 
@@ -297,6 +359,79 @@ bool DCFuncNode::fold(DCUnit *unit, std::deque<Node *> &nodes)
 
 	// ... and our 'init'
 	fold_init(unit, nodes);
+
+	is_startup = (func_start_offset == 0);
+	if(is_startup && startupnode==0)
+		startupnode = new StartupNode(func_start_offset);
+
+	// collapse if/else chains into switch/case blocks where possible
+	for(std::deque<Node *>::iterator it=funcnodes.begin(); it!=funcnodes.end(); ++it)
+	{
+		if((*it)->opcode()!=0x51)
+			continue;
+
+		IfNode *ifnode = static_cast<IfNode *>(*it);
+		const Node *cond = ifnode->a_node();
+		if(cond==0 || !acceptOp(cond->opcode(), 0x24))
+			continue;
+
+		const BinOperatorNode *cmp = static_cast<const BinOperatorNode *>(cond);
+		const Node *baseExpr = cmp->a_lnode();
+		if(baseExpr==0)
+			continue;
+
+		std::deque<IfNode *> chain;
+		std::deque<Node *>::iterator jt = it;
+		while(jt!=funcnodes.end() && (*jt)->opcode()==0x51)
+		{
+			IfNode *caseNode = static_cast<IfNode *>(*jt);
+			if(caseNode->itype==IfNode::I_ELSE)
+				break;
+			const Node *caseCond = caseNode->a_node();
+			if(caseCond==0 || !acceptOp(caseCond->opcode(), 0x24))
+				break;
+			const BinOperatorNode *caseCmp = static_cast<const BinOperatorNode *>(caseCond);
+			const PushVarNode *lhs = dynamic_cast<const PushVarNode *>(caseCmp->a_lnode());
+			const PushVarNode *rhs = dynamic_cast<const PushVarNode *>(baseExpr);
+			if(lhs==0 || rhs==0)
+				break;
+			if(lhs->dtype().dtype()!=rhs->dtype().dtype() || lhs->dtype().value()!=rhs->dtype().value())
+				break;
+			chain.push_back(caseNode);
+			++jt;
+		}
+
+		if(chain.size()<2)
+			continue;
+
+		SwitchNode *sw = new SwitchNode(ifnode->offset(), const_cast<Node *>(baseExpr));
+		for(std::deque<IfNode *>::const_iterator c=chain.begin(); c!=chain.end(); ++c)
+		{
+			const BinOperatorNode *caseCmp = static_cast<const BinOperatorNode *>((*c)->a_node());
+			CaseNode *caseNode = new CaseNode((*c)->offset(), const_cast<Node *>(caseCmp->a_rnode()));
+			caseNode->nodes().insert(caseNode->nodes().end(), (*c)->nodes().begin(), (*c)->nodes().end());
+			sw->addCase(caseNode);
+			sw->addOriginalNode(*c);
+		}
+
+		if(jt!=funcnodes.end() && (*jt)->opcode()==0x51)
+		{
+			IfNode *elseNode = static_cast<IfNode *>(*jt);
+			if(elseNode->itype==IfNode::I_ELSE)
+			{
+				CaseNode *caseNode = new CaseNode(elseNode->offset(), 0);
+				caseNode->nodes().insert(caseNode->nodes().end(), elseNode->nodes().begin(), elseNode->nodes().end());
+				sw->addCase(caseNode);
+				sw->addOriginalNode(elseNode);
+				++jt;
+			}
+		}
+
+		std::deque<Node *>::iterator eraseStart = it;
+		std::deque<Node *>::iterator eraseEnd = jt;
+		it = funcnodes.erase(eraseStart, eraseEnd);
+		it = funcnodes.insert(it, sw);
+	}
 	
 	// FIXME: This will obviously be false when we're finally implementing
 	// inline functions.

@@ -379,6 +379,32 @@ void PushVarNode::print_bin(ODequeDataSource  &o) const
 }
 
 /****************************************************************************
+	ListLiteralNode
+ ****************************************************************************/
+
+bool ListLiteralNode::fold(DCUnit * /*unit*/, std::deque<Node *> &nodes)
+{
+	grab_p(nodes, static_cast<sint32>(elemSize * elemCount));
+	fold_linenum(nodes);
+	return true;
+}
+
+void ListLiteralNode::print_unk(Console &o, const uint32 isize) const
+{
+	Node::print_linenum_unk(o, isize);
+	o.Print("<<");
+	for(std::deque<Node *>::const_reverse_iterator i=pnode.rbegin(); i!=pnode.rend(); ++i)
+	{
+		if(i!=pnode.rbegin()) o.Print(", ");
+		(*i)->print_unk(o, isize);
+	}
+	o.Print(">>");
+}
+
+void ListLiteralNode::print_asm(Console &o) const
+{
+	Node::print_linenum_asm(o);
+	for(std::deque<Node *>::const_reverse_iterator i=pnode.rbegin(); i!=pnode.rend(); ++i)
 	CreateListNode
  ****************************************************************************/
 
@@ -402,6 +428,13 @@ void CreateListNode::print_asm(Console &o) const
 		o.Putchar('\n');
 	}
 	Node::print_asm(o);
+	o.Printf("create list\t%02X (%02X)", elemCount, elemSize);
+}
+
+void ListLiteralNode::print_bin(ODequeDataSource &o) const
+{
+	Node::print_linenum_bin(o);
+	for(std::deque<Node *>::const_reverse_iterator i=pnode.rbegin(); i!=pnode.rend(); ++i)
 	o.Printf("create_list\t%02Xh", count);
 }
 
@@ -413,6 +446,8 @@ void CreateListNode::print_bin(ODequeDataSource &o) const
 		(*i)->print_bin(o);
 	}
 	o.write1(0x0E);
+	o.write1(elemSize);
+	o.write1(elemCount);
 	o.write1(count);
 }
 

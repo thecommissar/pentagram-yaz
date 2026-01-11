@@ -28,6 +28,8 @@ using	std::deque;
 #include <set>
 using	std::set;
 
+std::map<uint32, std::string> FoldClassNames;
+
 /****************************************************************************
 	Unit
  ****************************************************************************/
@@ -59,7 +61,7 @@ void Unit::print_unk(Console &o, const uint32 isize) const
 	FOR_CONST_DEQUE(DCFuncNode, functions, i)
 	{
 		// function header
-		(*i)->print_unk_funcheader(o, isize);
+		(*i)->print_unk_funcheader(o, isize, name, id);
 
 		// main function body
 		indent(o, isize);
@@ -388,4 +390,3 @@ bool print_assert(const Node *n, const DCUnit *u)
 	
 	return false;
 }
-

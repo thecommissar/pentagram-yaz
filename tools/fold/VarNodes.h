@@ -172,6 +172,15 @@ class PushVarNode : public Node
 		uint32 global_size;*/
 };
 
+class ListLiteralNode : public ColNode
+{
+	public:
+		ListLiteralNode(const uint32 opcode, const uint32 offset, const uint32 newElemSize, const uint32 newCount)
+			: ColNode(opcode, offset, Type(Type::T_LIST)), elemSize(newElemSize), elemCount(newCount)
+			{
+				assert(acceptOp(opcode, 0x0E));
+			};
+		~ListLiteralNode() {};
 class CreateListNode : public Node
 {
 	public:
@@ -214,6 +223,12 @@ class PopGlobalNode : public UniNode
 		void print_unk(Console &o, const uint32 isize) const;
 		void print_asm(Console &o) const;
 		void print_bin(ODequeDataSource &o) const;
+
+		bool fold(DCUnit * /*unit*/, std::deque<Node *> &nodes);
+
+	private:
+		uint32 elemSize;
+		uint32 elemCount;
 		bool fold(DCUnit *unit, std::deque<Node *> &nodes);
 
 	private:

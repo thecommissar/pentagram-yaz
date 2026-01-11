@@ -620,10 +620,10 @@ void just_print(TempOp &op, IDataSource *ucfile)
 			con_Printf("ret");
 			break;
 		case 0x51:
-			con_Printf("jne\t\t%04Xh\t(to %04X)", op.i0, op.nextoffset + static_cast<short>(op.i0));
+			con_Printf("jne\t\t%04Xh\t(to %04X)", op.i0, op.nextoffset + static_cast<sint16>(op.i0));
 			break;
 		case 0x52:
-			con_Printf("jmp\t\t%04Xh\t(to %04X)", op.i0, op.nextoffset + static_cast<short>(op.i0));
+			con_Printf("jmp\t\t%04Xh\t(to %04X)", op.i0, op.nextoffset + static_cast<sint16>(op.i0));
 			break;
 
 		case 0x53:

@@ -92,4 +92,36 @@ class LoopNextNode : public Node
 	private:
 };
 
+class ForeachNode : public ColNode
+{
+	public:
+		ForeachNode(const uint32 opcode, const uint32 offset, const uint32 newLoopVar,
+			const uint32 newElemSize, const uint32 newTargetOffset)
+			: ColNode(opcode, offset, Type(Type::T_VOID)),
+			loopVar(newLoopVar), elemSize(newElemSize), targetOffset(newTargetOffset)
+			{
+				assert(acceptOp(opcode, 0x75, 0x76));
+				switch(opcode)
+				{
+					case 0x75: ftype = FOREACH_LIST; break;
+					case 0x76: ftype = FOREACH_SLIST; break;
+					default: assert(false);
+				}
+			};
+		~ForeachNode() {};
+
+		void print_unk(Console &o, const uint32 isize) const;
+		void print_asm(Console &o) const;
+		void print_bin(ODequeDataSource &o) const;
+		bool fold(DCUnit *unit, std::deque<Node *> &nodes);
+
+	protected:
+		enum foreachtype { FOREACH_LIST, FOREACH_SLIST } ftype;
+
+	private:
+		uint32 loopVar;
+		uint32 elemSize;
+		uint32 targetOffset;
+};
+
 #endif

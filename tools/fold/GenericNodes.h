@@ -230,6 +230,8 @@ class UniNode : public Node
 			: Node(newOpcode, newOffset, newRType), node(0) {};
 		virtual ~UniNode() { /* don't delete node */ };
 
+		const Node *a_node() const { return node; };
+
 	protected:
 		void grab_n(std::deque<Node *> &nodes) { node=grab(nodes); };
 		Node *node;
@@ -249,6 +251,9 @@ class BinNode : public Node
 			const Type newRType=Type())
 			: Node(newOpcode, newOffset, newRType), lnode(0), rnode(0) {};
 		virtual ~BinNode() { /* don't delete lnode, rnode */ };
+
+		const Node *a_lnode() const { return lnode; };
+		const Node *a_rnode() const { return rnode; };
 
 	protected:
 		void grab_l(std::deque<Node *> &nodes) { lnode=grab(nodes); };
@@ -304,4 +309,3 @@ bool print_assert(const Node *n, const DCUnit *u=0);
 bool print_assert_nodes(std::deque<Node *> &nodes, uint32 index);
 
 #endif
-

@@ -22,6 +22,9 @@
 #define COMMONBASES_H
 
 #include "GenericNodes.h"
+#include <map>
 #include <string>
+
+extern std::map<uint32, std::string> FoldClassNames;
 
 #endif

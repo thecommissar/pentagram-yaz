@@ -354,3 +354,98 @@ bool EndNode::fold(DCUnit * /*unit*/, std::deque<Node *> &nodes)
 	return true;
 }
 
+/****************************************************************************
+	CaseNode
+ ****************************************************************************/
+
+CaseNode::CaseNode(const uint32 offset, Node *matchNode)
+	: Node(0xFFFF, offset, Type(Type::T_INVALID)), match(matchNode)
+{
+}
+
+void CaseNode::print_unk(Console &o, const uint32 isize) const
+{
+	indent(o, isize);
+	if(match!=0)
+	{
+		o.Print("case ");
+		match->print_unk(o, isize);
+	}
+	else
+	{
+		o.Print("default");
+	}
+	o.Print("\n");
+	indent(o, isize);
+	o.Print("{\n");
+	for(std::deque<Node *>::const_iterator i=casenodes.begin(); i!=casenodes.end(); ++i)
+	{
+		indent(o, isize+1);
+		(*i)->print_unk(o, isize+1);
+		o.Putchar('\n');
+	}
+	indent(o, isize);
+	o.Print("}\n");
+}
+
+void CaseNode::print_asm(Console &o) const
+{
+	for(std::deque<Node *>::const_iterator i=casenodes.begin(); i!=casenodes.end(); ++i)
+	{
+		(*i)->print_asm(o);
+		o.Putchar('\n');
+	}
+}
+
+void CaseNode::print_bin(ODequeDataSource &o) const
+{
+	for(std::deque<Node *>::const_iterator i=casenodes.begin(); i!=casenodes.end(); ++i)
+	{
+		(*i)->print_bin(o);
+	}
+}
+
+/****************************************************************************
+	SwitchNode
+ ****************************************************************************/
+
+SwitchNode::SwitchNode(const uint32 offset, Node *exprNode)
+	: Node(0xFFFF, offset, Type(Type::T_INVALID)), expr(exprNode)
+{
+}
+
+void SwitchNode::print_unk(Console &o, const uint32 isize) const
+{
+	indent(o, isize);
+	o.Print("switch ");
+	if(expr!=0)
+		expr->print_unk(o, isize);
+	else
+		o.Print("/*unknown*/");
+	o.Print("\n");
+	indent(o, isize);
+	o.Print("{\n");
+	for(std::deque<CaseNode *>::const_iterator i=cases.begin(); i!=cases.end(); ++i)
+	{
+		(*i)->print_unk(o, isize+1);
+	}
+	indent(o, isize);
+	o.Print("}");
+}
+
+void SwitchNode::print_asm(Console &o) const
+{
+	for(std::deque<IfNode *>::const_iterator i=originalNodes.begin(); i!=originalNodes.end(); ++i)
+	{
+		(*i)->print_asm(o);
+		o.Putchar('\n');
+	}
+}
+
+void SwitchNode::print_bin(ODequeDataSource &o) const
+{
+	for(std::deque<IfNode *>::const_iterator i=originalNodes.begin(); i!=originalNodes.end(); ++i)
+	{
+		(*i)->print_bin(o);
+	}
+}
