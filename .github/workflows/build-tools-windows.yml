@@ -1,0 +1,46 @@
+name: Build fold.exe and disasm.exe (Windows)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-SDL
+            mingw-w64-x86_64-SDL_ttf
+            mingw-w64-x86_64-libpng
+            mingw-w64-x86_64-zlib
+            autoconf
+            automake
+            libtool
+
+      - name: Bootstrap
+        run: ./bootstrap
+
+      - name: Configure
+        run: ./configure
+
+      - name: Build fold and disasm
+        run: make fold disasm
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: fold-disasm-windows
+          path: |
+            tools/fold/fold.exe
+            tools/disasm/disasm.exe
