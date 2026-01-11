@@ -268,6 +268,18 @@ void UniOperatorNode::print_unk(Console &o, const uint32 isize) const
 			o.Printf("not ");
 			node->print_unk(o, isize);
 			break;
+		case WORD_TO_DWORD:
+			assert(node!=0);
+			o.Printf("word_to_dword(");
+			node->print_unk(o, isize);
+			o.Putchar(')');
+			break;
+		case DWORD_TO_WORD:
+			assert(node!=0);
+			o.Printf("dword_to_word(");
+			node->print_unk(o, isize);
+			o.Putchar(')');
+			break;
 		case STR_TO_PTR:
 			assert(node!=0);
 			o.Printf("str_to_ptr(");
@@ -290,6 +302,20 @@ void UniOperatorNode::print_asm(Console &o) const
 			Node::print_asm(o);
 			o.Printf("not");
 			break;
+		case WORD_TO_DWORD:
+			assert(node!=0);
+			node->print_asm(o);
+			o.Putchar('\n');
+			Node::print_asm(o);
+			o.Printf("word_to_dword");
+			break;
+		case DWORD_TO_WORD:
+			assert(node!=0);
+			node->print_asm(o);
+			o.Putchar('\n');
+			Node::print_asm(o);
+			o.Printf("dword_to_word");
+			break;
 		case STR_TO_PTR:
 			assert(node!=0);
 			node->print_asm(o);
@@ -311,6 +337,16 @@ void UniOperatorNode::print_bin(ODequeDataSource &o) const
 			node->print_bin(o);
 			o.write1(0x30);
 			break;
+		case WORD_TO_DWORD:
+			assert(node!=0);
+			node->print_bin(o);
+			o.write1(0x60);
+			break;
+		case DWORD_TO_WORD:
+			assert(node!=0);
+			node->print_bin(o);
+			o.write1(0x61);
+			break;
 		case STR_TO_PTR:
 			assert(node!=0);
 			node->print_bin(o);
@@ -327,6 +363,14 @@ bool UniOperatorNode::fold(DCUnit * /*unit*/, std::deque<Node *> &nodes)
 		case NOT:
 			assert(acceptType(nodes.back()->rtype(), Type::T_WORD, Type::T_BYTE));
 			//assert(nodes.back()->rtype()==Type::T_WORD || nodes.back()->rtype()==Type::T_BYTE);
+			grab_n(nodes);
+			break;
+		case WORD_TO_DWORD:
+			assert(acceptType(nodes.back()->rtype(), Type::T_WORD, Type::T_BYTE));
+			grab_n(nodes);
+			break;
+		case DWORD_TO_WORD:
+			assert(acceptType(nodes.back()->rtype(), Type::T_DWORD));
 			grab_n(nodes);
 			break;
 		case STR_TO_PTR:
@@ -445,10 +489,15 @@ void BinOperatorNode::print_unk(Console &o, const uint32 isize) const
 		case M_ADD: o.Printf(" + ");  break;
 		case M_SUB: o.Printf(" - ");  break;
 		case M_MUL: o.Printf(" * ");  break;
+		case M_CONCAT: o.Printf(" + "); break;
+		case M_APPEND: o.Printf(" append "); break;
+		case M_REMOVE_SLIST: o.Printf(" remove "); break;
 		case M_CMP: o.Printf(" == "); break;
+		case M_STRCMP: o.Printf(" == "); break;
 		case M_LT:  o.Printf(" < ");  break;
 		case M_LE:  o.Printf(" <= "); break;
 		case M_GT:  o.Printf(" > ");  break;
+		case M_IN:  o.Printf(" in "); break;
 		case M_AND:  o.Printf(" and "); break;
 		case M_OR:  o.Printf(" or "); break;
 		case M_NE: o.Printf(" != "); break;
@@ -475,10 +524,15 @@ void BinOperatorNode::print_asm(Console &o) const
 		case M_ADD: o.Printf("add"); break;
 		case M_SUB: o.Printf("sub"); break;
 		case M_MUL: o.Printf("mul"); break;
+		case M_CONCAT: o.Printf("concat"); break;
+		case M_APPEND: o.Printf("append"); break;
+		case M_REMOVE_SLIST: o.Printf("remove_slist"); break;
 		case M_CMP: o.Printf("cmp"); break;
+		case M_STRCMP: o.Printf("strcmp"); break;
 		case M_LT:  o.Printf("lt");  break;
 		case M_LE:  o.Printf("le");  break;
 		case M_GT:  o.Printf("gt");  break;
+		case M_IN:  o.Printf("in");  break;
 		case M_AND:  o.Printf("and");  break;
 		case M_OR:  o.Printf("or");  break;
 		case M_NE:  o.Printf("ne");  break;
@@ -501,10 +555,15 @@ void BinOperatorNode::print_bin(ODequeDataSource &o) const
 		case M_ADD: o.write1(0x14); break;
 		case M_SUB: o.write1(0x1C); break;
 		case M_MUL: o.write1(0x1E); break;
+		case M_CONCAT: o.write1(0x16); break;
+		case M_APPEND: o.write1(0x17); break;
+		case M_REMOVE_SLIST: o.write1(0x1A); break;
 		case M_CMP: o.write1(0x24); break;
+		case M_STRCMP: o.write1(0x26); break;
 		case M_LT:  o.write1(0x28); break;
 		case M_LE:  o.write1(0x2A); break;
 		case M_GT:  o.write1(0x2C); break;
+		case M_IN:  o.write1(0x2E); break;
 		case M_AND: o.write1(0x32); break;
 		case M_OR:  o.write1(0x34); break;
 		case M_NE:  o.write1(0x36); break;
@@ -517,6 +576,31 @@ bool BinOperatorNode::fold(DCUnit *unit, std::deque<Node *> &nodes)
 {
 	switch(otype)
 	{
+		case M_CONCAT:
+			grab_r(nodes);
+			grab_l(nodes);
+			fold_linenum(nodes);
+			rtype(Type::T_STRING);
+			break;
+		case M_APPEND:
+			grab_r(nodes);
+			grab_l(nodes);
+			fold_linenum(nodes);
+			rtype(Type::T_LIST);
+			break;
+		case M_REMOVE_SLIST:
+			grab_r(nodes);
+			grab_l(nodes);
+			fold_linenum(nodes);
+			rtype(Type::T_SLIST);
+			break;
+		case M_STRCMP:
+		case M_IN:
+			grab_r(nodes);
+			grab_l(nodes);
+			fold_linenum(nodes);
+			rtype(Type::T_WORD);
+			break;
 		case M_ADD:	case M_SUB:	case M_MUL:
 		case M_CMP:	case M_LT:	case M_LE:	case M_GT:  case M_NE:
 		case M_AND: case M_OR:
@@ -541,4 +625,3 @@ bool BinOperatorNode::fold(DCUnit *unit, std::deque<Node *> &nodes)
 	}
 	return true;
 };
-

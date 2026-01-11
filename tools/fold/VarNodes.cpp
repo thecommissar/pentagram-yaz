@@ -286,6 +286,9 @@ void PushVarNode::print_asm(Console &o) const
 			{
 				case Type::T_WORD:  o.Printf("push\t\t");     _dtype.print_value_asm(o); break;
 				case Type::T_DWORD: o.Printf("push dword\t"); _dtype.print_value_asm(o); break;
+				case Type::T_STRING: o.Printf("push string\t"); _dtype.print_value_asm(o); break;
+				case Type::T_LIST: o.Printf("push list\t"); _dtype.print_value_asm(o); break;
+				case Type::T_SLIST: o.Printf("push slist\t"); _dtype.print_value_asm(o); break;
 				default: assert(false);
 			}
 			break;
@@ -330,10 +333,22 @@ void PushVarNode::print_bin(ODequeDataSource  &o) const
 			}
 			break;
 		case DataType::DT_BP:
-			switch(_dtype.type().type())
+			switch(opcode())
 			{
-				case Type::T_WORD:  o.write1(0x3F); _dtype.print_value_bin(o); break;
-				case Type::T_DWORD: o.write1(0x40); _dtype.print_value_bin(o); break;
+				case 0x02:
+				case 0x3F:
+					o.write1(opcode());
+					_dtype.print_value_bin(o);
+					break;
+				case 0x40:
+					o.write1(0x40);
+					_dtype.print_value_bin(o);
+					break;
+				case 0x41:
+				case 0x43:
+					o.write1(opcode());
+					_dtype.print_value_bin(o);
+					break;
 				default: assert(false);
 			}
 			break;
@@ -363,3 +378,159 @@ void PushVarNode::print_bin(ODequeDataSource  &o) const
 	}
 }
 
+/****************************************************************************
+	CreateListNode
+ ****************************************************************************/
+
+void CreateListNode::print_unk(Console &o, const uint32 isize) const
+{
+	o.Print("create_list(");
+	for(std::deque<Node *>::const_reverse_iterator i=elements.rbegin(); i!=elements.rend(); ++i)
+	{
+		if(i!=elements.rbegin()) o.Print(", ");
+		(*i)->print_unk(o, isize);
+	}
+	o.Putchar(')');
+}
+
+void CreateListNode::print_asm(Console &o) const
+{
+	Node::print_linenum_asm(o);
+	for(std::deque<Node *>::const_reverse_iterator i=elements.rbegin(); i!=elements.rend(); ++i)
+	{
+		(*i)->print_asm(o);
+		o.Putchar('\n');
+	}
+	Node::print_asm(o);
+	o.Printf("create_list\t%02Xh", count);
+}
+
+void CreateListNode::print_bin(ODequeDataSource &o) const
+{
+	Node::print_linenum_bin(o);
+	for(std::deque<Node *>::const_reverse_iterator i=elements.rbegin(); i!=elements.rend(); ++i)
+	{
+		(*i)->print_bin(o);
+	}
+	o.write1(0x0E);
+	o.write1(count);
+}
+
+bool CreateListNode::fold(DCUnit *unit, std::deque<Node *> &nodes)
+{
+	if(nodes.size() < count)
+	{
+		assert(print_assert(this, unit));
+		return false;
+	}
+	for(uint32 i=0; i<count; ++i)
+	{
+		elements.push_back(grab(nodes));
+	}
+	fold_linenum(nodes);
+	return true;
+}
+
+/****************************************************************************
+	PopGlobalNode
+ ****************************************************************************/
+
+void PopGlobalNode::print_unk(Console &o, const uint32 isize) const
+{
+	assert(node!=0);
+	Node::print_linenum_unk(o, isize);
+	o.Printf("global [%04X %02X] = ", gOffset, gSize);
+	node->print_unk(o, isize);
+}
+
+void PopGlobalNode::print_asm(Console &o) const
+{
+	assert(node!=0);
+	Node::print_linenum_asm(o);
+	node->print_asm(o);
+	o.Putchar('\n');
+	Node::print_asm(o);
+	o.Printf("pop\t\tglobal [%04X %02X]", gOffset, gSize);
+}
+
+void PopGlobalNode::print_bin(ODequeDataSource &o) const
+{
+	assert(node!=0);
+	Node::print_linenum_bin(o);
+	node->print_bin(o);
+	o.write1(0x4F);
+	o.write2(gOffset);
+	o.write1(gSize);
+}
+
+bool PopGlobalNode::fold(DCUnit *unit, std::deque<Node *> &nodes)
+{
+	assert(nodes.back()->rtype()==rtype() || print_assert(this, unit));
+	grab_n(nodes);
+	fold_linenum(nodes);
+	return true;
+}
+
+/****************************************************************************
+	PushProcessResultNode
+ ****************************************************************************/
+
+void PushProcessResultNode::print_unk(Console &o, const uint32 /*isize*/) const
+{
+	o.Print("process_result");
+}
+
+void PushProcessResultNode::print_asm(Console &o) const
+{
+	Node::print_asm(o);
+	o.Printf("push\t\tprocess_result");
+}
+
+void PushProcessResultNode::print_bin(ODequeDataSource &o) const
+{
+	o.write1(0x6D);
+}
+
+/****************************************************************************
+	FreeVarNode
+ ****************************************************************************/
+
+void FreeVarNode::print_unk(Console &o, const uint32 isize) const
+{
+	Node::print_linenum_unk(o, isize);
+	o.Print("free ");
+	_dtype.print_value_unk(o);
+}
+
+void FreeVarNode::print_asm(Console &o) const
+{
+	Node::print_linenum_asm(o);
+	Node::print_asm(o);
+	switch(opcode())
+	{
+		case 0x62: o.Printf("free string\t"); break;
+		case 0x63: o.Printf("free slist\t"); break;
+		default: assert(false);
+	}
+	_dtype.print_value_asm(o);
+}
+
+void FreeVarNode::print_bin(ODequeDataSource &o) const
+{
+	Node::print_linenum_bin(o);
+	switch(opcode())
+	{
+		case 0x62:
+		case 0x63:
+			o.write1(opcode());
+			o.write1(static_cast<uint8>(_value));
+			break;
+		default: assert(false);
+	}
+}
+
+bool FreeVarNode::fold(DCUnit * /*unit*/, std::deque<Node *> &nodes)
+{
+	fold_linenum(nodes);
+	return true;
+}

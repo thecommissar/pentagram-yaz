@@ -307,7 +307,7 @@ bool DCFuncNode::fold(DCUnit *unit, std::deque<Node *> &nodes)
 
 void DCFuncNode::fold_init(DCUnit * /*unit*/, std::deque<Node *> &nodes)
 {
-	assert(nodes.size() && nodes.back()->opcode()==0x5A);
+	assert(nodes.size() && (nodes.back()->opcode()==0x5A || nodes.back()->opcode()==0x00));
 	FuncMutatorNode *initnode = static_cast<FuncMutatorNode *>(nodes.back());
 	nodes.pop_back();
 	
@@ -319,7 +319,7 @@ void DCFuncNode::fold_init(DCUnit * /*unit*/, std::deque<Node *> &nodes)
 
 void DCFuncNode::fold_ret(DCUnit * /*unit*/, std::deque<Node *> &nodes)
 {
-	assert(nodes.size() && nodes.back()->opcode()==0x50);
+	assert(nodes.size() && (nodes.back()->opcode()==0x50 || nodes.back()->opcode()==0x3A));
 	FuncMutatorNode *retnode = static_cast<FuncMutatorNode *>(nodes.back());
 	nodes.pop_back();
 
@@ -349,6 +349,43 @@ void DCFuncNode::fold_setinfo(DCUnit * /*unit*/, std::deque<Node *> &nodes)
 	//FORGET_OBJECT(setinfonode); 
 }
 
+/****************************************************************************
+	SayNode
+ ****************************************************************************/
+
+void SayNode::print_unk(Console &o, const uint32 isize) const
+{
+	assert(node!=0);
+	o.Print("say ");
+	node->print_unk(o, isize);
+}
+
+void SayNode::print_asm(Console &o) const
+{
+	assert(node!=0);
+	Node::print_linenum_asm(o);
+	node->print_asm(o);
+	o.Putchar('\n');
+	Node::print_asm(o);
+	o.Print("say");
+}
+
+void SayNode::print_bin(ODequeDataSource &o) const
+{
+	assert(node!=0);
+	Node::print_linenum_bin(o);
+	node->print_bin(o);
+	o.write1(0x38);
+}
+
+bool SayNode::fold(DCUnit *unit, std::deque<Node *> &nodes)
+{
+	assert(nodes.size()>0 || print_assert(this, unit));
+	grab_n(nodes);
+	fold_linenum(nodes);
+	return true;
+}
+
 void DCFuncNode::fold_procexclude(DCUnit * /*unit*/, std::deque<Node *> &nodes)
 {
 	assert(nodes.size() && nodes.back()->opcode()==0x78);
@@ -361,7 +398,6 @@ void DCFuncNode::fold_procexclude(DCUnit * /*unit*/, std::deque<Node *> &nodes)
 
 	FORGET_OBJECT(procexcludenode);
 }
-
 
 
 
