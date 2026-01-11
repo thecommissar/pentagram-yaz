@@ -1,0 +1,931 @@
+uses "use";
+uses "look";
+uses "books";
+uses "item";
+
+
+process BookMan::sgBook1()
+{
+	#if English
+	{
+	read("THE SAGA OF BONE CRUSHER"
+	   
+	+"~~%And so it was in the early days of Pagan that the Titan
+	of Earth, Lithos, declared that all who lived upon his lands
+	should pay homage to him. With his mighty earthquakes, he
+	demanded that the people of Tenebrae bow to him, lest he 
+	shake their houses down around them." 
+	+"~~%'But mighty Lithos,'said
+	the Lord Elsmil, the Tempest, 'we are under the guidance of
+	Hydros. From her we receive the rain for the crops and the
+	fish for our table. We can not bow to you.' This
+	greatly angered Lithos and to punish the people of Tenebrae, he
+	sent a great army of undead skeletons to slaughter them. Lord
+	Elsmil, went to Hydros. ~~%'Please,' he begged her. 'The people of"
+
+	+" your city are being slain by the minions of your brother, Lithos.
+	We must have your help.' ~~Hydros heard the plea of her Tempest
+	and gave to him a mighty hammer. 'You shall have this weapon called
+	Bone Crusher and with it defeat the minions of Lithos.' she said.
+	When Lord Elsmil arrived back at the battle, it was going poorly for
+	the Tenebraens. They were fighting bravely, but were outnumbered two
+	to one by the undead. Lord Elsmil let out a mighty roar and waded"
+
+	+" into the carnage wielding the mighty Bone Crusher. The skeletons
+	fell before him like trees and the tide of the battle was turned. By
+	evening the last of the skeletons were being hunted down in the woods
+	and the town of Tenebrae was saved. ~~%However, Lord Elsmil was missing.
+	The Tenebraens began to look for him. They finally found his crushed
+	body on the battle field, but the wonderous Bone Crusher was nowhere to bee seen."
+
+	+"They looked for it for many days and nights, but did not find
+	it. Though several of the searchers found the prints of bony feet
+	in the soft dirt of the western forest. By the looks of the prints, they
+	said, the skeletons were dragging something heavy behind them.  A few
+	of the searchers even say they caught a glimpse of bony white and the
+	glint of light off something gold. ~~%To this day, intrepid treasure
+	hunters continue to look for the hammer called Bone Crusher.");
+	}
+
+	#if French
+	{
+	read("La Saga du Brisos"
+	
+	+"~~Tout au desbut de l'histoire de Pagan, le Titan de l'Air, Lithos,
+	d‚clara que tous ceux qui vivoient sur ses terres luy devoient
+	hommage. Avec force tremblements de terre, il exigea que les
+	habitants de Tenebrae s'inclinent devant luy, sinon il"
+
+	+" d‚moliroit leurs modestes demeures. Elsmil, la Tempeste, intervint,
+	disant: 'Mais Seigneur Lithos, nous sommes sous le gouvernement de
+	Hydros. D'elle nous recevons la pluie pour nos cultures, et le poisson
+	pour nos repas. Nous ne pouvons nous incliner devant toy'.
+	Ces paroles courroucŠrent fortement Pyros et, pour punir le peuple
+	de Tenebrae, il envoya une horde de squelettes mort-vivants 
+	pour les exterminer. Elsmil se rendit alors chez Hydros."
+
+	+" 'Je t'en prie, les citoyens de ta ville sont occis par les larbinus 
+	de ton frŠre, Lithos. Nous avons besoin de ton aide'. Hydros entendit
+	la requeste de sa Tempeste et luy donna un puissant marteau.
+	'Prends ce marteau magique, le Brisos, qui te permettra de vaincre
+	les larbinus de Lithos', dit-elle. Quand Elsmil revint sur le
+	champ de bataille, les choses se pr‚sentoient mal pour les habitants de
+	Tenebrae. Ils se battoient fort bravement, mais les mort-vivants estoient
+	deux fois plus nombreux qu'eux. Esmil laissa alors ‚chapper un
+	puissant rugissement et se jeta dans le carnage, brandissant le Brisos."
+
+	+" Les squelettes tomboient autour de luy comme des arbres abattus et
+	la bataille prit une aultre tournure. Le soir venu, les derniers
+	squelettes furent chass‚s dans les bois et la ville de Tenebrae fut
+	enfin sauve. Mais Esmil restoit introuvable. Tout Tenebrae se mit …
+	sa recherche et ils finirent par retrouver son corps d‚chiquet‚
+	sur le champ de bataille. Le marteau magique avoit disparu."
+
+	+" Durant plusieurs jours et plusieurs nuits, ils le cherchŠrent, mais
+	en vain. Ils virent cependant des traces de pieds ossus dans le sol meuble, 
+	dans la partie Ouest de la forest. D'aprŠs les empreintes, ils purent
+	conclure que les squelettes avoient traisn‚ quelque chose de lourd derriŠre
+	eux. Certains assurent mesme avoir aper‡u des os blanchastres
+	et le scintillement de l'or. A ce jour, les chercheurs de tr‚sor intr‚pides continuent
+	leur queste du marteau magique appel‚ le Brisos.");
+	}
+
+	#if German
+	{
+	read("Die Legende des Knochenschmetterers"
+
+	+"~~Und so geschah es in den frhen Tagen Pagans, daá der Erdtitan Lithos 
+	verkndete, daá alle im Land ihm Ehrerbietung erweisen sollten. Er drohte 
+	den Menschen Tenebraes, er werde ihre H„user mit seinen m„chtigen 
+	Erdbeben vernichten, wenn sie sich nicht vor ihm niederwarfen."
+
+	+" ~'Aber m„chtiger Lithos', sagte der Gezeitenfrst Lord Elsmil, 'wir folgen 
+	der Wassertitanin Hydros. Von ihr erhalten wir den Regen, der unsere Ernte 
+	wachsen l„át und den Fisch, der uns n„hrt. Wir k”nnen uns nicht vor Euch 
+	niederwerfen, wir mssen stattdessen ihr dienen.' Lithos aber zrnte den 
+	Menschen in Tenebrae und er sandte eine ganze Heerschar untoter Skelette aus,"
+	 
+	+" um die Bev”lkerung zu t”ten. Lord Elsmil flehte Hydros um Hilfe an. 'So helft 
+	uns doch, o m„chtige Hydros. Eure Stadt wird von den Heerscharen Eures 
+	Bruders Lithos zerst”rt. Ihr mát uns helfen'. Und Hydros erh”rte das Flehen 
+	ihres Gezeitenfrsten und gab ihm einen m„chtigen Hammer. 'Ich gebe dir 
+	diese Waffe, den Knochenschmetterer. Mit ihm wirst du die untoten Heerscharen 
+	besiegen', sagte sie dem Gezeitenfrsten. Als Lord Elsmil sich am 
+	Schlachtplatz einfand, sah es bel aus fr Tenebrae. Die Bev”lkerung schlug 
+	sich tapfer, aber ihnen standen mehr als doppelt so viele Untote gegenber." 
+	
+	+" Da brllte Lord Elsmil vor Wut auf und warf sich mit seinem 
+	Knochenschmetterer mitten ins Getmmel. Unter der Macht des Hammers 
+	fielen die Skelette wie die Fliegen. Und das Blatt wandte sich. Am Abend jagten 
+	die Bewohner die letzten Skelette aus dem Wald und die Stadt war gerettet. 
+	Aber von Lord Elsmil fehlte jede Spur. Endlich fanden die Tenebraer seine 
+	verstmmelte Leiche auf dem Schlachtfeld, aber der m„chtige Knochenschmetterer 
+	war nirgends zu sehen." 
+	
+	+" Viele Tage und N„chte forschten sie nach der wundersamen Waffe, aber ihre Suche 
+	blieb erfolglos. Einige M„nner stieáen dabei im weichen Waldboden auf Abdrcke von Knochenfáen 
+	westlich von Tenebrae. Nach den Spuren zu urteilen, hatten die Skelette 
+	einen schweren Gegenstand mit sich geschleppt. Ein Mann erz„hlte sogar, er h„tte in der 
+	Ferne eine weiáe, knochige Gestalt und etwas Goldenes gesehen. Bis auf den 
+	heutigen Tag forschen Schatzsucher nach dem legend„ren Hammer, der seinerzeit 
+	Tenebrae vor dem sicheren Untergang bewahrte.");
+	}
+}
+
+process BookMan::sgBook2()
+{
+	#if English
+	{
+	read("Enemies of Tenebrae~
+	compiled by The Royal Seneschal,~
+	His Eminence, Salkind"
+	+" The following is a list of those citizens and former
+	citizens of Tenebrae who are suspected to be involved in
+	dealings or activities that may be construed to be
+	dangerous or otherwise damaging to the City/State of Tenebrae."
+	+"
+	~~% Aramina
+	~% Darion
+	~% Devon
+	~% Kilandra
+	~% Korick
+	~% Orlok
+	~% Rhian
+	~% Gwilliam
+	~% Corinth
+	~% Torwin
+	~% Cyrrus
+
+
+	~~These people are to be considered dangerous and will be
+	constantly watched for suspicious activity.");
+	}
+	#if French
+	{
+	read("Les Ennemis de Tenebrae~
+	compil‚ par le S‚n‚chal Royal,~
+	Son Eminence, Salkind"
+	+" Cy-dessous est mentionn‚e la liste des citoyens et anciens citoyens
+	de Tenebrae qui sont suspect‚s d'avoir pris part dans des activit‚s ou des
+	conversations risquant de mettre en cause la paix ou la s‚curit‚ de
+	la ville ou l'estat de Tenebrae."
+	+"
+	~~% Aramina
+	~% Darion
+	~% Devon
+	~% Kilandra
+	~% Korick
+	~% Orlok
+	~% Rhian
+	~% Gwilliam
+	~% Corinth
+	~% Torwin
+	~% Cyrrus
+
+	~~Ces personnes sont consid‚r‚es comme dangereuses et seront surveill‚es
+	 en permanence.");
+	}
+
+	#if German
+	{
+	read("Die Feinde Tenebraes~
+	verfaát von dem K”niglichen Majordomus,~
+	Seine Eminenz Salkind~~"
+	+"Diese Bewohner und ehemaligen Bewohner Tenebraes werden verd„chtigt, 
+	Besch„ftigungen nachzugehen, die gef„hrlich oder hochverr„terisch sind 
+	und sich gegen die Stadt Tenebrae und seine Gezeitenfrstin richten."
+	+"
+	~~% Aramina
+	~% Darion
+	~% Devon
+	~% Kilandra
+	~% Korick
+	~% Orlok
+	~% Rhian
+	~% Gwilliam
+	~% Corinth
+	~% Torwin
+	~% Cyrrus
+	
+	~~Diese Verbrecher sind gef„hrlich und wom”glich bewaffnet. Sie stehen 
+	unter st„ndiger šberwachung.");
+	}
+
+}
+process BookMan::sgBook3()
+{
+	#if English
+	{	
+	read("WHAT THE FISH TELL ME"
+	+"
+	~by Kilandra"
+	+"
+	~Oh the fish tell me all sorts of things,
+	~like when there's sun and when there's rain,
+	~They are so nice and very smart,
+	~and bubbles come up when they fart.
+
+	~Oh the fish tell me all sorts of things,
+	~I like to listen to them sing.
+	~They sing of life beneath the sea
+	~But never mention if they pee.
+
+	~Oh the fish tell me all sorts of things,
+	~Like where they are and where they've been.
+	~I guess it all just goes to prove
+	~You can have your friends and eat them too!");
+	}
+	#if German
+	{
+	read("Was Die Fische Mir Erz„hlen"
+	+"
+	~von Kilandra verfaát"
+	+"
+	~~Oh, die Fische erz„hlen mir viel,
+	~wenn es regnet und wenn die Sonne scheint.
+	~Sie singen und ziehen vorbei an meinem Kiel,
+	~und lachen, wenn die alte Hydros greint. 
+
+	~Oh, die Fische erz„hlen mir viel, 
+	~gerne h”re ich ihre Sagen.
+	~Sie singen und ziehen vorbei an meinem Kiel, 
+	~auch wenn vom Steg ich nur noch h”re Wehklagen.
+
+	~Oh, die Fische erz„hlen mir viel, 
+	~viele Tage bin ich bei ihnen gesessen.
+	~Sie singen und ziehen vorbei an meinem Kiel,
+	~Man kann wohl doch Freunde haben und sie essen!");
+	}
+
+	#if French
+	{	
+	read("Ce que me disent les poissons"
+	+"
+	~par Kilandra"
+	+"
+	~Oh les poissons me disent toutes sortes de choses,
+	~Quand il pleut, quand il vente ou bien tempeste,
+	~Ils sont d'un commerce bien agr‚able et me reposent,
+	~Au son des bulles qu'ils font quand ils s'embestent.
+
+	~Oh les poissons me disent toutes sortes de choses,
+	~J'aime aussy les escouter chanter.
+	~Mais ils me taieront leur envie de pleurer.
+	~Car tous leurs discours ont la beaut‚ des roses.
+
+	~Oh les poissons me disent toutes sortes de choses,
+	~O— ils vont, d'o— ils viennent.
+	~Mais hel…s, qu'… cela ne tienne,
+	~Il me faut manger ces doux amis tout comme aultre chose!");
+}
+}
+
+process BookMan::sgBook4()
+{
+	#if English
+	{
+	read("The Spell of Divination
+	~~The divination spell is a most practical spell. It allows the caster
+	to know his exact location, the time of day, the day of the week, and
+	the current month. The Focus necessary for casting this spell resembles
+	a sextant. The spell also has a vocal aspect. The words that must be
+	uttered at the moment of casting are 'In Wis.'");
+	}
+	#if French
+	{
+	read("Le SortilŠge Conscience du Temps
+	~~Le SortilŠge Conscience du Temps est le plus pratique des sorts. 
+	Il permet … celuy qui le jette de savoir exactement o— il se trouve,
+	l'instant de la journ‚e, le jour de la semaine et le mois en cours.
+	Le Substrat n‚cessaire pour jeter ce sort ressemble … un sextant. La voix
+	est aussy … pr‚voir et il faut, au moment de le jeter, dire 'In Wis.'");
+	}
+	#if German
+	{
+	read("Der Zauber 'Wissen des Windes'
+	~~Dieser Zauber ist „uáerst ntzlich und l„át sich auf vielerlei Weise 
+	anwenden. Er erlaubt dem Benutzer, seinen genauen Standort, die Tageszeit, 
+	den Tag der Woche und den derzeitigen Monat zu ermitteln. Das Zaubersymbol, 
+	das fr diese Zauberformel erforderlich ist, „hnelt einem Sextanten. 
+	Um den Zauber erfolgreich durchzufhren, mssen auáerdem die Worte 'In Wis' 
+	gesprochen werden.");
+	}
+}
+
+process BookMan::sgBook5()
+{
+	#if English
+	{
+	read("The Spell of Healing Touch"
+	+"~~This is the least powerful of the healing spells of Stratos and
+	one of the first usually learned by Adepts. The Focus necessary to
+	cast this spell represents a pointing hand. The words that must
+	be uttered at the moment of casting are 'In Mani.'");
+	}
+	#if French
+	{
+	read("Le SortilŠge Gu‚rison"
+	+"~~Voicy le sortilŠge de gu‚rison le moins puissant de Stratos, et
+	celuy qu'apprennent en premier les Adeptes. Le Substrat n‚cessaire
+	pour jeter ce sort ressemble … un doigt point‚. Il faut prononcer les
+	paroles suivantes en le jetant: 'In Mani.'");
+	}
+	#if German
+	{
+	read("Der Zauber 'Heilende Hand'"
+	+"~~Dies ist einer der leichtesten von Stratos' Zaubern, vermag aber 
+	auch am wenigsten auszurichten. Fr gew”hnlich erlernen Schler diese 
+	Zauberformel schon sehr frh in ihrer Ausbildung. Das erforderliche 
+	Zaubersymbol „hnelt einer deutenden Hand. Um die gewnschte Wirkung 
+	erzielen zu k”nnen, mssen auáerdem die Worte 'In Mani' ausgesprochen 
+	werden.");
+	}
+
+}
+
+process BookMan::sgBook6()
+{
+	#if English
+	{
+	read("The spell of Aerial Servant"
+	+"~~One of the more impressive of the Theurgic spells, Aerial Servant
+	is also one of the most versatile. Upon casting of the Aerial Servant
+	spell, a whirling being of Air is called into existance. This being
+	will accept the Theurgist's directives to manipulate or move any
+	object. One of the more interesting aspects of this spell is that the
+	Aerial Servant is able to move objects through another solid object,
+	such as a door or wall. The Focus used to represent this spell
+	represents an Arm Band and the casting words are 'Kal Ort Xen.'");
+	}
+	#if French
+	{
+	read("Le SortilŠge Serviteur A‚rien"
+	+"~~L'un des sortilŠges Theurgiques et aussy le plus versatile, est
+	le Serviteur A‚rien. En jetant ce sort, on cr‚e un estre fait d'air qui acceptera
+	les ordres du Theurgiste pour manipuler ou faire bouger tout objet.
+	L'un des aspects les plus int‚ressants de ce sortilŠge est qu'il permet de
+	faire passer un objet … travers un aultre objet solide,
+	comme une porte ou un mur. Le Substrat utilis‚ pour repr‚senter
+	ce sort est un Bracelet et les incantations sont 'Kal Ort Xen.'");
+	}
+	#if German
+	{
+	read("Der Zauber 'Schwebender Diener'"
+	+"~~'Schwebender Diener' ist nicht nur einer der beeindruckendsten 
+	theurgischen Zaubersprche, sondern auch einer der vielseitigsten. Mit 
+	diesem Zauber l„át sich ein wirbelnde, luftige Gestalt heraufbeschw”ren. 
+	Dieser 'Diener' kann dann auf Befehl des Magiers jeden beliebigen 
+	Gegenstand manipulieren oder bewegen. Er ist sogar in der 
+	Lage, Gegenst„nde durch Tren oder W„nde hindurch zu bewegen. Um diesen 
+	Zauber auszul”sen, muá man ein Zaubersymbol in Form eines Armbands mit sich 
+	tragen und die Worte 'Kal Ort Xen' aussprechen.");
+}
+}
+process BookMan::sgBook7()
+{
+	#if English
+	{
+	read("The Spell of Reveal"
+	+"~~This spell is a dissipation spell, meaning that it will actually
+	dispell another type of magic, specifically the spell of invisibility.
+	When the Theurgist casts this spell, a wave of energy moves away from
+	the caster in ever increasing concentric circles. These energy waves
+	will dispell all forms of invisibility. The Focus used for this spell
+	is an open eye and the casting words are 'Ort Lor.'");
+	}
+	#if French
+	{
+	read("Le SortilŠge Annule Invisibilit‚"
+	+"~~Ce sort est un sort de dissipation, c'est … dire qu'il permet
+	de contrecarrer un aultre type de sort, et en particulier le
+	sortilŠge d'invisibilit‚.
+	Quand un Theurgiste jette ce sort, un courant d'‚nergie en cercles
+	de plus en plus grands s'estend autour de celuy qui jette le sort,
+	les ondes faisant apparaistre sur leur parcours toutes formes jusque l…
+	invisibles. Le Substrat utilis‚ pour ce sort est un oeil ouvert
+	et les paroles d'incantation sont 'Ort Lor.'");
+	}
+	#if German
+	{
+	read("Der Zauber 'Energie der Enthllung'"
+	+"~~Dieser Zauber kann dazu dienen, andere magische Kr„fte in der 
+	Umgebung des Magiers aufzuheben. Das gilt vor allem fr alle 
+	Unsichtbarkeitszauber. Nach Aussprechen dieser Formel breiten sich 
+	konzentrische Energiewellen um den Theurgisten aus. Diese Energie hebt alle 
+	Unsichtbarkeitszauber in der unmittelbaren Umgebung auf. Um die 
+	gewnschte Wirkung erzielen zu k”nnen, muá man das Zaubersymbols des 
+	offenen Auges bei sich tragen und die Worte 'Ort Lor' aussprechen.");
+	} 
+}
+
+process BookMan::sgBook8()
+{
+#if English
+{	
+read("The Spell of Restoration"
+	+"~~One of the most powerful spells available to the Theurgist, this
+	spell restores the recipient to full health, providing the recipient
+	is still alive upon the beginning of the casting. It will
+	eliminate wounds and maimings and will cure disease. This spell is
+	one that the Theurgist will find in great demand. The Focus for this
+	spell resembles an open hand. The words which must be uttered upon
+	casting the spell are 'Vas In Mani.'");
+	}
+#if German
+{
+read("Der Zauber 'Gnadenvolle Genesung'"
+	+"~~Diese Formel ist einer der m„chtigsten Zauber, die ein Theurgist 
+	aussprechen kann. Gnadenvolle Genesung erlaubt dem Magier, seinen Patienten 
+	v”llig gesunden zu lassen. Der Zauber heilt alle Wunden, Verstmmelungen 
+	und Krankheiten. Voraussetzung ist jedoch, daá der Patient zu Beginn der 
+	Zeremonie noch am Leben ist. Um diesen Zauber erfolgreich ausfhren zu 
+	k”nnen, muá man ein Zaubersymbol der offenen Hand mit sich tragen 
+	und die Worte 'Vas In Mani' aussprechen.");
+	}
+
+#if French
+{	
+read("Le SortilŠge Restauration"
+	+"~~L'un des sorts les plus puissants … la disposition
+	des Theurgistes. Il permet de redonner pleine sant‚ … son
+	b‚n‚ficiaire, … condition que celuy-ci soit encore en vie.
+	Il gu‚rira les blessures et les maladies et est fort demand‚.
+	Le Substrat pour ce sort ressemble … une main ouverte, et il faut 
+	prononcer les paroles suivantes: 'Vas In Mani.'");
+	}
+}
+
+process BookMan::sgBook9()
+{
+	#if English
+	{
+	read("The Spell of Fade From Sight"
+	+"~~This spell is another very versatile spell as it allows the caster
+	to become invisible to the sight of nearly all mortal beings. The
+	Focus representing this spell is a closed eye. The words to be spoken
+	during the casting are 'Quas An Lor.'");
+	}
+	#if German
+	{
+	read("Der Zauber 'V”lliges Verschwinden'"
+	+"~~Dieser Zauber erlaubt dem Theurgisten, fr fast alle sterblichen Wesen 
+	v”llig unsichtbar zu werden. Das Zaubersymbol fr diese Beschw”rung „hnelt 
+	einem geschlossenen Auge. Um den Erfolg dieses Zaubers zu gew„hrleisten, 
+	mssen die Worte 'Quas An Lor' ausgesprochen werden.'");
+	}
+	#if French
+	{
+	read("Le SortilŠge Invisibilit‚"
+	+"~~Ce sortilŠge est aussy fort versatile, et permet … celuy qui le
+	jette de devenir invisible de tout estre mortel. Le Substrat
+	repr‚sentant de sort est un Oeil Ferm‚. Il faut dire, en le jetant, 'Quas An Lor.'");
+	}
+}
+
+process BookMan::sgBook10()
+{
+	#if English {
+	read("The spell of Air Walk"
+	+"~~The Air Walk spell is the most highly valued spell a Theurgist can
+	learn, for it is only through the use of this spell that a Theurgist
+	can reach Stratos and hear the Mystic Voice. When this spell is cast,
+	the Theurgist is capable of jumping quite a great distance with the
+	aid of the surrounding air. It is interesting to note, that the first
+	time a Theurgist experiences this spell is when he has completed the
+	Tests and seeks Stratos for the first time. If Stratos is pleased
+	with the Theurgist, then she will grant the spell without the use
+	of a Focus. From that point on, however, the Theurgist must have the
+	Focus representing wings to cast this spell. Words of power must
+	also be spoken. For this spell those words are 'Vas Hur Por.'");
+	}
+	#if German {
+	read("Der Zauber 'Luftschritt'"
+	+"~~Luftschritt ist fr jeden Theurgisten der wichtigste 
+	Zauber von allen, denn nur mit Hilfe dieser Beschw”rung kann man Stratos 
+	erreichen und die Mystische Stimme vernehmen. Die ihn umgebende 
+	Luft hilft dem Theurgisten dabei, riesige Sprnge zu machen. Ein Schler 
+	wird die Wirkung dieses Zaubers zum ersten Mal verspren, nachdem er 
+	seine Prfungen bestanden hat und Stratos aufsucht. Wenn Stratos seine 
+	Leistungen billigt, wird sie ihm die Wirkung der Luftschrittbeschw”rung 
+	auch ohne ein Zaubersymbol gew„hren. Danach muá der Theurgist jedoch ein 
+	Flgelsymbol mit sich tragen und die Worte 'Vas Hur Por' aussprechen.");
+	} 
+	#if French {
+	read("Le SortilŠge Giga-Saut"
+	+"~~Le SortilŠge Giga-Saut est le sort qui a la plus grande valeur
+	pour un Theurgiste, car ce n'est qu'… travers ce sortilŠge qu'il pourra
+	communiquer avec Stratos et entendre la Voix Mystique. AprŠs avoir
+	jet‚ ce sort, le Theurgiste peut sauter sur une grande distance. Il est
+	int‚ressant de noter que le Theurgiste fait ce saut pour la premiŠre
+	fois quand il r‚ussit les Tests et cherche Stratos. Si Stratos est
+	satisfaite du Theurgiste, elle luy permet de se servir
+	de ce sort sans faire appel au Substrat. Par la suite, cependant, le
+	Theurgiste a besoin de ce Substrat en forme d'Ailes pour jeter le sort.
+	Il doit aussy prononcer 'Vas Hur Por.'");
+	}
+}
+
+process BookMan::sgBook11()
+{
+	#if English
+	{
+	read("The Spell of Hear Truth"
+	+"~~A useful spell for any number of reasons. This spell allows the
+	Theurgist to hear both what the speaker is saying and what the truth
+	is. If the speaker is, indeed, speaking untruthfully, the truth will
+	come to the caster as if carried on a breeze. The Focus for this
+	spell resembles a chain. The words spoken upon casting are 'An Quas
+	Lor.'");
+	}
+	#if German
+	{
+	read("Der Zauber 'Wahre Worte'"
+	+"~~Diese Beschw”rung kann in vielen Situationen von groáem Nutzen sein, 
+	denn sie erlaubt dem Theurgisten, sowohl die Wahrheit zu h”ren als auch 
+	das, was der Sprecher tats„chlich sagt. Wenn er lgt, werden dem Magier 
+	die wahren Worte zugeflstert. Um diesen Zauber auszul”sen, muá man 
+	ein Kettensymbol bei sich tragen und die Worte 'An Quas Lor' aussprechen.");
+	} 
+
+	#if French
+	{
+	read("Le SortilŠge D‚cŠle V‚rit‚"
+	+"~~Un sort fort utile pour bien des raisons. Grace … ce sort,
+	le Theurgiste entend aussy bien ce qui est dit que ce qui est vrai.
+	En cas de mensonge, la v‚rit‚ apparaist comme port‚e par la brise.
+	Le Substrat pour ce sort ressemble … une Chaisne. Et il faut
+	dire: 'An Quas Lor.'");
+	}
+}
+
+process BookMan::sgBook12()
+{
+	#if English
+	{
+	read("The spell of Intervention"
+	+"~~A powerful spell, upon casting the spell of Intervention, the
+	Theurgist calls into being a wall of Air that blocks all damaging
+	forces. While this spell will protect the caster from all blows
+	and striking attacks, it will not protect the caster from
+	immersion in lava or drowning in Water. The Focus for this spell
+	resembles a fist and the words used are 'In Sanct An Jux.'");
+	}
+	#if German
+	{
+	read("Der Zauber 'Windwall'"
+	+"~~Dieser m„chtige Zauber l„át zwischen dem Theurgisten und seinen 
+	Angreifern eine magische, unsichtbare Wand entstehen, die ihn vor 
+	allem Schaden bewahrt. Der Windwall ist jedoch nicht in der Lage, den 
+	Magier vor dem Ertrinken oder vor Lava zu schtzen. Um diesen Zauber 
+	erfolgreich durchfhren zu k”nnen, trage man ein Zaubersymbol einer 
+	Faust bei sich und spreche die Worte 'In Sanct An Jux'.");
+	}
+	#if French
+	{
+	read("Le SortilŠge Mur d'Air"
+	+"~~Un sortilŠge puissant qui permet au Theurgiste de faire appel …
+	un mur d'air qui le protŠge de toutes les forces destructrices.
+	Il ne peut rien, cependant, contre la lave, ni l'eau qui risquent de
+	l'engloutir ou le noyer. Le Substrat pour ce sort ressemble … un Poing
+	et il faut dire 'In Sanct An Jux.'");
+	}
+}
+
+process BookMan::sgBook13()
+{
+	#if English
+	{
+	read("The Spell of Resurrection"
+	+"~~As told to Cyrrus by Stellos"
+	+"~~ In all my time as the leader of the Theurgists on Argentrock
+	Isle, I hold dearest to my heart the time I received the Spell
+	of Resurrection from the Mystic Voice that is our dear Stratos."
+	+"%I was no more than 60 when Kalen brought the body of his
+	beloved to me. She had been dead for a number of days, and I knew
+	there was not much I could do. However, I saw the love that burned in
+	Kalen's eyes and knew I had to try. I took the body of the woman to
+	Windy Point and begged Stratos to return the spirit to the body.
+	Stratos told me that the price would be high. I agreed to it, without
+	hesitation. At that point began the journey I will never forget."
+	+"~% My spirit left my body and I began to fly. Oh, the glorious freedom, to
+	fly above the clouds and soar the open skies. As I flew higher, the
+	winds became stronger, soon it was a battle just to continue, but I
+	struggled onward."
+	+"~% Suddenly, before my eyes there was a shimmering cloud.
+	It was on the edge of the sky and the Ethereal Void. Undaunted, I flew
+	into the cloud, and what did I behold but a brilliant ball of fire and
+	light. Stratos whispered to me that I beheld what hadn't been seen by
+	a Pagan in years...something called the sun."
+	+"~% At that moment, my body back on the ground opened its mouth
+	and breathed the Breath of Life into the body of Keldan's betrothed."
+	+"~% The next thing I new, I was surrounded by darkness and back in my
+	body. I asked what had happened and why it was so dark. At that, Keldan
+	began to weep. It was then I knew that in viewing this wonderful sun,
+	I had lost my sight. But I know it was a small price to pay, for
+	Keldan's betrothed put her soft hand in mine and thanked
+	me for returning her to Keldan. This is a price I would ask no other
+	to pay and therefore, there is no focus or words of power for it.");
+	}
+	#if German
+	{
+	read("Der Zauber 'Wiedererweckung'"
+	+"~~ Stellos' Worte, von Cyrrus getreulich niedergeschrieben"
+	+"~~ In meinen vielen Jahren als Oberhaupt der Theurgisten hier auf der 
+	Insel Silberfels denke ich immer noch am liebsten an den Augenblick 
+	zurck, als ich den Wiedererweckungszauber von der Mystischen Stimme, 
+	unserer heiligen Stratos, erhielt."
+	+" Ich war erst 60 Jahre alt, als Kalen die Leiche seiner Geliebten 
+	zu mir brachte. Sie war schon vor mehreren Tagen verstorben, und ich 
+	wuáte, daá ich nichts mehr fr ihn tun konnte. Aber ich sah das Feuer 
+	der Liebe in seinen Augen und ich wuáte, daá ich es zumindest versuchen 
+	muáte. Ich ging mit der Leiche zur Sturmspitze und flehte Stratos an, 
+	die Seele in den K”rper zurckkehren zu lassen. Stratos warnte mich, 
+	daá ich dafr ein groáes Opfer erbringen máte. Ich erkl„rte mich sofort 
+	einverstanden. Und dann begann die Reise, die ich nie vergessen werde."
+	+"~Meine Seele verlieá meinen K”rper und ich begann zu fliegen. Oh, ich 
+	kann nicht beschreiben, was das fr ein Gefhl war. Ich schwebte ber den 
+	Wolken. Aber als ich h”her in den Himmel stieg, wurden die Winde st„rker, 
+	und bald war es fast unm”glich, weiterzufliegen. Und doch gab ich nicht 
+	auf, sondern k„mpfte mich mhsam vorw„rts."
+	+"~Pl”tzlich erschien vor meinen Augen eine schimmernde Wolke. Ich war 
+	am Ende des Himmels und der „therischen Leere angelangt. Ich flog geradeaus 
+	in die Wolke und sah einen gleiáenden Feuerball, so hell, daá ich nicht 
+	einmal hinsehen konnte. Stratos flsterte mir zu, daá dies etwas war, was 
+	die Paganen seit langer Zeit nicht mehr gesehen hatten... sie nannte es die 
+	Sonne."
+	+"~In diesem Augenblick ”ffnete sich der Mund meines K”rpers, den ich 
+	auf der Erde zurckgelassen hatte und atmete den Lebensodem in die Leiche 
+	der Geliebten Kalens."
+	+"~Und dann war meine Seele pl”tzlich in meinen K”rper zurckgekehrt. Ich 
+	befand mich in v”lliger Dunkelheit. Ich fragte Stratos, was geschehen sei 
+	und weshalb ich nichts sehen konnte. Keldan begann zu weinen und da wuáte ich, 
+	daá der Anblick der wundervollen Sonne mir mein Augenlicht genommen hatte. 
+	Aber ich wuáte, daá ich gerne bereit war, diesen Preis zu zahlen, denn 
+	Keldan legte ihre sanfte Hand in meine und dankte mir. Ich erwarte von keinem 
+	anderen Theurgisten, ein solches Opfer zu erbringen. Aus diesem Grunde 
+	gibt es auch kein Zaubersymbol und keine magischen Worte fr den 
+	Wiedererweckungszauber.");
+	}
+	#if French
+	{
+	read("Le SortilŠge de R‚surrection"
+	+"~~Racont‚ … Cyrrus par Stellos"
+	+"~~De toute l'espoque o— j'estois le Maistre des Theurgistes 
+	sur L'isle du Roc d'Argent, je me souviendrois toujours avec ‚motion
+	du moment o— j'ai re‡u le SortilŠge de R‚surrection de la
+	Voix Mystique qui n'est aultre que nostre chŠre Stratos."
+	+"% Je n'avois point plus de 60 ans quand Kalen m'a apport‚ la despouille
+	de sa bien aim‚e. Elle estoit morte depuis plusieurs jours et je savois que
+	je ne pouvois rien pour la sauver. Mais j'ai vu l'amour qui brusloit
+	dans les yeux de Kalen et me sentois oblig‚ d'essayer. J'ai emport‚
+	le corps de la jeune femme … Zona Ventus et ai pri‚ Stratos de ramener l'esprit
+	dans le corps de la morte. Stratos m'a dit que le prix en seroit eslev‚, mais
+	j'ai accept‚ sans h‚siter. Et ce jour a commenc‚ un voyage que je n'oublieroi jamais."
+	+"~% Mon esprit a quitt‚ mon corps et j'ai commenc‚ … voler. Oh, quelle
+	merveilleuse libert‚. Pouvoir voler au dessus des nuages et foncer dans le
+	ciel infini. En volant plus haut, les vents estoient plus puissants, difficiles
+	… braver. Mais j'ai continu‚ malgr‚ tout."
+	+"~% Soudain, devant mes yeux, il y a eu un nuage brillant de lumiŠre.
+	Il se trouvoit au bord du ciel et du N‚ant Esternel. Sans h‚siter. j'ai
+	fonc‚ dans le nuage et vu devant moy une esnorme boule brillante
+	de feu et de lumiŠre. Stratos m'a confi‚ que je voyois ce qu'aucun habitant de
+	Pagan n'avoit vu depuis des ann‚es, et qui s'appeloit... le soleil."
+	+"~% Au mesme instant, mon corps rest‚ sur terre a ouvert la bouche et
+	a insuffl‚ le Souffle du Vent dans le corps de la belle de Kelden."
+	+"~% Puis je me suis retrouv‚ dans mon propre corps, plong‚ dans le noir.
+	J'ai demand‚ ce qui c'estoit pass‚, et pourquoi il faisait aussy sombre.
+	Keldan s'est mis … pleurer. Alors j'ai compris qu'aprŠs avoir vu ce
+	merveilleux soleil, j'estois devenu aveugle. Mais ce n'estoit point cher payer
+	pour ramener cette demoiselle … la vie. Cependant, je ne demanderoi …
+	personne de faire un tel sacrifice. Il n'y a donc point de Substrat et de paroles
+	magiques pour ce sortilŠge.");
+	}
+}
+
+
+process BookMan::sgBook14()
+{	
+	#if English
+	{
+	read("My dearest Prevan,"
+		+"~~%I regret to tell you that I will not be home from this
+	visit as soon as I had thought. My healing services
+	will be needed here for some time as a terrible thing has
+	happened to this small village. Two nights ago, as I had just
+	finished my evening rituals, I heard a horrible commotion from
+	the town square. I ran out to see what the trouble was, only to find
+	the town overrun by trolls. "
+		+"~~%The trolls had come in search of their favorite meal, human
+	children. From house to house they went, ripping doors off
+	and brushing aside the men as if they were no more than flies.
+	Mothers wailed as babes were torn from their breasts and fathers
+	cried in anguish as one by one their children were eaten alive. The
+	bloody procession went on and on, and I fear the screams
+	and sobs will ring in my darkest dreams forever."
+		+"~~%And then, a miracle occured. From the final house, came not
+	a cry of torment, but one of victory. We raced down the street
+	to the house. We found the inside strewn with the bodies of the trolls
+	and there in the middle stood Nehdra, a young woman who had just
+	given birth a few days before. She had her newborn clutched in one
+	arm, in the other was a magnificent golden sword. She told us that"
+
+	+"as the trolls burst in, she had grabbed the only weapon she had, a
+	knitting needle, and had cried out to Stratos to protect her child.
+	Instantly, in answer to her plea, the great Stratos turned the needle
+	into a magnificent sword. She said the sword fairly danced in her
+	hand, slaying the trolls left and right until none were left alive."
+
+	+"~~%While I can find some solace in the miracle Stratos performed,
+	I am afraid the task ahead of me is almost overwhelming. I do what
+	I can to ease the hurts, but wounds of the mind Stratos gives
+	no power to heal. I will stay until I have done all I can, then I will
+	carry the sword, now called 'Nehdra's Needle' to Argentrock Isle.
+	There I will prepare a small shrine for it in the catacombs beneath
+	the monastery."
+	+"~~%I do miss you, my love, and ask that you watch over
+	our dear little Stellos until I can return. It is sad his mother
+	must be away from him so soon after his birth, but I must serve where
+	I am needed. I am sure you understand."
+
+	+"~~ All my love,"
+	+"~ Veras");
+	}
+	#if French
+	{
+	read("Mon bien cher Prevan,"
+		+"~~Je suis d‚sol‚e de te dire que je ne vais estre de retour … la
+		maison aussitost que pr‚vu. Ils auront besoin de mes soins
+		icy car un terrible malheur est arriv‚ … ce petit village.
+		Il y a deux nuits, je venois juste de terminer mes rites quand
+		j'ai entendu des cris provenant de la place du village. Je suis
+		sortie en courant pour voir ce qui se passoit. La ville estoit
+		envahie de Trolls."
+		+"~~Les Trolls estoient venus pour qu‚rir leur repas favori, des enfants.
+		Ils couroient de maison en maison, arrachant les portes, repoussant les
+		hommes comme s'ils n'estoient que de vulgaires mouches.
+		Les mŠres g‚missoient tandis qu'ils leur arrachoient leurs
+		nourrissons et les pŠres hurloient d'horreur en voyant leurs enfants
+		d‚vor‚s vivants. La procession sanglante sembloit durer une ‚ternit‚,
+		et je crains que les cris et les pleurs hanteront mes resves … jamais."
+		+"~~Puis il y eut un miracle. De la derniŠre maison n'‚chappa point
+		un cri de lamentation, mais de victoire. Nous nous pr‚cipitasmes tous vers
+		la maison. L'int‚rieur estoit jonch‚ de cadavres de Trolls, et au milieu 
+		d'eux, se tenoit Nehdra, une jeune femme qui avoit donn‚ naissance … un 
+		b‚b‚ depuis peu. D'un bras, elle le tenoit serr‚ contre elle. De l'aultre,
+		elle brandissoit une magnifique esp‚e d'or. Elle nous expliqua"
+
+		+"que lorsque les Trolls estoient entr‚s, elle avoit saisi la premiŠre arme
+		qui s'estoit trouv‚e … sa port‚e. Elle avoit suppli‚ Stratos de prot‚ger
+		son enfant. Imm‚diatement, en response … sa priŠre, la grande Stratos
+		avoit transform‚ son aiguille en une superbe esp‚e en or. Elle raconta que
+		son esp‚e dansoit litt‚ralement entre ses mains, tuant tous les Trolls
+		qui s'en approchoient, jusqu'au dernier."
+		+"~~Tout en trouvant l'intervention de Stratos d'un grand
+		resconfort, je suis affol‚e … l'id‚e du travail qu'il me reste
+		… accomplir icy. Je fais tout mon possible pour adoucir les maux, mais
+		Stratos ne me donne point le pouvoir de gu‚rir les peines de l'asme.
+		Je resteroi le temps qu'il faudra pour aider tout le monde puis je porteroi
+		l'esp‚e maintenant surnom‚e l'Aiguille de Nehdra … l'Isle du Roc d'Argent.
+		L…, je luy construiroi un petit autel dans les catacombes, sous le monastŠre."
+		+"~~Tu me manques beaucoup, mon amour, et je te prie de bien veiller
+		sur nostre petit Stellos jusqu'… mon retour. Il est bien triste que sa mŠre
+		doive s'absenter aussy tost aprŠs sa naissance, mais j'ai une mission
+		… accomplir et ils ont besoin de moy. Je suis certaine que tu comprendras."
+
+	+"~~ Avec tout mon amour,"
+	+"~ Veras");
+	}
+	
+	#if German
+	{
+	read("Mein liebster Prevan,"
+		+"~~Ich muá dir leider mitteilen, daá ich nicht so bald nach Hause 
+		zurckkehren kann wie zun„chst erwartet. Es ist etwas Schreckliches in 
+		diesem kleinen Dorf geschehen und meine Heildienste werden wohl noch 
+		einige Zeit lang ben”tigt werden. Vorgestern abend, als ich gerade 
+		meine abendlichen Zeremonien beendet hatte, h”rte ich pl”tzlich ein 
+		groáes Geschrei auf dem Dorfplatz. Als ich aus dem Haus rannte, um 
+		nachzusehen, was geschehen war, sah ich, daá das Dorf von Trollen 
+		nur so wimmelte."
+		+"~~Sie waren gekommen, um nach ihrer Leibspeise zu suchen. Es gibt nichts, 
+		was Trolle so gerne essen wie Menschenkinder. Sie gingen von Haus zu Haus, 
+		brachen die Tren nieder und warfen selbst die st„rksten M„nner zu Boden, 
+		als seien sie nicht viel mehr als Fliegen. Mtter kreischten, als ihnen 
+		ihre Kinder aus den Armen gerissen wurden und die V„ter heulten vor Schmerz, 
+		als ihre Kleinen, eines nach dem anderen, bei lebendigem Leibe von diesen 
+		Bestien verspeist wurden. Es schien, als wrde dieser blutige Alptraum nie 
+		enden, und ich frchte, daá ich die Schreie nie vergessen werde."
+
+		+"~~Und dann geschah ein Wunder. Aus dem letzten Haus h”rten wir keinen 
+		Schmerzensschrei, sondern Triumphgeheul. Wir rannten die Straáe hinunter. 
+		Als wir in das Haus traten, sahen wir, daá der Boden von Trolleichen bers„t 
+		war. Mitten im Zimmer stand Nehdra, eine junge Frau, deren S„ugling erst ein 
+		paar Tage alt war. In einem Arm hielt sie das Neugeborene fest an sich, in 
+		der anderen Hand schwang sie ein wunderbares goldenes Schwert. Sie erz„hlte uns, "
+		
+		+"daá sie nach einer Stricknadel gegriffen hatte, um die Trolle abzuwehren. Sie 
+		hatte die m„chtige Stratos um Hilfe angerufen und sie angefleht, das Leben 
+		ihres Kindes zu retten. Stratos hatte die kleine Stricknadel auf der Stelle in 
+		die m„chtige Waffe verwandelt, die sie jetzt in der Hand hielt. Sie erz„hlte 
+		uns, daá das Schwert in ihrer Hand zu tanzen schien. Die angreifenden Trolle 
+		waren allesamt tot zu Boden gefallen."
+		+"~~Das Wunder, das Stratos hier gewirkt hat, tr”stet mich zwar, aber ich 
+		frchte, daá meine Aufgabe sehr schwer sein wird. Ich kann K”rper heilen, 
+		aber Stratos hat mir keine Macht gegeben, die Wunden der Seele zu heilen. 
+		Ich werde hierbleiben, solange ich noch irgendwie helfen kann. Dann werde ich 
+		das Schwert, das alle hier 'Nehdras Nadel' nennen, nach Silberfels bringen. 
+		Dort werde ich einen kleinen Schrein in den Katakomben unter dem Kloster 
+		errichten lassen, um diese wunderbare Waffe dort zu verwahren."
+		+"~~Du fehlst mir sehr, mein Liebster. Achte auf unseren lieben kleinen 
+		Stellos, bis ich zurckkehren kann. Es bedrckt mich, daá er so bald nach 
+		seiner Geburt von seiner Mutter getrennt sein muá, aber meine Pflicht ruft 
+		mich. Ich weiá, daá du das verstehen kannst."
+		
+		+"~~ Auf ewig Deine"
+		+"~ Vera");    
+	}
+}
+
+
+
+process BookMan::sgBook15()
+{
+	#if English
+	{
+		read("THE CHRONICLE OF PAGAN"
+		+"~~A treatise on the Glorious History of this Foremost Society"
+		+"~"
+		+"~There is little in the world more refreshing to me than knowledge.
+		I remember in my youth hearing tales of legendary times, unexplored
+		places and fantastic beasts. I constantly pestered my parents and
+		instructors with an endless number of questions. How does this work?
+		Why did they act in such a manner? Where can I find these plants? My
+		thirst for information was -- nay, still is -- insatiable. I spent"
+		+" hours at a time investigating all I could about my surroundings.
+		~~Unfortunately, as I realized early in life, I lacked much in
+		the way of physical prowess, making exploration difficult. Imagine
+		my pleasure when I discovered that not only did life itself teach me
+		things great and wonderous, but the myriad ancient tomes could
+		offer nearly as much. It was then that I elected to dedicate this"
+		+" humble life to filling my mind and library with all the knowledge
+		I could. Thus, I humbly add these words to the collection of
+		wisdom that already fills the multitude of bookshelves throughout
+		the land. I hope my work may someday imbue curiosity into the
+		hearts of others.");
+	}
+
+	#if French
+	{
+		read("LES CHRONIQUES DE PAGAN"
+		+"~~Un traist‚ sur l'Histoire Glorieuse de cette Soci‚t‚"
+		+"~"
+		+"~Il n'y a rien au monde qui me satisfasse autant que le savoir.
+		Lors de mon enfance, je me souviens avoir entendu moultes
+		l‚gendes concernant des bestes fantastiques et des contr‚es inexplor‚es.
+		Sans cesse j'attaquois mes parents et mes tuteurs avec d'interminables
+		questions. Comment cela fonctionne-t-il? Pourquoi ont-ils fait cela
+		de cette maniŠre? O— puis-je trouver ces plantes?. Bref, j'estois
+		insatiable! Et je le suis encore."
+		+" Il m'arrive de passer des heurs … explorer mon voisinage.
+		~~Malheureusement, comme j'ai pu m'en rendre compte dŠs mon plus jeune ƒge,
+		mon physique n'est point … la hauteur de mes ambitions. Cela rend mes
+		explorations plus difficiles. Par chance, j'ai eu le plaisir
+		inimaginable de descouvrir que les anciens manuscripts contiennent
+		des miriades d'informations d'un accŠs on ne peut plus ais‚."
+		+" C'est pourquoi j'ai consacr‚ ma vie non seulement … estudier ces ouvrages, mais 
+		aussy … en escrire. J'ai l'espoir que mon humble savoir et mes escrits
+		sauront r‚veiller dans le coeur des g‚n‚rations … venir la mesme soif du savoir
+		qui a brusl‚ dans le mien.");
+	}
+
+	#if German
+	{
+		read("DIE CHRONIK PAGANS"
+		+"~~Eine Abhandlung ber die wunderbare Geschichte dieser erlauchten Gesellschaft"
+		+"~"
+		+"~Das Wissen ist eines der wichtigsten Tugenden dieser Welt. Schon 
+		in meiner Jugend war ich von unendlichem Wissensdurst erfllt. Ich 
+		versuchte st„ndig mehr ber l„ngst vergangene Zeiten, geheimnisvolle 
+		L„nder und Ungeheuer zu erfahren. Ich lag meinen Eltern und Lehrern 
+		immer mit neuen Fragen in den Ohren. Wie funktioniert das? Weshalb 
+		ist das so geschehen? Wo kann ich diese Pflanzen finden? Mein Wissensdurst 
+		war, wie schon gesagt, kaum zu stillen. Ich verbrachte unz„hlige Stunden 
+		damit, meine Umgebung zu erkunden."
+		+"~~Es wurde mir jedoch schon frh bewuát, daá meine k”rperliche 
+		Verfassung nicht sehr gut war. Ich neigte zu Schw„cheanf„llen, was 
+		Abenteuerreisen fast unm”glich machte. Ihr k”nnt Euch gut vorstellen, 
+		wie groá meine Freude war, als ich feststellte, daá ich fast 
+		ebenso viel aus den unz„hligen alten Bchern lernen konnte. Damals 
+		entschloá ich mich dazu, sowohl meinen eigenen Verstand als auch diese 
+		Bibliothek mit Wissen zu erfllen."
+		+"~Aus diesem Grund ist mein bescheidener Wunsch, diese Zeilen neben die 
+		unz„hligen Bcher dieser Bibliothek zu stellen. Ich m”chte meine 
+		Neugier an andere weitergeben und ihnen zeigen, wieviel uns das 
+		Wissen vermitteln kann." );
+	}
+}
+
+
+
+
+

@@ -1,0 +1,2172 @@
+uses "npc";
+uses "free";
+uses "snddefs";
+uses "flags";
+
+
+npcclass Stellos inherits Npc
+{
+	process use();
+	process look();
+	process schedule(currentTime:Long);
+	process enterFastArea();
+	process leaveFastArea();
+	process cast(ref:Referent);
+	process AvatarStoleSomething(ref:Referent);
+
+	process atMonastery(); 
+	process atHome(); 
+	process randomBarkAtHome(); 
+	process randomBarkAtMonastery(); 
+
+}
+
+
+
+process Stellos::look()
+{
+	if Stellos.isDead()
+	{
+		bark("the body of Stellos \f la despouille de Stellos \g Stellos' Leiche");
+		return;
+	}
+
+	if stellosName and stellosJob 
+	{
+		bark("Stellos the monk \f Stellos le moine \g Der M”nch Stellos");
+		return;
+	}
+	else if stellosName 
+	{
+		bark("Stellos");
+		return;
+	}
+	else if stellosJob 
+	{
+		bark("monk \f moine \g M”nch");
+		return;
+	}
+	else 
+	{
+		bark("man \f homme \g Mann");
+		return;
+	}
+}
+
+
+
+
+process Stellos::schedule(currentTime:Long)
+{
+
+	point : WorldPoint;
+	map : MapNum = MapArgentrockIsle;
+	sched:Number;
+
+	if Stellos.isDead() {
+		return;
+	}
+
+	// If time to go to work, head for the Monastery
+	if (getPeriod() = lastebb) or (getPeriod() = eventide) 
+	{
+		point.x = 18623;
+		point.y = 19199;
+		point.z = 56;
+		sched = at_monastery;
+	}
+
+
+	// if it's nap time, head for home.
+	if (getPeriod() <= threemoons) 
+	{
+		point.x = 21790;
+		point.y = 19818;
+		point.z = 56;
+		sched = at_home;
+	}
+
+	if canSafeTeleport(point,map)
+	{
+		stellosSchedule = sched;
+		safeTeleport(point,map);
+	}
+
+}
+
+
+
+
+process Stellos::enterFastArea()
+{
+
+	if Stellos.isDead()
+	{
+		return;
+	}
+
+	resetRef(referent,PT_PATHFIND);
+	resetRef(referent,PT_ACTIVITY);
+	resetRef(referent,PT_ANIM);
+	resetRef(referent,PT_BARK);
+	
+	if (stellosSchedule = at_home) 
+	{
+		spawn atHome() -> return;
+	}
+	
+	else if (stellosSchedule = at_monastery) 
+	{
+		spawn atMonastery() -> return;
+	}
+}
+
+
+
+process Stellos::leaveFastArea()
+{
+	stellosJustHealed = false;
+
+	killProcess(referent,PT_ACTIVITY);
+	killProcess(referent,PT_PATHFIND);
+	killProcess(referent,PT_ANIM);
+	killProcess(referent,PT_BARK);
+
+	if isDead()
+	{
+		teleport(urandom(10000),urandom(10000),0,0);
+	}
+}
+
+
+
+
+process Stellos::cast(ref:Referent)
+{
+	count:Number;
+	count = 10;
+
+	// TEST TO MAKE SURE THAT THE NPC HAS A TARGET
+	// -------------------------------------------
+	while (not getTarget()) and (count) {
+		wait(1);
+		count--;
+	}
+
+	ref = getTarget();
+
+
+	if ref = Avatar:Referent
+	{
+		resetRef(referent,PT_ACTIVITY);
+		resetRef(referent,PT_PATHFIND);
+		resetRef(referent,PT_ANIM);
+		resetRef(referent,PT_BARK);
+
+		bark("Stratos! Preserve me!
+					\f Stratos! Espargne-moy!
+					\g Stratos! Rette mich!");
+
+		spawn safePlaySFX(MAGIC3,200) -> return;
+		realDoAnim(AS_ENTER_CAST,getDir());
+		realDoAnim(AS_CAST1,getDir());
+		toggleStatus(INVISIBLE);
+		setFrame(getFrame());
+		spawn safePlaySFX( WIND4,100) -> return;
+		realDoAnim(AS_EXIT_CAST,getDir());
+		clrImmortal();
+		setDead();
+		teleport(urandom(10000),urandom(10000),0,0);
+	}
+}
+
+
+
+
+process Stellos::AvatarStoleSomething(ref:Referent)
+{
+	item:Item;
+	item.referent = ref;
+
+	resetRef(referent,PT_ACTIVITY);
+	resetRef(referent,PT_PATHFIND);
+	resetRef(referent,PT_ANIM);
+	resetRef(referent,PT_BARK);
+
+	turnToFace(getDirToItem(Avatar:Referent),false,10);
+	bark("What are you doing there...?
+		\f Eh! Qu'est-ce que tu trafiques, l…-bas...?
+		\g Was macht Ihr denn da...?");
+	wait(120);
+	enterFastArea();
+	return;
+}
+
+
+
+
+
+process Stellos::atMonastery()
+{
+
+	[[PT_ACTIVITY, referent]];
+
+	startup 
+	{
+		pathEgg:Item;
+		counter,counter2:Number;
+		foreach	pathEgg where (type = TypePathMarker) and (quality = 4) within 10 cells of Stellos
+		{
+			counter2 = pathEgg.getFrame();
+		}
+	}
+
+	process
+	{
+		for counter = counter2 to 31 
+		{
+			foreach	pathEgg where (type = TypePathMarker) and (frame = counter)
+			and (quality = 4) within 50 cells of Stellos 
+			{
+				if pathfind(pathEgg.referent,10)
+				{
+					if not somebodyTalking
+					{
+						randomBarkAtMonastery();
+					}
+					else
+					{
+						doAnim(AS_FIDGET,getDir(),NO_ANIM_LIMIT,FALSE);
+						wait(30);
+						doAnim(AS_FIDGET,getDir(),NO_ANIM_LIMIT,FALSE);
+					}
+				}
+				else
+				{
+					wait(500);
+					doAnim(AS_FIDGET,getDir(),NO_ANIM_LIMIT,FALSE);
+				}
+			}
+		}
+
+	counter2 = 0;
+	}
+}
+
+
+process Stellos::randomBarkAtMonastery()
+{
+	[[PT_ACTIVITY, referent]];
+
+	ran:Number;
+
+
+	ran = getDistance(Avatar:Referent, Stellos:Referent);
+
+	if (ran < 200)
+	{
+		ran = urandom(8);
+
+		if ran = 1 
+		{
+			turnToFace(getDirToItem(Avatar:Referent),false,10);
+			bark("Hello? \f Salut? \g Hallo?");
+			doAnim(AS_FIDGET,getDir(),NO_ANIM_LIMIT,FALSE);
+			wait(120);
+		}
+		if ran = 2 
+		{
+			turnToFace(getDirToItem(Avatar:Referent),false,10);
+			bark("Can I help you? \f Puis-je t'aider?
+				\g Womit kann ich Euch helfen?");
+			doAnim(AS_FIDGET,getDir(),NO_ANIM_LIMIT,FALSE);
+			wait(120);
+		}
+		if ran = 3 
+		{
+			bark("Who goes there? \f Qui va l…? \g Wer ist da?");
+			wait(60);
+			bark("I can hear your footsteps! \f Je peux entendre tes pas!
+				\g Ich kann Eure Schritte h”ren!");
+			wait(120);
+		}
+		if ran = 4 
+		{
+			turnToFace(getDirToItem(Avatar:Referent),false,10);
+			doAnim(AS_FIDGET,getDir(),NO_ANIM_LIMIT,FALSE);
+			bark("Do you require my assistance? 
+			\f As-tu besoin de mon assistance?
+			\g Ben”tigt Ihr meine Hilfe?");
+			wait(120);
+			bark("Very well then... \f TrŠs bien, alors...
+				\g Also gut...");
+		}
+	}
+
+	else
+	{
+		ran = urandom(12);
+		turnToFace(urandom(7),0,10);
+
+		if ran = 1 
+		{
+			bark("Where is that Xavier? \f O— est encore ce Xavier?
+				\g Wo steckt dieser Xavier nur?");
+			return;
+		}
+		if ran = 2 
+		{
+			bark("hmmmm... \f Hmmmm... \g Hmmmm...");
+			doAnim(AS_FIDGET,getDir(),NO_ANIM_LIMIT,FALSE);
+			wait(60);
+		}
+		if ran = 3 
+		{
+			bark("No rest for the weary.
+				\f Point de repos pour les braves.
+				\g Nicht einmal die Ersch”pften drfen sich hier ausruhen.");
+		}
+		if ran = 4 
+		{
+			bark("Brrrr! There is a chill in the air.
+			\f Brrr! Il fait frisquet.
+			\g Brrr! Es ist ziemlich kalt heute.");
+			doAnim(AS_EXIT_CAST,getDir(),NO_ANIM_LIMIT,FALSE);
+			wait(60);
+		}
+		if ran = 5 
+		{
+			bark("Perhaps...? \f Peut-estre...? \g Vielleicht...?");
+			doAnim(AS_FIDGET,getDir(),NO_ANIM_LIMIT,FALSE);
+			bark("No, I don't think so... \f Non, je ne le crois point...
+				\g Nein, das glaube ich nicht...");
+		}
+		if ran = 6 
+		{
+			bark("Oh mighty Stratos, forgive my fragility.
+				\f Oh, puissante Stratos, excuse ma fragilit‚.
+				\g Oh, m„chtige Stratos, verzeiht mir meine Gebrechlichkeit...");
+		}
+		if ran = 7 
+		{
+			bark("Oh, my aching bones. \f Oh, mes pauvres os.
+			\g Oh, meine armen Knochen.");
+			doAnim(AS_EXIT_CAST,getDir(),NO_ANIM_LIMIT,FALSE);
+			wait(100);
+		}
+	}
+}
+
+
+process Stellos::atHome()
+{
+
+	[[PT_ACTIVITY, referent]];
+
+	startup 
+	{
+		pathEgg:Item;
+		counter, counter2 :Number;
+
+		if getLastAnimSet() = AS_SIT_DOWN 
+		{
+			doAnim(AS_SIT_UP,getDir(),NO_ANIM_LIMIT,FALSE);
+		}
+		foreach	pathEgg where (type = TypePathMarker) and (quality = 3) within 10 cells of Stellos
+		{
+			counter2 = pathEgg.getFrame();
+		}
+	}
+
+	process
+	{
+		for counter = counter2 to 16
+		{
+			foreach	pathEgg where (type = TypePathMarker) and (frame = counter)
+				and (quality = 3) within 25 cells of Stellos
+				{
+				pathfind(pathEgg.referent,10);
+				if counter = 0
+				{
+					turnToFace(2,0,10);
+					bark("I must meditate! \f Il faut que je mesdite!
+						\g Ich muá meditieren!");
+					doAnim(AS_SIT_DOWN,getDir(),NO_ANIM_LIMIT,FALSE);
+					wait(2000);
+					doAnim(AS_SIT_UP,getDir(),NO_ANIM_LIMIT,FALSE);
+					bark("I feel refreshed now! \f Je me sens bien mieux, maintenant!
+						\g Jetzt fhle ich mich erfrischt!");
+				}
+				else
+				{
+					if not somebodyTalking
+					{
+						doAnim(AS_STAND,getDir(),NO_ANIM_LIMIT,FALSE);
+						randomBarkAtMonastery();
+					}
+					else
+					{
+						doAnim(AS_FIDGET,getDir(),NO_ANIM_LIMIT,FALSE);
+					}
+				}
+				wait(60 + urandom(100));
+			}
+		}
+	counter2 = 0;
+	}
+}
+
+
+process Stellos::randomBarkAtHome()
+{
+	[[PT_ACTIVITY, referent]];
+
+	ran:Number;
+
+
+	ran = getDistance(Avatar:Referent, Stellos:Referent);
+
+	if (ran < 200)
+	{
+
+		ran = urandom(8);
+
+		if ran = 1 
+		{
+			turnToFace(getDirToItem(Avatar:Referent),false,15);
+			bark("Can I help you? \f Puis-je t'aider?
+				\g Womit kann ich Euch helfen?");
+			wait(120);
+			doAnim(AS_FIDGET,getDir(),NO_ANIM_LIMIT,FALSE);
+			bark("Oh, well. \f Oh, eh bien soit.
+				\g Nun gut.");
+			wait(100);
+		}
+		if ran = 2 
+		{
+			turnToFace(getDirToItem(Avatar:Referent),false,15);
+			bark("Yes? \f Oui? \g Ja?");
+			doAnim(AS_FIDGET,getDir(),NO_ANIM_LIMIT,FALSE);
+			wait(120);
+		}
+		if ran = 3 
+		{
+			turnToFace(7 - (getDirToItem(Avatar:Referent)),false,15);
+			bark("Who goes there? I feel your presence.
+				\f Qui va l…? Je sens une pr‚sence.
+				\g Wer ist da? Ich kann Eure Anwesenheit spren.");
+			wait(100);
+		}
+		if ran = 4 
+		{
+			turnToFace(getDirToItem(Avatar:Referent),false,15);
+			bark("Speak! Who is there? \f Parle! Qui est l…?
+			\g Sprecht! Wer ist da?");
+			wait(120);
+			doAnim(AS_FIDGET,getDir(),NO_ANIM_LIMIT,FALSE);
+		}
+	}
+
+	else
+	{
+		ran = urandom(12);
+		turnToFace(urandom(7),0,10);
+
+		if ran = 1 
+		{
+			bark("I must have a talk with Torwin.
+				\f Il faut que je parle … Torwin.
+				\g Ich muá mit Torwin sprechen.");
+		}
+		if ran = 2 
+		{
+			bark("hmmmm... \f Hmmmm... \g Hmmmm...");
+			doAnim(AS_FIDGET,getDir(),NO_ANIM_LIMIT,FALSE);
+			wait(60);
+		}
+		if ran = 3 
+		{
+			bark("The flowers smell sweet today.
+				\f Les fleurs sentent bon, aujourd'huy.
+				\g Die Blumen duften heute so sá.");
+		}
+		if ran = 4 
+		{
+			bark("Where is that focus? \f O— est ce Substrat?
+			\g Wo kann dieses Heilsymbol nur sein?");
+			wait(100);
+		}
+		if ran = 5 
+		{
+			bark("Ahh, fresh air. \f Ahhh, de l'air frais.
+				\g Ahh, frische Luft.");
+			wait(100);
+		}
+		if ran = 6 
+		{
+			bark("Oh, my bones feel tired today.
+			\f Oh, je me sens las, aujourd'huy.
+			\g Ach, ich fhle mich heute sehr mde.");
+			doAnim(AS_EXIT_CAST,getDir(),NO_ANIM_LIMIT,FALSE);
+		}
+		if ran = 7 
+		{
+			doAnim(AS_FIDGET,getDir(),NO_ANIM_LIMIT,FALSE);
+			bark("Those noisy monks. \f Ces moines sont bien bruyants.
+				\g Diese M”nche machen so viel L„rm.");
+			wait(60);
+		}
+	}
+}
+
+
+process Stellos::use()
+{
+
+	answer:String;
+	askList:String List;
+
+
+	if not stellosMet
+	{
+		Avatar.bark("Pardon me, good sir. \f Excuse-moy, sire. \g Verzeihung, mein Herr.");
+		enterConvo();
+	}
+	else
+	{
+		Avatar.bark("Pardon me. \f Excuse-moy. \g Verzeihung.");
+		enterConvo();
+	}
+
+	if getLastAnimSet() = AS_SIT_DOWN
+	{
+		killProcess(referent,PT_ANIM);
+		doAnim(AS_SIT_UP,getDir(),NO_ANIM_LIMIT,FALSE);
+	}
+	
+	enterConvo();
+	killProcess(Avatar:Referent,PT_BARK);
+
+	if stellosMet
+	{
+
+		bark("Welcome, my friend. \f Bienvenue, mon amy.
+		\g Willkommen, mein Freund.");
+		askList=<<"Hello again, Stellos. 
+				\f Salut derechef, Stellos.
+				\g Guten Tag, Stellos.",
+		"bye \f bon vent \g Lebt wohl.">>;
+
+	}
+	else
+	{
+		bark("Welcome, stranger. \f Bienvenue, estranger.
+		\g Willkommen, Fremder.");
+		askList=<<"Good day to you. 
+				\f Bonne journ‚e.
+				\g Guten Tag.", 
+				"bye \f bon vent \g Lebt wohl.">>;
+	}
+
+	if attemptedWisdomTest and not passedWisdomTest
+	{
+		askList^=<<"Tell me of the Test of Wisdom.
+		\f Parle-moy du Test de la Sagesse.
+		\g Erz„hlt mir etwas ber die Prfung der Weisheit.">>;
+	}
+
+	if passedWisdomTest
+	{
+		askList^=<<"I have passed the Test of Wisdom.
+			\f J'ai r‚ussi le Test de la Sagesse.
+			\g Ich habe die Prfung der Weisheit bestanden.">>;
+		askList-=<<"Tell me of the Test of Wisdom.
+			\f Parle-moy du Test de la Sagesse.
+			\g Erz„hlt mir etwas ber die Prfung der Weisheit.">>;
+	}
+
+	if passedWisdomTest and attemptedCenteredTest and not passedCenteredTest
+	{
+		askList^=<<"What do you know of the Test of Centeredness?
+			\f Que sais-tu du Test de l'Equilibre?
+			\g Was wiát Ihr ber die Prfung des Gleichgewichts?">>;
+		askList-=<<"I have passed the Test of Wisdom.
+			\f J'ai r‚ussi le Test de la Sagesse.
+			\g Ich habe die Prfung der Weisheit bestanden.",
+		"Tell me of the Test of Wisdom.
+			\f Parle-moy du Test de la Sagesse.
+			\g Erz„hlt mir etwas ber die Prfung der Weisheit.">>;
+	}
+
+	if passedWisdomTest and passedCenteredTest
+	{
+		askList^=<<"I have passed the first two tests.
+			\f J'ai r‚ussi les deux premiers tests.
+			\g Ich habe die ersten beiden Prfungen bestanden.", 
+			"bye \f bon vent \g Lebt wohl.">>;
+		askList-=<<"I have passed the Test of Wisdom.
+			\f J'ai r‚ussi le Test de la Sagesse.
+			\g Ich habe die Prfung der Weisheit bestanden.",
+		"Tell me of the Test of Wisdom.
+			\f Parle-moy du Test de la Sagesse.
+			\g Erz„hlt mir etwas ber die Prfung der Weisheit.",
+		"What do you know of the Test of Centeredness?
+			\f Que sais-tu du Test de l'Equilibre?
+			\g Was wiát Ihr ber die Prfung des Gleichgewichts?">>;
+//learn about third test and foci
+	}
+
+	if hasOwnFoci
+	{
+		askList^=<<"I have constructed my Foci. 
+		\f J'ai construit mes Substrats.
+		\g Ich habe meine Symbole fertiggestellt.">>;
+		askList-=<<"I have passed the Test of Wisdom.
+			\f J'ai r‚ussi le Test de la Sagesse.
+			\g Ich habe die Prfung der Weisheit bestanden.",
+		"Tell me of the Test of Wisdom.
+			\f Parle-moy du Test de la Sagesse.
+			\g Erz„hlt mir etwas ber die Prfung der Weisheit.",
+		"I have passed the first two tests.
+			\f J'ai r‚ussi les deux premiers tests.
+			\g Ich habe die ersten beiden Prfungen bestanden.",
+		"What do you know of the Test of Centeredness?
+			\f Que sais-tu du Test de l'Equilibre?
+			\g Was wiát Ihr ber die Prfung des Gleichgewichts?",
+		"I passed the Test of Centeredness.
+				\f J'ai r‚ussi le Test de l'Equilibre.
+				\g Ich habe die Prfung des Gleichgewichts bestanden.">>;
+//learn about third test
+	}
+
+	if passedThirdTest and not hasOwnFoci
+	{
+
+		askList^=<<"I have completed the Third Test. 
+				\f J'ai r‚ussi le TroisiŠme Test.
+				\g Ich habe die Dritte Prfung bestanden.">>;
+		askList-=<<"I have passed the Test of Wisdom.
+			\f J'ai r‚ussi le Test de la Sagesse.
+			\g Ich habe die Prfung der Weisheit bestanden.",
+		"Tell me of the Test of Wisdom.
+			\f Parle-moy du Test de la Sagesse.
+			\g Erz„hlt mir etwas ber die Prfung der Weisheit.",
+		"I have passed the first two tests.
+			\f J'ai r‚ussi les deux premiers tests.
+			\g Ich habe die ersten beiden Prfungen bestanden.",
+		"What do you know of the Test of Centeredness?
+			\f Que sais-tu du Test de l'Equilibre?
+			\g Was wiát Ihr ber die Prfung des Gleichgewichts?",
+		"I have constructed my Foci. 
+			\f J'ai construit mes Substrats.
+			\g Ich habe meine Symbole fertiggestellt.",
+		"I passed the Test of Centeredness.
+			\f J'ai r‚ussi le Test de l'Equilibre.
+			\g Ich habe die Prfung des Gleichgewichts bestanden.">>;
+	}
+
+
+	if passedThirdTest and hasOwnFoci
+	{
+		askList^=<<"I have passed the third test.
+		\f J'ai r‚ussi le troisiŠme test.
+		\g Ich habe die dritte Prfung bestanden.">>;
+		askList-=<<"I have passed the Test of Wisdom.
+			\f J'ai r‚ussi le Test de la Sagesse.
+			\g Ich habe die Prfung der Weisheit bestanden.",
+		"Tell me of the Test of Wisdom.
+			\f Parle-moy du Test de la Sagesse.
+			\g Erz„hlt mir etwas ber die Prfung der Weisheit.",
+		"I have passed the first two tests.
+			\f J'ai r‚ussi les deux premiers tests.
+			\g Ich habe die ersten beiden Prfungen bestanden.",
+		"What do you know of the Test of Centeredness?
+			\f Que sais-tu du Test de l'Equilibre?
+			\g Was wiát Ihr ber die Prfung des Gleichgewichts?",
+		"I have constructed my Foci. 
+			\f J'ai construit mes Substrats.
+			\g Ich habe meine Symbole fertiggestellt.",
+		"I passed the Test of Centeredness.
+				\f J'ai r‚ussi le Test de l'Equilibre.
+				\g Ich habe die Prfung des Gleichgewichts bestanden.">>;
+//learn about missing foci
+	}
+
+	if passedThirdTest and hasOwnFoci and torwinMet
+	{
+		askList^=<<"I have met Torwin.
+		\f J'ai rencontr‚ Torwin.
+		\g Ich habe Torwin kennengelernt.">>;
+		askList-=<<"I have passed the Test of Wisdom.
+			\f J'ai r‚ussi le Test de la Sagesse.
+			\g Ich habe die Prfung der Weisheit bestanden.",
+		"Tell me of the Test of Wisdom.
+			\f Parle-moy du Test de la Sagesse.
+			\g Erz„hlt mir etwas ber die Prfung der Weisheit.",
+		"I have passed the first two tests.
+			\f J'ai r‚ussi les deux premiers tests.
+			\g Ich habe die ersten beiden Prfungen bestanden.",
+		"What do you know of the Test of Centeredness?
+			\f Que sais-tu du Test de l'Equilibre?
+			\g Was wiát Ihr ber die Prfung des Gleichgewichts?",
+		"I have constructed my Foci.
+			\f J'ai construit mes Substrats.
+			\g Ich habe meine Symbole fertiggestellt.",
+		"I passed the Test of Centeredness.
+				\f J'ai r‚ussi le Test de l'Equilibre.
+				\g Ich habe die Prfung des Gleichgewichts bestanden.">>;
+// find out about torwin, combining powers, set spokeAboutTorwinS
+	}
+
+	if passedThirdTest and hasOwnFoci and xavierMet
+	{
+		askList^=<<"I have spoken with Brother Xavier.
+			\f J'ai parl‚ avec FrŠre Xavier.
+			\g Ich habe mit Bruder Xavier gesprochen.">>;
+		askList-=<<"I have passed the Test of Wisdom.
+			\f J'ai r‚ussi le Test de la Sagesse.
+			\g Ich habe die Prfung der Weisheit bestanden.",
+		"Tell me of the Test of Wisdom.
+			\f Parle-moy du Test de la Sagesse.
+			\g Erz„hlt mir etwas ber die Prfung der Weisheit.",
+		"I have passed the first two tests.
+			\f J'ai r‚ussi les deux premiers tests.
+			\g Ich habe die ersten beiden Prfungen bestanden.",
+		"What do you know of the Test of Centeredness?
+			\f Que sais-tu du Test de l'Equilibre?
+			\g Was wiát Ihr ber die Prfung des Gleichgewichts?",
+		"I have constructed my Foci.
+			\f J'ai construit mes Substrats.
+			\g Ich habe meine Symbole fertiggestellt.",
+		"I passed the Test of Centeredness.
+				\f J'ai r‚ussi le Test de l'Equilibre.
+				\g Ich habe die Prfung des Gleichgewichts bestanden.">>;
+	}
+
+	if passedThirdTest and hasOwnFoci and cyrrusMet
+	{
+		askList^=<<"I spoke with Holy Cyrrus.
+				\f J'ai parl‚ avec V‚n‚rable Cyrrus.
+				\g Ich habe mit dem Ehrwrdigen Cyrrus gesprochen.">>;
+		askList-=<<"I have passed the Test of Wisdom.
+			\f J'ai r‚ussi le Test de la Sagesse.
+			\g Ich habe die Prfung der Weisheit bestanden.",
+		"Tell me of the Test of Wisdom.
+			\f Parle-moy du Test de la Sagesse.
+			\g Erz„hlt mir etwas ber die Prfung der Weisheit.",
+		"I have passed the first two tests.
+			\f J'ai r‚ussi les deux premiers tests.
+			\g Ich habe die ersten beiden Prfungen bestanden.",
+		"What do you know of the Test of Centeredness?
+			\f Que sais-tu du Test de l'Equilibre?
+			\g Was wiát Ihr ber die Prfung des Gleichgewichts?",
+		"I have constructed my Foci.
+			\f J'ai construit mes Substrats.
+			\g Ich habe meine Symbole fertiggestellt.",
+		"I passed the Test of Centeredness.
+				\f J'ai r‚ussi le Test de l'Equilibre.
+				\g Ich habe die Prfung des Gleichgewichts bestanden.">>;
+	}
+
+	if passedThirdTest and hasOwnFoci and torwinJumped
+	{
+		askList^=<<"Poor Torwin. \f Pauvre Torwin. \g Armer Torwin.">>;
+		askList-=<<"I have passed the Test of Wisdom.
+			\f J'ai r‚ussi le Test de la Sagesse.
+			\g Ich habe die Prfung der Weisheit bestanden.",
+		"Tell me of the Test of Wisdom.
+			\f Parle-moy du Test de la Sagesse.
+			\g Erz„hlt mir etwas ber die Prfung der Weisheit.",
+		"I have passed the first two tests.
+			\f J'ai r‚ussi les deux premiers tests.
+			\g Ich habe die ersten beiden Prfungen bestanden.",
+		"What do you know of the Test of Centeredness?
+			\f Que sais-tu du Test de l'Equilibre?
+			\g Was wiát Ihr ber die Prfung des Gleichgewichts?",
+		"I have constructed my Foci.
+			\f J'ai construit mes Substrats.
+			\g Ich habe meine Symbole fertiggestellt.",
+		"I spoke with Holy Cyrrus.
+			\f J'ai parl‚ avec V‚n‚rable Cyrrus.
+			\g Ich habe mit dem Ehrwrdigen Cyrrus gesprochen.",
+		"I have spoken with Brother Xavier.
+			\f J'ai parl‚ avec FrŠre Xavier.
+			\g Ich habe mit Bruder Xavier gesprochen.",
+		"I have met Torwin.
+			\f J'ai rencontr‚ Torwin.
+			\g Ich habe Torwin kennengelernt.",
+		"I passed the Test of Centeredness.
+				\f J'ai r‚ussi le Test de l'Equilibre.
+				\g Ich habe die Prfung des Gleichgewichts bestanden.">>;
+	}
+
+	if stratosMet and not hasBreath
+	{
+		askList=<<"I have heard the Mystic Voice.
+			\f J'ai entendu la Voix Mystique.
+			\g Ich habe die Mystische Stimme vernommen.", 
+			"bye \f bon vent \g Lebt wohl.">>;
+		askList-=<<"I have passed the Test of Wisdom.
+			\f J'ai r‚ussi le Test de la Sagesse.
+			\g Ich habe die Prfung der Weisheit bestanden.",
+		"Tell me of the Test of Wisdom.
+			\f Parle-moy du Test de la Sagesse.
+			\g Erz„hlt mir etwas ber die Prfung der Weisheit.",
+		"I have passed the first two tests.
+			\f J'ai r‚ussi les deux premiers tests.
+			\g Ich habe die ersten beiden Prfungen bestanden.",
+		"What do you know of the Test of Centeredness?
+			\f Que sais-tu du Test de l'Equilibre?
+			\g Was wiát Ihr ber die Prfung des Gleichgewichts?",
+		"I have constructed my Foci.
+			\f J'ai construit mes Substrats.
+			\g Ich habe meine Symbole fertiggestellt.",
+		"I spoke with Holy Cyrrus.
+			\f J'ai parl‚ avec V‚n‚rable Cyrrus.
+			\g Ich habe mit dem Ehrwrdigen Cyrrus gesprochen.",
+		"I have spoken with Brother Xavier.
+			\f J'ai parl‚ avec FrŠre Xavier.
+			\g Ich habe mit Bruder Xavier gesprochen.",
+		"I have met Torwin.
+			\f J'ai rencontr‚ Torwin.
+			\g Ich habe Torwin kennengelernt.",
+		"I passed the Test of Centeredness.
+				\f J'ai r‚ussi le Test de l'Equilibre.
+				\g Ich habe die Prfung des Gleichgewichts bestanden.">>;
+		}
+
+	if hasBreath
+	{
+		askList=<<"I have the Breath of Wind. 
+				\f J'ai le Souffle du Vent.
+				\g Ich habe den Atem des Windes.", 
+				"bye \f bon vent \g Lebt wohl.">>;
+	}
+
+
+
+	if torwinJumped and hasRing and not spokeAboutRing
+	{
+		askList^=<<"I found this ring.
+				\f J'ai trouv‚ cet anneau.
+				\g Ich habe diesen Ring gefunden.">>;
+	}
+
+	if passedCenteredTest and not passedWisdomTest
+	{
+		askList^=<<"I passed the Test of Centeredness.
+				\f J'ai r‚ussi le Test de l'Equilibre.
+				\g Ich habe die Prfung des Gleichgewichts bestanden.">>;
+		askList-=<<"I have passed the Test of Wisdom.
+			\f J'ai r‚ussi le Test de la Sagesse.
+			\g Ich habe die Prfung der Weisheit bestanden.">>;
+	}
+
+	if (Avatar.getHp() < Avatar.getStr() * 2) and (stellosJob)
+	{
+		askList+=<<"I need healing. 
+				\f J'ai besoin de gu‚rison. 
+				\g Ich brauche einen Heiler.">>;
+	}
+
+
+	while answer!="bye \f bon vent \g Lebt wohl."
+	{
+		answer=ask(askList);
+		askList-=<<"bye \f bon vent \g Lebt wohl.">>;
+		askList+=<<"bye \f bon vent \g Lebt wohl.">>;
+		switch answer
+		{
+			case "Hello again, Stellos. 
+				\f Salut derechef, Stellos.
+				\g Guten Tag, Stellos."
+			{
+				bark("It is good to hear your voice again, friend. 
+					\f Quel plaisir d'entendre de nouveau ta voix, l'amy. 
+					\g Ich freue mich, Eure Stimme wieder zu h”ren, mein Freund.");
+				askList-=<<"Hello again, Stellos. 
+						\f Salut derechef, Stellos.
+						\g Guten Tag, Stellos.">>;
+				askList^=<<"Who is Stratos? \f Qui est Stratos? \g Wer ist Stratos?",
+				"What do you do? \f Que fais-tu? \g Was ist Euer Beruf?">>;
+			}
+
+
+
+			case "I need healing. 
+				\f J'ai besoin de gu‚rison. 
+				\g Ich brauche einen Heiler."
+			{
+				if stellosJustHealed
+				{
+					bark("I am sorry, but I do not have the strength to
+					perform such a service. Come back later after I have rested.
+					
+					\f Je regrette, mais je n'ai point assez de force pour accomplir
+					une telle tƒche. Reviens quand de je me seroi repos‚.
+					
+					\g Es tut mir leid, aber ich habe im Augenblick nicht die n”tige 
+					Kraft, um Euch zu heilen. Bitte kommt doch wieder, 
+					wenn ich mich ein wenig ausgeruht habe.");
+
+					exitConvo();
+					return;
+				}
+
+				else
+				{
+					bark("That is certainly no problem. \f Point de problŠme.
+					\g Das ist weiter kein Problem, ich werde Euch heilen.");
+	
+					restoration(Avatar:Referent);
+					stellosJustHealed = true;
+	
+					bark("Please leave me now, I need to rest.
+					 \f Laisse-moy, je te prie. Je dois me reposer.
+					 \g Bitte laát mich jetzt allein. Ich muá mich ausruhen.");
+	
+					exitConvo();
+					return;
+				}
+			}
+
+			case "Good day to you. 
+				\f Bonne journ‚e. 
+				\g Guten Tag."
+			{
+				bark("And a good day to you, my friend. How may I help you?
+				\f Bonne journ‚e … toy, mon amy. Que puis-je pour toy?
+				\g Das wnsche ich Euch auch, mein Freund. Was kann ich fr
+				Euch tun?");
+				askList-=<<"Good day to you. 
+						\f Bonne journ‚e. 
+						\g Guten Tag.">>;
+				askList=<<"By what are you called? 
+						\f Comment t'appelle-t-on?
+						\g Wie heiát Ihr?">>;
+			}
+
+			case "By what are you called? 
+				\f Comment t'appelle-t-on?
+				\g Wie heiát Ihr?"
+			{
+				bark("I am Stellos. I have lived here for many, many years.
+					\f Je suis Stellos. J'habite icy depuis moultes, moultes ann‚es.
+					\g Ich heiáe Stellos. Ich wohne hier bereits seit vielen, 
+					vielen Jahren.");
+				stellosMet=true;
+				askList-=<<"By what are you called? 
+							\f Comment t'appelle-t-on?
+							\g Wie heiát Ihr?">>;
+				askList+=<<"What do you do? \f Que fais-tu? \g Was ist Euer Beruf?",
+				"How many years? \f Combien d'ann‚es? \g Wie viele Jahre?">>;
+				stellosName = true;
+			}
+
+			case "What do you do? \f Que fais-tu? \g Was ist Euer Beruf?"
+			{
+				bark("I am the leader of the Order of Enlightenment.
+					\f Je suis le guide spirituel de l'Ordre de l'Illumination.
+					\g Ich bin das Oberhaupt des Ordens der Erleuchtung.");
+				askList-=<<"What do you do? \f Que fais-tu? \g Was ist Euer Beruf?">>;
+				askList^=<<"Leader? \f Guide spirituel? \g Oberhaupt?", 
+				"Order of Enlightenment 
+				\f L'Ordre de l'Illumination? 
+				\g Orden der Erleuchtung?">>;
+			}
+
+			case "Leader? \f Guide spirituel? \g Oberhaupt?"
+			{
+				bark("Well, it really isn't an official title. Most of the
+				younger members come to me for guidance because
+				I am the oldest member of the Order.
+					\f Eh bien, ce n'est guŠre un titre officiel. La plupart des
+					nouveaux membres viennent … moy pour prendre conseil, car je suis
+					le plus vieux membre de l'Ordre.
+					\g Nun ja, eigentlich ist es kein offizieller Titel. Die meisten
+					jngeren Mitglieder bitten mich um Rat, weil ich das „lteste
+					Mitglied des Ordens bin.");
+				askList-=<<"Leader? \f Guide spirituel? \g Oberhaupt?">>;
+			}
+
+			case "Order of Enlightenment 
+				\f L'Ordre de l'Illumination? 
+				\g Orden der Erleuchtung?"
+			{
+				bark("That is the name of those of us who follow the Great
+				Air Titan, Stratos.
+					\f C'est le nom de ceux d'entre-nous qui v‚nŠrent
+					le Grand Titan de l'Air, Stratos.
+					\g So nennen wir unsere Gemeinschaft. Wir huldigen Stratos, der m„chtigen 
+					Titanin der Lfte.");
+				askList-=<<"Order of Enlightenment 
+						\f L'Ordre de l'Illumination?
+						\g Orden der Erleuchtung?">>;
+			}
+
+			case "How many years? \f Combien d'ann‚es? \g Wie viele Jahre?"
+			{
+				bark("Through the grace of the Great Air Titan, Stratos,
+				I have lived over 200 years.
+					\f Par la grƒce de Stratos, je vis
+					depuis plus de 200 ans!
+					\g Durch die Gnade der m„chtigen Stratos lebe ich schon ber 200 Jahre!");
+				askList-=<<"How many years? \f Combien d'ann‚es? \g Wie viele Jahre?">>;
+				askList^=<<"Who is Stratos? \f Qui est Stratos? \g Wer ist Stratos?",
+				 "200 years! \f 200 ans! \g 200 Jahre!">>;
+			}
+
+			case "Who is Stratos? \f Qui est Stratos? \g Wer ist Stratos?"
+			{
+				bark("Stratos is the greatest of the Titans,
+				for it is through the power of Stratos that we of the Order
+				gain our ability to heal the hurts of the world. However,
+				this gift is not without cost.
+				
+				\f Stratos est le plus grand des Titans, car c'est par son pouvoir
+				que nous, les membres de l'Ordre, recevons nostre pouvoir 
+				de gu‚rir les maux de ce monde. Cependant, ce talent n'est point
+				un don sans prix.
+				
+				\g Stratos ist die M„chtigste der Titanen, denn es ist ihre Kraft,
+				die uns Ordensmitgliedern die F„higkeit verleiht, die
+				Wunden der Welt zu heilen. Aber diese Gabe hat auch ihren Preis.");
+				askList-=<<"Who is Stratos? \f Qui est Stratos? \g Wer ist Stratos?">>;
+				askList^=<<"Tell me of healing. 
+						\f Parle-moy de gu‚rison. 
+						\g Wie bewirkt Ihr diese Heilung?",
+				 "What is the cost? \f Quel est ce prix? \g Was ist der Preis?">>;
+			}
+
+			case "Tell me of healing. 
+					\f Parle-moy de gu‚rison. 
+					\g Wie bewirkt Ihr diese Heilung?"
+			{
+				stellosJob = true;
+				bark("The healing is done by using a Focus to channel the
+				powers of Stratos to the patient. This is a delicate procedure
+				for if the healer is not steady in his ability or disciplined
+				in his art, he may reach too deeply into the power and destroy
+				himself and the patient.
+				
+				\f La gu‚rison est faite grƒce … un Substrat qui canalise
+				les pouvoirs de Stratos vers le patient. C'est un proc‚d‚ d‚licat car
+				si le gu‚risseur ne maistrise point ses talents ou n'est point disciplin‚
+				dans son art, il risque de se destruire luy-mesme
+				ainsy que son patient.
+				
+				\g Ein Symbol konzentriert die Kr„fte der Stratos auf 
+				den Patienten. Diese Behandlung kann
+				sehr riskant sein. Wenn der Heiler sein K”nnen nicht mit einer 
+				v”llig ruhigen Hand und viel Selbstdisziplin ausfhrt, kann es sein,
+				daá er die Macht berfordert und dabei nicht nur seinen Patienten,
+				sondern auch sich selbst vernichtet.");
+				askList-=<<"Tell me of healing. 
+						\f Parle-moy de gu‚rison.
+						\g Wie bewirkt Ihr diese Heilung?">>;
+				askList+=<<"I would like to learn to heal.
+					 \f J'aimerois apprendre … gu‚rir.
+					 \g Ich wrde gerne die Kunst der Heilung erlernen.">>;
+
+				if (Avatar.getHp() < Avatar.getStr() * 2) {
+					askList^=<<"I need healing. 
+							\f J'ai besoin de gu‚rison. 
+							\g Ich brauche einen Heiler.">>;
+				}
+			}
+
+			case "I would like to learn to heal. 
+				\f J'aimerois apprendre … gu‚rir.
+				\g Ich wrde gerne die Kunst der Heilung erlernen."
+			{
+				bark("To do that you will have to join the Order.
+				 \f Pour ce faire, il te faut entrer dans l'Ordre.
+				 \g Das ist nur m”glich, wenn Ihr in den Orden eintretet.");
+				askList-=<<"I would like to learn to heal.
+				 \f J'aimerois apprendre … gu‚rir.
+				 \g Ich wrde gerne die Kunst der Heilung erlernen.">>;
+				askList=<<"Then I will join your order.
+				 \f Alors je veux entrer dans votre Ordre.
+				 \g Dann werde ich in Euren Orden eintreten.",
+				 "I am sorry, I cannot join your order.
+				 \f Je regrette, je ne puis entrer dans votre Ordre.
+				 \g Es tut mir leid. Ich kann nicht eintreten.">>;
+			}
+
+			case "Then I will join your order.
+				 \f Alors je veux entrer dans votre Ordre.
+				 \g Dann werde ich in Euren Orden eintreten."
+			{
+				bark("The first steps to joining the Order of Enlightenment
+				are to pass the Tests of Wisdom and Centeredness. Brother
+				Xavier can tell you more. I suggest you seek him out.
+				
+				\f Les premiŠres ‚tapes pour entrer dans l'Ordre de l'Illumination
+				consistent … r‚ussir les Tests de la Sagesse et de l'Equilibre.
+				FrŠre Xavier peut t'en dire davantage. Je te conseille d'aller le
+				voir.
+				
+				\g Um in den Orden der Erleuchtung einzutreten, mát Ihr zuerst die
+					Prfungen der Weisheit und des Gleichgewichts bestehen. Bruder
+					Xavier kann Euch mehr darber sagen. Ihr solltet ihn 
+					aufsuchen.");
+				askList-=<<"Then I will join your order.
+					 \f Alors je veux entrer dans votre Ordre.
+					 \g Dann werde ich in Euren Orden eintreten.">>;
+				exitConvo();
+				return;
+			}
+
+			case "I am sorry, I cannot join your order.
+				 \f Je regrette, je ne puis entrer dans votre Ordre.
+				 \g Es tut mir leid. Ich kann nicht eintreten."
+			{
+				bark("I'm sorry you are not interested. Should you change
+				your mind, Brother Xavier is the one to speak to in order
+				to begin your journey down the path to Enlightenment.
+
+					\f Dommage que tu ne sois point int‚ress‚. Si jamais tu changes d'avis,
+					il te faut parler … FrŠre Xavier afin qu'il te dirige vers
+					le chemin de l'Illumination.
+					
+					\g Ich bedaure, daá Euch der Orden nicht interessiert. Wenn Ihr
+					es Euch doch noch anders berlegt, dann sprecht mit Bruder
+					Xavier. Er wird Euch helfen, den Pfad der Erleuchtung zu 
+					finden.");
+				exitConvo();
+				return;
+			}
+
+			case "What is the cost? \f Quel est ce prix? \g Was ist der Preis?"
+			{
+				bark("As you can see by the clouding in my eyes, I 
+				am blind. It is the price I pay for being able to serve
+				Stratos so completely.
+					
+				\f Comme tu peux le voir … mes yeux voil‚s, je suis aveugle.
+					C'est le prix que je paie pour avoir accŠs … tous les pouvoirs de Stratos.
+					
+				\g Ich bin blind, wie Ihr auch an meinen trben Augen erkennen k”nnt.
+				Das ist der Preis, den ich dafr bezahlen muá, daá ich Stratos mit
+				v”lliger Hingabe dienen kann.");
+				askList-=<<"What is the cost? \f Quel est ce prix? \g Was ist der Preis?">>;
+			}
+
+			case "200 years! \f 200 ans! \g 200 Jahre!"
+			{
+				bark("It is a long time for anyone to live. Stratos must
+				have need for me to keep me here so long.
+
+					\f C'est une bien longue vie. Stratos doit vraiment avoir besoin de moy
+					pour me garder ausyi longtemps en ce monde.
+					
+					\g Das ist eine lange Zeitspanne fr ein menschliches Leben.
+					Stratos muá meine Dienste wohl ben”tigen, um mich so lange 
+					hierzubehalten.");
+				askList-=<<"200 years! \f 200 ans! \g 200 Jahre!">>;
+			}
+
+			case "I have passed the Test of Wisdom. 
+			\f J'ai r‚ussi le Test de la Sagesse.
+			\g Ich habe die Prfung der Weisheit bestanden."
+			{
+				bark("Your time studying was well spent then. Until you
+				arrived, I was impressed with Torwin's speed, but
+				we've never had a student succeed at the rate you
+				are progressing. Stratos will be so pleased with you.
+				
+				\f Alors tu n'as point perdu ton temps. Jusqu'… ton arriv‚e,
+				j'ai ‚t‚ impressionn‚ par la rapidit‚ de Torwin, mais je
+				n'ai jamais vu estudiant aussy diligent que toy. Stratos
+				sera fort satisfaite.
+				
+				\g Ihr habt Eure Zeit weise genutzt. Torwins Schnelligkeit hat mich 
+				bereits sehr beeindruckt, aber wir hatten noch nie einen Schler, der
+				in so kurzer Zeit solch erstaunliche Fortschritte machte wie Ihr. Stratos
+				wird sehr erfreut sein.");
+				askList-=<<"I have passed the Test of Wisdom. 
+				\f J'ai r‚ussi le Test de la Sagesse.
+				\g Ich habe die Prfung der Weisheit bestanden.">>;
+ 
+				askList+=<<"Stratos will be pleased?
+						\f Stratos sera satisfaite?
+						\g Stratos wird erfreut sein?">>;
+			}
+
+ 
+			case "Stratos will be pleased?
+				\f Stratos sera satisfaite?
+				\g Stratos wird erfreut sein?"
+			{
+				bark("I commune daily with the Giver of Life. Recently
+				she has been speaking of one who would come and be the
+				greatest healer Argentrock Isle has ever seen. She
+				described this great healer to me. When Torwin arrived
+				here, I thought it was he she spoke of, but now I realize
+				it is you. Oh, she has looked forward to your arrival and
+				all the great things you will do as one of her healers!
+				
+				\f Tous les jours, je suis en contact avec celle qui donne la vie.
+				R‚cemment, elle a parl‚ de quelqu'un qui viendroit et seroit le
+				plus grand gu‚risseur de l'Isle du Roc d'Argent. Elle me l'a descrit.
+				Quand Torwin est arriv‚ icy, j'ai d'abord cru qu'il s'agissoit de luy, mais
+				lors je me rends compte qu'elle parloit de toy. Elle est
+				impatiente de voir tous les bienfaits que tu r‚aliseras en tant que 
+				l'un de ses gu‚risseurs! 
+				
+				\g Ich spreche jeden Tag mit der Lebensspenderin. In letzter 
+				Zeit hatte sie mir erz„hlt, daá der gr”áte Heiler, den die 
+				Welt jemals gesehen hatte, nach Silberfels kommen wrde. Sie 
+				beschrieb mir diesen Heiler. Als Torwin hier ankam, dachte ich, 
+				er w„re der Begnadete, von dem sie gesprochen hatte. Aber jetzt 
+				weiá ich, daá sie Euch meinte. Sie hat sich so auf Eure Ankunft 
+				gefreut. Ihr werdet groáe Taten in Stratos' Namen vollbringen.");
+				askList-=<<"Stratos will be pleased?
+						\f Stratos sera satisfaite?
+						\g Stratos wird erfreut sein?">>;
+			}
+
+			case "I passed the Test of Centeredness. 
+				\f J'ai r‚ussi le Test de l'Equilibre.
+				\g Ich habe die Prfung des Gleichgewichts bestanden."
+			{
+				bark("I am pleased you have come through it unharmed. So
+				many times we have lost initiates to it. Now you must also
+				pass the Test of Wisdom.
+
+					\f Je suis content que tu t'en sois sorti indemne. Nous avons
+					d‚j… perdu tant d'Initi‚s. Maintenant, il te faut aussy passer le
+					Test de la Sagesse.
+					
+					\g Es freut mich, daá Ihr diese Prfung unbeschadet berstanden
+					habt. So oft haben wir schon Schler auf diese Weise verloren.
+					Nun mát Ihr auch noch die Prfung der Weisheit bestehen.");
+				askList-=<<"I passed the Test of Centeredness. 
+					\f J'ai r‚ussi le Test de l'Equilibre.
+					\g Ich habe die Prfung des Gleichgewichts bestanden.">>;
+			}
+
+			case "Tell me of the Test of Wisdom. 
+				\f Parle-moy du Test de la Sagesse.
+				\g Erz„hlt mir etwas ber die Prfung der Weisheit."
+			{
+				bark("Ah, so you have begun the road to Enlightenment. Stratos
+				will be pleased. She sets great store by you. What do you wish
+				to know?
+					
+				\f Ah, ainsy tu as commenc‚ la route vers l'Illumination. Stratos
+					sera satisfaite. Elle fait grand cas de toy. Que veux-tu savoir?
+					
+				\g Ach, Ihr habt also beschlossen, den Pfad der Erleuchtung zu beschreiten.
+				Stratos wird sehr erfreut sein. Sie hat groáes Vertrauen in Eure
+				F„higkeiten. Was wollt Ihr von mir erfahren?");
+				askList+=<<"Tell me the answers, please. 
+						\f Donne-moy les responses, je te prie.
+						\g Ich bitte Euch, verratet mir die Antworten.",
+				 "Where can I find the answers? 
+				 	\f O— puis-je trouver les responses?
+				 	\g Wo kann ich die Antworten finden?">>;
+				askList-=<<"Tell me of the Test of Wisdom. 
+							\f Parle-moy du Test de la Sagesse.
+							\g Erz„hlt mir etwas ber die Prfung der Weisheit.">>;
+			}
+
+			case "Tell me the answers, please. 
+				\f Donne-moy les responses, je te prie.
+				\g Ich bitte Euch, verratet mir die Antworten."
+
+			{
+				#if English
+				{
+				bark("It is forbidden for anyone to give away the answers
+				to the Test of Wisdom. The answers you must find for
+				yourself, "+getName()+", for they must come from your heart.");
+				}
+
+				#if French
+				{
+				bark("Il est interdit … quiconque de donner les responses au Test de
+				la Sagesse. Les responses, tu dois les trouver toy-mesme, "+getName()+", 
+				car elles doivent venir de ton coeur.");
+				}
+
+				#if German
+				{
+				bark("Es ist streng verboten, die Antworten auf die Prfung der Weisheit
+				zu verraten. Ihr mát sie selbst finden, "+getName()+", denn sie 
+				mssen aus Eurem Herzen kommen.");
+				}
+				askList-=<<"Tell me the answers, please. 
+					\f Donne-moy les responses, je te prie.
+					\g Ich bitte Euch, verratet mir die Antworten.",
+				"Where can I find the answers? 
+					\f O— puis-je trouver les responses?
+					\g Wo kann ich die Antworten finden?">>;
+			}
+
+			case "Where can I find the answers? 
+				\f O— puis-je trouver les responses?
+				\g Wo kann ich die Antworten finden?"
+			{
+				bark("You must go to the library in the monastery. There
+				you will find many old texts that discuss at great length the
+				philosophy of Stratos. Read these and apply them to your
+				own feelings. Only then will you find the right answers.
+				
+				\f Tu dois te rendre … la bibliothŠque du monastŠre. L…, tu trouveras
+				moultes manuscripts fort anciens qui expliquent en destail la philosophie
+				de Stratos. Lis-les et soumets-les … ton propre jugement. Ce n'est
+				qu'ainsy que tu trouveras les bonnes responses.
+				
+				\g Ihr mát die Bcherei im Kloster aufsuchen. Dort werdet Ihr 
+				unz„hlige alte Abhandlungen ber Stratos' Philosophie finden. Lest 
+				diese Bcher und bringt sie mit Euren eigenen Gefhlen in Einklang.
+				Nur so k”nnt Ihr die richtigen Antworten finden.");
+				askList-=<<"Where can I find the answers? 
+						\f O— puis-je trouver les responses?
+						\g Wo kann ich die Antworten finden?",
+					"Tell me the answers, please. 
+						\f Donne-moy les responses, je te prie.
+						\g Ich bitte Euch, verratet mir die Antworten.">>;
+			}
+
+			case "What do you know about the Test of Centeredness?
+				 \f Que sais-tu du Test de l'Equilibre?
+				 \g Was wiát Ihr ber die Prfung des Gleichgewichts?"
+			{
+				bark("The Test of Centeredness is an important test as it
+				tests your stamina and courage. Why even our most prized
+				pupil, Torwin, took several tries before he managed to
+				succeed. And he is one of the lucky ones. We've had many
+				fall to their deaths.
+				
+				\f Le Test de l'Equilibre est important, car il teste ta d‚termination
+				et ton courage. Mesme nostre meilleur ‚lŠve, Torwin, a fait plusieurs
+				tentatives avant de le r‚ussir. Et il fait partie des chanceux!
+				Nombreux sont ceux qui sont tomb‚s dans les bras de la mort.
+				
+				\g Die Prfung des Gleichgewichts ist sehr wichtig, denn sie stellt 
+				Eure Ausdauer und Euren Mut auf die Probe. Sogar unser bester Schler
+				Torwin, muáte es mehrmals versuchen, bevor seine Bemhungen erfolgreich
+				waren.");
+				askList-=<<"What do you know about the Test of Centeredness?
+					 \f Que sais-tu du Test de l'Equilibre?
+					 \g Was wiát Ihr ber die Prfung des Gleichgewichts?">>;
+			}
+
+			case "I have passed the first two tests.
+				\f J'ai r‚ussi les deux premiers tests.
+				\g Ich habe die ersten beiden Prfungen bestanden."
+			{
+				bark("Yes, I know. You have proven yourself worthy to wear
+				the title Initiate. Now you are ready to begin learning
+				the spells that Stratos grants us. However, before
+				you do that, you must construct your Foci.
+				
+				\f Oui, je sais. Tu t'es montr‚ digne du titre d'Initi‚. Tu es prest
+				… apprendre les sortilŠges dont Stratos nous pourvoit. Cependant, 
+				avant d'en arriver l…, il te faut construire tes Substrats.
+
+				\g Ja, ich weiá. Ihr habt bewiesen, daá Ihr es wert seid, den Titel 
+				eines Klosterschlers zu tragen. Ihr seid nun bereit, die Zauberformeln zu erlernen,
+				die Stratos uns verleiht. Aber zuerst mát Ihr Eure eigenen Symbole anfertigen.");
+
+				askList-=<<"I have passed the first two tests.
+					 \f J'ai r‚ussi les deux premiers tests.
+					 \g Ich habe die ersten beiden Prfungen bestanden.">>;
+				askList=<<"What are Foci? 
+					\f Les Substrats?
+					\g Was sind Symbole?",
+				 "How do I construct the Foci? 
+				 	\f Comment construire les Substrats?
+				 	\g Wie fertigt man die Symbole an?">>;
+			}
+
+			case "I have completed the Third Test. 
+					\f J'ai r‚ussi le TroisiŠme Test.
+				    \g Ich habe die Dritte Prfung bestanden."
+			{		   
+				bark("That is wonderful. Now you must construct your Foci.
+					\f F‚licitations! Il te faut maintenant construire tes Substrats.
+					\g Herzlichen Glckwunsch. Jetzt mát Ihr nur noch Eure Zaubersymbole anfertigen.");
+				askList-=<<"I have completed the Third Test. 
+							\f J'ai r‚ussi le TroisiŠme Test.
+							\g Ich habe die Dritte Prfung bestanden.">>;
+				askList^=<<"How do I construct the Foci?
+					\f Comment construire les Substrats?
+					\g Wie fertigt man die Symbole an?">>;
+			}
+
+			case "How do I construct the Foci?
+				 \f Comment construire les Substrats?
+				 \g Wie fertigt man die Symbole an?"
+			{
+				bark("The construction of the Foci is the most important task an
+				Initiate in the Order of Enlightenment can undertake. The Foci
+				are wrought of the finest silver, found only in the caverns
+				under our monastery. These caverns are dark and fraught with
+				fearsome creatures.
+				
+				\f La construction des Substrats est la tƒche la plus importante qu'un
+				Initi‚ de l'Ordre de l'Illumination puisse entreprendre. Les Substrats
+				sont forg‚s du plus bel argent, trouv‚ seulement dans les grottes sous
+				nostre monastŠre. Ces grottes sont sombres et peupl‚es de cr‚atures
+				effroyables.
+				
+				\g Das Anfertigen der Symbole ist die wichtigste Aufgabe eines
+				Klosterschlers im Orden der Erleuchtung. Symbole werden aus dem
+				feinsten Silber geschmiedet, das nur in den H”hlen
+				unterhalb des Klosters zu finden ist. In der Dunkelheit dort aber lauern 
+				schreckliche Kreaturen."); 
+
+				if not silverMineKeyGiven
+				{
+					if give(Avatar:Referent,TypeKey,1,8,1)
+					{
+						bark("Using this key, you will be able to
+						open the door where the silver may be found.
+						
+						\f En te servant de cette clef, tu pourras ouvrir la porte
+						pour trouver l'argent.
+						
+						\g Mit diesem Schlssel k”nnt Ihr die Tr ”ffnen, hinter der
+						das Silber zu finden ist.");
+
+						silverMineKeyGiven = true;
+					}
+					else
+					{
+						bark("I would give you the key to the mine, but
+						I see that your hands are full. Maybe later.
+						
+						\f Je te donnerois volontiers la clef de la mine, mais je vois que
+						tes mains sont pleines. Peut-estre plus tard.
+						
+						\g Ich g„be Euch gerne den Schlssel zur Mine, aber ich sehe,
+						daá Eure H„nde voll sind. Vielleicht sp„ter.");
+					}
+				}
+				else
+				{
+
+					bark("Using the key I gave you earlier, you may use it to
+						unlock the door to the mine. After you have removed enough
+						silver ore to construct your focuses, please lock the door again.
+						There are more than a few curious souls who have found that mine to be
+						their final resting place, so please seal it when you are done.
+						\f En utilisant la clef que je t'ai remise, tu peux ouvrir la porte
+						de la mine. Une fois que tu auras ramass‚ assez d'argent pour
+						construire tes Substrats, referme la porte … clef, derriŠre toy.
+						Nombreuses sont les asmes trop curieuses qui ont trouv‚ dans cette
+						grotte leur derniŠre demeure. Je t'en prie, scelle donc cette porte
+						quand tu auras termin‚.
+						\g Mit dem Schlssel, den ich Euch bereits gegeben habe, k”nnt 
+						Ihr die Tr zur Mine aufschlieáen. Verschlieát bitte die Tr wieder 
+						hinter Euch, nachdem Ihr Euch gengend Silbererz genommen habt, um 
+						Eure Zaubersymbole anzufertigen. Viele sind bereits 
+						in die Mine gewandert und haben ihre Neugier mit dem Tod bezahlt. 
+						Bitte seid also sicher, daá Ihr die Tr anschlieáend wieder verriegelt.");
+				}
+
+				askList-=<<"How do I construct the Foci?
+					 \f Comment construire les Substrats?
+					 \g Wie fertigt man die Symbole an?">>;
+				askList+=<<"What do I do with the silver?
+						\f Qu'est-ce que je fais avec l'argent?
+						\g Was mache ich mit dem Silber?">>;
+			}
+
+			case "What do I do with the silver? 
+				\f Qu'est-ce que je fais avec l'argent?
+				\g Was mache ich mit dem Silber?"
+			{
+				bark("You must take the silver to the blacksmith, Korick,
+				in Tenebrae. Only he has the skill to forge the Foci. But
+				these Foci will be without power. You must return here,
+				place them upon the Altar of Focus in the monastery
+				and call upon the name of Stratos. If you have met with her
+				approval, she will fill them with her power.
+				
+				\f Tu dois apporter l'argent chez le forgeron, Korick, … Tenebrae.
+				Luy seul a le talent de forger les Substrats. Toutefois, ces Substrats
+				n'auront point de pouvoirs. Il te faudra revenir icy, les poser sur l'Autel
+				des Substrats  qui se trouve dans le monastŠre et invoquer le nom de 
+				Stratos. Si tu obtiens son accord, elle les chargera de son pouvoir.
+				
+				\g Ihr mát das Silber zum Schmied Korick in Tenebrae bringen. Nur 
+				er hat das n”tige Geschick, um Symbole zu schmieden. Aber diese
+				Symbole werden zun„chst wirkungslos sein. Ihr mát hierher zurckkehren, sie 
+				auf den Symbolaltar im Kloster legen und Stratos anrufen. Wenn Ihr 
+				Stratos' Gunst erlangt habt, wird sie die Symbole mit ihrer Macht
+				erfllen.");
+				askList-=<<"What do I do with the silver? 
+							\f Qu'est-ce que je fais avec l'argent?
+							\g Was mache ich mit dem Silber?">>;
+			}
+
+			case "What are Foci? 
+				\f Les Substrats?
+				\g Was sind Symbole?"
+			{
+				bark("A Focus is a talisman of great magical power. It is a
+				channel. It allows the wielder to touch a small part of the
+				great power of Stratos and use it for the specific purpose
+				for which the Focus was designed such as healing. It
+				is a powerful item, but in the hands of the
+				inexperienced or weak, it can kill.
+				
+				\f Un Substrat est un talisman de grand pouvoir magique. Il permet
+				… celuy qui le manie d'acqu‚rir une partie du pouvoir de 
+				Stratos et de l'utiliser dans le but pr‚cis pour lequel le Substrat a ‚t‚
+				construit, telle la gu‚rison. C'est un objet puissant, mais entre les mains
+				des moins exp‚riment‚s ou des faibles, il peut tuer.
+				
+				\g Ein Symbol ist ein Gegenstand mit groáen magischen
+				Kr„ften. Es erlaubt seinem Besitzer, einen kleinen Teil von 
+				Stratos' unendlicher Macht fr einen ganz speziellen Zweck zu nutzen, 
+				etwa zum Heilen. Diese Gegenst„nde sind sehr m„chtig und verm”gen, viel 
+				Gutes zu leisten. In den H„nden eines Dilettanten oder Schw„chlings aber
+				k”nnen sie t”dlich sein.");
+				askList-=<<"What are Foci? 
+							\f Les Substrats?
+							\g Was sind Symbole?">>;
+			}
+
+			
+			case "I have constructed my Foci. 
+				\f J'ai construit mes Substrats.
+				\g Ich habe meine Symbole fertiggestellt."
+			{
+				bark("Very good. You are well on your way to becoming a
+				full Adept. The next step is a test of all you have learned.
+				You must return to the caverns under the monastery.
+				You will know what to do when you arrive there.
+			
+				\f Fort bien. Tu es dans le bon chemin pour devenir un Adepte.
+				La prochaine estape est un test sur tout ce que tu as appris.
+				Tu dois retourner dans les grottes sous le monastŠre.
+				L…, ta tƒche te sera r‚v‚l‚e.
+				
+				\g Ausgezeichnet. Ihr seid auf dem besten Weg, ein Eingeweihter
+				zu werden. Als n„chstes mát Ihr eine Prfung ablegen, die alles 
+				von Euch verlangt, was Ihr bisher gelernt habt. Ihr mát erneut
+				die H”hlen unter dem Kloster aufsuchen. Ihr werdet wissen, was zu
+				tun ist, wenn Ihr dort ankommt.");
+
+				if not madeToraxForTest
+				{
+					item2:Item;
+					item2.create(TypeWoundedTorax,0);
+					item2.pop(3282,3190,8);
+					madeToraxForTest = true;
+				}
+
+				exitConvo();
+				return;
+
+			}
+
+			case "I have passed the third test.
+				\f J'ai r‚ussi le troisiŠme test.
+				\g Ich habe die dritte Prfung bestanden."
+			{
+				bark("That is a wonderful thing. However, you will
+				have to excuse me. I do not have the time to further
+				your education. We have had a terrible thing happen.
+				
+				\f Excellent! Mais pour l'heur il te faut m'excuser car
+				je n'ai point le temps de continuer ton enseignement. Quelque chose
+				de grave est arriv‚.
+				
+				\g Das ist wunderbar. Aber Ihr mát mich entschuldigen. Ich
+				habe im Augenblick keine Zeit, um Eure Ausbildung fortzufhren.
+				Etwas Schreckliches ist geschehen.");
+
+
+				askList-=<<"I have passed the third test. 
+					\f J'ai r‚ussi le troisiŠme test.
+					\g Ich habe die dritte Prfung bestanden.">>;
+				askList=<<"What has happened? 
+							\f Qu'est-il arriv‚? 
+							\g Was ist geschehen?">>;
+			}
+
+			case "What has happened? 
+				\f Qu'est-il arriv‚? 
+				\g Was ist geschehen?"
+			{
+				bark("Brother Xavier has lost his Focus of healing.
+					\f FrŠre Xavier a perdu son Substrat de gu‚rison.
+					\g Bruder Xavier hat sein Heilsymbol verloren.");
+				askList-=<<"What has happened? 
+							\f Qu'est-il arriv‚? 
+							\g Was ist geschehen?">>;
+				askList+=<<"How did that happen? 
+							\f Comment est-ce arriv‚? 
+							\g Wie konnte das geschehen?">>;
+				focusMissing = true;
+			}
+
+			case "How did that happen? 
+				\f Comment est-ce arriv‚? 
+				\g Wie konnte das geschehen?"
+			{
+
+				bark("No one is sure. Poor Brother Xavier is beside
+				himself with grief. It is very unlikely that an Adept
+				would simply misplace something like that. Ah well, if he
+				knows more, he is not telling me. 
+				
+				\f Personne ne le sait. Le pauvre FrŠre Xavier est malheureux
+				comme une pierre. Il est peu probable qu'un Adepte perde 
+				simplement quelque chose d'aussy important. Il se peut qu'il en sache
+				plus, mais il ne me l'a point dit.
+				
+				\g Das weiá keiner genau. Der arme Bruder Xavier ist v”llig 
+				auáer sich. Es ist sehr unwahrscheinlich, daá ein Eingeweihter
+				ein solch wertvolles Stck einfach verliert. Er mag zwar in 
+				Wirklichkeit mehr darber wissen, aber wenn, dann verr„t er es mir auf 
+				jeden Fall nicht.");
+				askList-=<<"How did that happen? 
+							\f Comment est-ce arriv‚?
+							\g Wie konnte das geschehen?">>;
+				askList+=<<"Do you think it was stolen? 
+							\f Crois-tu qu'il ait ‚t‚ vol‚?
+							\g Vermutet Ihr einen Diebstahl?">>;
+			}
+
+			case "Do you think it was stolen? 
+					\f Crois-tu qu'il ait ‚t‚ vol‚?
+					\g Vermutet Ihr einen Diebstahl?"
+			{
+				bark("It wounds me deeply to think that one of our own
+				would stoop so low as to steal from another enlightened
+				one. It goes against all of Stratos' teachings. But, she
+				also teaches mercy and compassion, so if it was stolen
+				by one of our own, I will not hold it against that
+				person, but rather, will help him find the path of
+				Enlightenment again.
+				
+				\f Cela me blesse profond‚ment de penser que l'un d'entre nous
+				puisse commettre un larcin. Cela
+				va … l'encontre de tous les enseignements de Stratos. Mais elle
+				enseigne aussy le pardon et la compassion. S'il a ‚t‚ vol‚
+				par l'un des nostres, je n'en voudrois point … cette personne, mais luy
+				r‚apprendrois au contraire le chemin vers l'Illumination.
+				
+				\g Es schmerzt mich zutiefst, anzunehmen, daá einer unter uns voller Niedertracht
+				den Besitz eines erleuchteten Bruders stehlen wrde. Eine solche Tat steht
+				im v”lligen Widerspruch zu Stratos' Lehren. Aber Stratos lehrt uns auch Mitgefhl und Gnade. Wenn
+				der Gegenstand wirklich von einem unserer Mitglieder gestohlen wurde, 
+				dann werde ich meinen Groll nicht gegen seine Person richten. Stattdessen
+				werde ich versuchen, ihn wieder auf den Pfad der Erleuchtung zu lenken.");
+
+				askList-=<<"Do you think it was stolen? 
+						\f Crois-tu qu'il ait ‚t‚ vol‚?
+						\g Vermutet Ihr einen Diebstahl?">>;
+			}
+
+			case "I have met Torwin.
+					\f J'ai rencontr‚ Torwin.
+					\g Ich habe Torwin kennengelernt."
+			{
+				bark("He is one of our newest Initiates. He has shown tremendous
+				progress. Until you, he was the finest student we had
+				ever trained. Recently he was been doing some interesting
+				research.
+				
+				\f C'est un de nos Initi‚s les plus r‚cents. Il a fait d'immenses
+				progrŠs. Jusqu'… ton arriv‚e, il estoit un de nos plus brillants estudiants.
+				Ces temps derniers, il a fait des recherches trŠs int‚ressantes.
+				
+				\g Er ist einer unserer neuesten Klosterschler. Er hat erstaunliche
+				Fortschritte gemacht. Vor Euch war er der beste Schler, den wir
+				je ausgebildet hatten. In letzter Zeit war er mit einem interessantem
+				Forschungsprojekt besch„ftigt.");
+				askList-=<<"I have met Torwin. 
+							\f J'ai rencontr‚ Torwin. 
+							\g Ich habe Torwin kennengelernt.">>;
+				askList+=<<"What research is Torwin doing? 
+							\f Quelle recherche fait Torwin?
+							\g An welchem Forschungsprojekt arbeitet Torwin?",
+				 		"One of your finest? 
+				 		\f Un des plus brillants? 
+						\g Einer der Besten?">>;
+			}
+
+			case "What research is Torwin doing? 
+				\f Quelle recherche fait Torwin?
+				\g An welchem Forschungsprojekt arbeitet Torwin?"
+			{
+				bark("He has been looking into the possibility of combining
+				Foci to increase their power. Although I don't believe
+				there is much chance, I don't like to stifle creativity
+				and individuality.
+				
+				\f Il explore la possibilit‚ de combiner plusieurs Substrats pour
+				augmenter leurs pouvoirs. Il y a peu d'espoir que cela fonctionne,
+				mais je n'aime point museler la cr‚ativit‚ et la personnalit‚ de nos eslŠves.
+				
+				\g Er forschte nach M”glichkeiten, Symbole miteinander zu kombinieren, 
+				um ihre Macht zu vervielfachen. Obwohl ich es fr unwahrscheinlich
+				halte, daá so etwas funktionieren k”nnte, ist es „uáerst wichtig, solche 
+				Charakterst„rke und Kreativit„t zu f”rdern.");
+				spokeAboutTorwinS = true;
+				askList-=<<"What research is Torwin doing? 
+							\f Quelle recherche fait Torwin?
+							\g An welchem Forschungsprojekt arbeitet Torwin?">>;
+			}
+
+			case "One of your finest? 
+				\f Un des plus brillants? 
+				\g Einer der Besten?"
+			{
+				bark("Certainly. He finished the Test of Wisdom in record
+				time. He also successfully completed the Test of Centeredness
+				with virtually no mishaps. We have been very proud of
+				him.
+				
+					\f Oh oui!. Il a termin‚ le Test de la Sagesse en un temps record.
+					Il a aussy r‚ussi le Test de l'Equilibre dans la foul‚e.
+					Nous sommes trŠs fiers de luy.
+					
+				\g Das kann man sagen. Er hat die Prfung der Weisheit in krzester
+				Zeit bestanden. Und auch die Prfung des Gleichgewichts hat er ohne 
+				gr”áere Schwierigkeiten abgelegt. Wir sind sehr stolz auf ihn.");
+				askList-=<<"One of your finest? 
+							\f Un des plus brillants? 
+							\g Einer der Besten?">>;
+			}
+
+			case "I have spoken with Brother Xavier. 
+				\f J'ai parl‚ avec FrŠre Xavier.
+				\g Ich habe mit Bruder Xavier gesprochen."
+			{
+				bark("He is such a fine man, and such a wonderful
+				healer. His brusque manner has put some people off
+				at times, but he really is a kind man at heart.
+				
+					\f C'est un brave homme et si bon gu‚risseur. Parfois ses maniŠres
+					brusques agacent les gens, mais il a bon coeur.
+					
+				\g Er ist ein wunderbarer Mann und ein begnadeter Heiler. Mit seiner
+				schroffen Art verletzt er vielleicht manche Leute, aber er ist ein von Herzen 
+				guter Mann.");
+				askList-=<<"I have spoken with Brother Xavier. 
+					\f J'ai parl‚ avec FrŠre Xavier.
+					\g Ich habe mit Bruder Xavier gesprochen.">>;
+			}
+
+			case "I spoke with Holy Cyrrus. 
+				\f J'ai parl‚ avec V‚n‚rable Cyrrus.
+				\g Ich habe mit dem Ehrwrdigen Cyrrus gesprochen."
+			{
+				bark("Good Cyrrus. He is such a kind and gentle soul.
+				In the beginning I was not sure he would be able to
+				withstand the rigors of life here on Argentrock. But
+				he has a core of iron, he does. He is truly a joy
+				to work with.
+				
+					\f Ce bon Cyrrus. Une asme tellement bonne et douce.
+					Au d‚but je n'estois point certain qu'il supporteroit les
+					rigueurs de nostre vie … l'isle du Roc d'Argent. Mais il est solide.
+					C'est un vrai plaisir de travailler avec luy.
+					
+				\g Der gute Cyrrus. Eine so freundliche und sanfte Seele.
+				Am Anfang war ich nicht sicher, ob er das harte Leben hier
+				auf Silberfels aushalten wrde. Aber er hat einen st„hlernen 
+				Willen, ja, den hat er wirklich. Es ist wahrlich eine Freude, mit ihm zu
+				arbeiten.");
+				askList-=<<"I spoke with Holy Cyrrus. 
+					\f J'ai parl‚ avec V‚n‚rable Cyrrus.
+					\g Ich habe mit dem Ehrwrdigen Cyrrus gesprochen.">>;
+			}
+
+			case "Poor Torwin. \f Pauvre Torwin. \g Armer Torwin."
+			{
+				bark("Loss of life is always a tragedy, however, the loss
+				of one so gifted is even a greater loss for those who will
+				not receive his healing powers. However, I am glad the
+				Focus was found. You have plainly shown yourself to be
+				ready to pass the final test and become a full Adept.
+				
+					\f La perte d'une vie est toujours une trag‚die, mais la
+					perte d'un tel talent est mesme plus cruelle pour ceux qui ne
+					pourront profiter de ses pouvoirs de gu‚rison. Cependant, je
+					suis heureux que le Substrat ait ‚t‚ retrouv‚. Tu as bien
+					prouv‚ que tu estois prest … passer le test final pour
+					devenir un Adepte … part entiŠre.
+					
+				\g Tod ist immer etwas Tragisches, aber der Verlust eines so
+				begnadeten Schlers ist ein wahrlich vernichtender Schlag fr die
+				Menschen, die seine Heilkr„fte ben”tigt h„tten. Aber ich bin sehr
+				erfreut, daá das Symbol gefunden wurde. Ihr habt bewiesen,
+				daá Ihr die letzte Prfung ablegen k”nnt, um ein Eingeweihter zu 
+				werden. ");
+				askList-=<<"Poor Torwin \f Pauvre Torwin. \g Armer Torwin.">>;
+				askList+=<<"Adept? \f Adepte? \g Eingeweihter?",
+				 "Final test? \f Test final? \g Endgltige Prfung?">>;
+			}
+
+			case "Adept? \f Adepte? \g Eingeweihter?"
+			{
+				bark("Yes. When you become an Adept, you will have full
+				use of all the spells Stratos gives her followers.
+				
+				\f Oui. Quand tu deviendras un Adepte, tu pourras te servir de
+				tous les sortilŠges que Stratos donne … ses disciples.
+				
+				\g Ja. Wenn Ihr Euch erst den Titel 'Eingeweihter' verdient habt, k”nnt Ihr alle
+				Zauberformeln verwenden, die Stratos ihren Anh„ngern zur Verfgung
+				gestellt hat.");
+				askList-=<<"Adept? \f Adepte? \g Eingeweihter?">>;
+			}
+
+			case "Final test? \f Test final? \g Endgltige Prfung?"
+			{
+				permissionToAirWalk = true;
+				bark("In the final test there are no creatures for you
+				to fight, no riddles to answer nor problems to solve.
+				There is simply you and your belief. You must rely
+				upon your own ability and your faith in Stratos'
+				power.
+				
+				\f Dans le test final, tu n'as point … combattre de monstres, point
+				de devinettes ou de problŠmes … r‚soudre. Il n'y a que toy 
+				et tes croyances. Tu ne peux te fier qu'… tes propres capacit‚s et
+				… ta foy dans le pouvoir de Stratos.
+				
+				\g In der endgltigen Prfung verlangen wir nicht, daá Ihr Ungeheuer t”tet oder
+				R„tsel und Aufgaben l”st. Es geht nur um Eure Seele und Euren Glauben.  Ihr
+				mát Euch auf Eure eigenen F„higkeiten und Euren Glauben an Stratos'
+				Macht verlassen.");
+				askList-=<<"Final test? \f Test final? \g Endgltige Prfung?">>;
+				askList+=<<"How do I take this test? 
+					\f Comment puis-je tenter ce test?
+					\g Wie kann ich diese Prfung ablegen?">>;
+			}
+
+			case "How do I take this test? 
+				\f Comment puis-je tenter ce test?
+				\g Wie kann ich diese Prfung ablegen?"
+			{
+				bark("You must travel to Windy Point where you will
+				find two black pillars. Stand between those pillars.
+				If you truly wish to hear the Mystic Voice, you must
+				then take a leap of faith.
+				
+				\f Il te faut voyager jusqu'… Zona Ventus o— tu trouveras
+				deux grandes colonnes noires. Tiens-toy entre ces colonnes. Si tu d‚sires
+				vraiment entendre la Voix Mystique, il te faut faire le saut de la foy.
+				
+				\g Ihr mát zur Sturmspitze reisen. Dort werdet Ihr zwei schwarze
+				S„ulen finden. Stellt Euch zwischen diese S„ulen. Wenn Ihr wirklich
+				die Mystische Stimme h”ren wollt, dann mát Ihr Euch ganz auf Euren
+				Glauben verlassen.");
+				askList-=<<"How do I take this test? 
+					\f Comment puis-je tenter ce test?
+					\g Wie kann ich diese Prfung ablegen?">>;
+			}
+
+			case "I have heard the Mystic Voice. 
+				\f J'ai entendu la Voix Mystique.
+				\g Ich habe die Mystische Stimme vernommen."
+			{
+				bark("Then you are truly an Adept. 
+					\f Alors tu es vraiment un Adepte.
+					\g Dann seid Ihr wahrlich ein Eingeweihter.");
+				askList-=<<"I have heard the Mystic Voice. 
+					\f J'ai entendu la Voix Mystique.
+					\g Ich habe die Mystische Stimme vernommen.">>;
+				askList=<<"What do you know of the Breath of Wind?
+						\f Que sais-tu du Souffle du Vent?
+						\g Was wiát Ihr ber den Atem des Windes?">>;
+			}
+
+			case "What do you know of the Breath of Wind? 
+				\f Que sais-tu du Souffle du Vent?
+				\g Was wiát Ihr ber den Atem des Windes?"
+			{
+				bark("Ah, the Breath of Wind is that through which
+				Stratos gives her power to her chosen children. Why
+				do you ask?
+				
+					\f Ah, le Souffle du Vent est ce par quoi Stratos insuffle
+					son pouvoir … ses enfants choisis. Pourquoi veux-tu savoir?
+					
+				\g Durch den Atem des Windes gibt Stratos ihre Macht 
+				an ihre auserw„hlten Kinder weiter. Weshalb fragt Ihr?");
+				askList-=<<"What do you know of the Breath of Wind?
+					\f Que sais-tu du Souffle du Vent?
+					\g Was wiát Ihr ber den Atem des Windes?">>;
+				askList+=<<"I must have it.
+					\f Il me le faut.
+					\g Ich muá ihn haben.",
+				"I was just curious.
+					\f Simple curiosit‚.
+					\g Ich war nur neugierig.">>;
+			}
+
+			case "I was just curious.
+					\f Simple curiosit‚.
+					\g Ich war nur neugierig."
+			{
+
+				bark("Ah, it is good for a Child of Stratos to seek knowledge.
+				Continue on the path and you will soon gain the wisdom you
+				seek.
+				\f Ah, il est bon pour un enfant de Stratos de chercher la connoissance.
+				Continue de la sorte et tu trouveras la sagesse.
+				\g Es freut mich immer, wenn eines von Stratos' Kindern nach Wissen strebt.
+				Haltet immer an Eurem Ziel fest, und Ihr werdet bald das Wissen 
+				erlangen, nach dem Ihr sucht.");
+				askList-=<<"I was just curious.
+					\f Simple curiosit‚.
+					\g Ich war nur neugierig.">>;
+				exitConvo();
+				return;
+			}
+
+			case "I must have it.
+					\f Il me le faut.
+					\g Ich muá ihn haben."
+			{
+				bark("Ah, I was afraid it would come to this. The Breath
+				of Wind is found with Stratos. Although you will find it
+				with Stratos, you cannot see it with only your eyes. There
+				are many ways to see things.
+				
+				\f Je craignois qu'on en arrive l…. Le Souffle du Vent est chez Stratos.
+				Mais tu ne peux le voir avec tes seuls yeux. Il y a moultes fa‡ons
+				de voir les choses.
+				
+				\g Ich frchtete, daá es dazu kommen wrde. Der Atem des 
+				Windes ist in Stratos' Reich. Doch obwohl Ihr ihn bei Stratos
+				finden werdet, k”nnt Ihr ihn nicht nur mit den Augen sehen.
+				Man kann solche Dinge auf viele verschiedene Arten erkennen.");
+				askList-=<<"I must have it. 
+					\f Il me le faut. 
+					\g Ich muá ihn haben.",
+				"I was just curious.
+					\f Simple curiosit‚.
+					\g Ich war nur neugierig.">>;
+			}
+
+			case "I have the Breath of Wind. 
+					\f J'ai le Souffle du Vent.
+					\g Ich habe den Atem des Windes."
+			{
+				bark("You are to be congratulated, for you have 
+				achieved that which no other has. You will have to excuse
+				me, however, if I seem to lack some enthusiasm at your
+				accomplishment.
+				
+				\f J'avoue estre impressionn‚ par ton exploit! Tu as accompli ce que nul n'a fait.
+				Mais il faudra m'excuser, cependant, si je manque d'enthousiasme devant
+				ton oeuvre.
+				
+				\g Ich muá Euch beglckwnschen, denn Ihr habt erreicht, 
+				was noch keinem vor Euch gelungen ist. Ihr mát mich 
+				entschuldigen, wenn es mir etwas an Begeisterung ber Eure
+				Errungenschaft mangelt.");
+				askList-=<<"I have the Breath of Wind. 
+							\f J'ai le Souffle du Vent.
+							\g Ich habe den Atem des Windes.">>;
+				askList=<<"Why are you lacking enthusiasm?
+				 			\f Pourquoi manques-tu d'enthousiasme?
+				 			\g Weshalb mangelt es Euch an Begeisterung?",
+				"No other has done this? 
+					\f Nul aultre n'a r‚ussi?
+					\g Es ist keinem vor mir gelungen?">>;
+			}
+
+			case "Why are you lacking enthusiasm?
+				\f Pourquoi manques-tu d'enthousiasme?
+				\g Weshalb mangelt es Euch an Begeisterung?"
+			{
+				bark("Taking the Breath of Wind is not without repercussion.
+					\f Prendre le Souffle du Vent n'est point sans cons‚quences.
+					\g Ihr habt den Atem des Windes genommen. Das kann nicht ohne
+					Folgen bleiben.");
+				askList-=<<"Why are you lacking enthusiasm?
+						 \f Pourquoi manques-tu d'enthousiasme?
+						 \g Weshalb mangelt es Euch an Begeisterung?">>;
+				askList+=<<"What repercussions? 
+							\f Quelles cons‚quences?
+							\g Welche Folgen?">>;
+			}
+
+			case "No other has done this? 
+					\f Nul aultre n'a r‚ussi?
+					\g Es ist keinem vor mir gelungen?"
+			{
+				bark("Even I have not dared such a feat. You are truly
+				one of unparalleled character and bravery.
+				
+				\f Mesme moy, je n'ai os‚ un tel acte. Tu es un estre au
+				caractŠre et au courage in‚gal‚s.
+				
+				\g Selbst ich h„tte das nie gewagt. Ihr verfgt wahrlich ber
+				unglaubliche Charakterst„rke und bewundernswerten Mut.");
+				askList-=<<"No other has done this? 
+							\f Nul aultre n'a r‚ussi?
+							\g Es ist keinem vor mir gelungen?">>;
+			}
+
+			case "What repercussions? 
+				\f Quelles cons‚quences?
+				\g Welche Folgen?"
+			{
+				bark("I understand you are doing what must be done, however, 
+				without the Breath of Wind to draw from, we of Argent Rock will
+				be without our healing spells. So, I hope that you know what you
+				do, for if you are in error, the entire population will suffer.
+				As will I.
+				
+				\f Je comprends que ce que tu as fait devoit estre fait. Mais sans
+				le Souffle du Vent, … l'isle du Roc d'Argent, nous sommes sans nostre
+				pouvoir de gu‚rison. J'espŠre que tu sais ce que tu fais,
+				car si tu te trompes, toute la population va en souffrir. Et moy aussy.
+				
+				\g Ich verstehe, daá Eure Tat notwendig war. Aber ohne den Atem des
+				Windes bleiben wir hier auf Silberfels ohne unsere Heilkr„fte zurck.
+				Ich hoffe, Ihr wiát, was Ihr tut. Wenn Ihr Euch irrt, wird die gesamte
+				Bev”lkerung darunter zu leiden haben und ich selbst natrlich auch...");
+				askList-=<<"What repercussions? 
+							\f Quelles cons‚quences?
+							\g Welche Folgen?">>;
+				askList+=<<"Why will you suffer? 
+							\f Pourquoi vas-tu souffrir?
+							\g Weshalb werdet Ihr leiden?">>;
+			}
+
+			case "I found this ring.
+				\f J'ai trouv‚ cet anneau.
+				\g Ich habe diesen Ring gefunden."
+			{
+				bark("Here let me feel it.
+					\f Permets-moy de le taster.
+					\g Gebt ihn mir in die Hand, so daá ich ihn abtasten kann.");
+				bark("Ah, yes. This is Torwin's. It is not
+				very valuable, but he was very proud of it.
+				He said it belonged to his father. I am afraid it is all
+				that is left of poor Torwin. This must be returned to his
+				mother. You will return it, won't you?
+				
+				\f Ah, oui. C'est celuy de Torwin. Il n'a point grande valeur,
+				mais il en estoit trŠs fier. Il disoit qu'il appartenoit
+				… son pŠre. J'ai peur que ce soit tout ce qui reste de ce pauvre
+				Torwin. Il faudroit le rapporter … sa mŠre. Tu vas t'en charger, n'est-ce point?
+				
+				\g Ach ja. Er geh”rt Torwin. Der Ring ist zwar nicht sehr wertvoll, 
+				aber Torwin war immer sehr stolz darauf. Es war ein Geschenk 
+				von seinem Vater. Das ist leider alles, was von dem armen 
+				Torwin briggeblieben ist. Wir mssen den Ring seiner Mutter 
+				berbringen. Das k”nnt Ihr doch tun, nicht wahr?");
+				askList-=<<"I found this ring.
+							\f J'ai trouv‚ cet anneau.
+							\g Ich habe diesen Ring gefunden.">>;
+				askList+=<<"Yes, I will. 
+								\f Oui, je m'en charge.
+								\g Ja, ich werde ihr den Ring bringen.", 
+							"No, I won't. 
+								\f Non, c'est hors de question.
+								\g Nein, das kommt nicht in Frage.">>;
+				spokeAboutRing = true;
+			}
+
+			case "Yes, I will.
+				\f Oui, je m'en charge.
+				\g Ja, ich werde ihr den Ring bringen."
+			{
+				bark("Ah, there is a good fellow. Stratos was right in
+				trusting you.
+				\f Ah, tu es bien bon. Stratos a raison d'avoir foy en toy.
+				\g Das ist nett von Euch. Stratos tat recht daran, auf Euch zu 
+				vertrauen.");
+				askList-=<<"Yes, I will.
+							\f Oui, je m'en charge.
+							\g Ja, ich werde ihr den Ring bringen.", 
+							"No, I won't.
+								\f Non, c'est hors de question.
+								\g Nein, das kommt nicht in Frage.">>;
+			}
+
+			case "No, I won't.
+				\f Non, c'est hors de question.
+				\g Nein, das kommt nicht in Frage."
+			{
+				bark("But you found it and were the last to see Torwin
+				alive. It is your duty, nay, your honor to take it to his
+				mother. Won't you?
+				\f Mais c'est toy qui l'as trouv‚. Tu es aussy le dernier … avoir vu Torwin.
+				Au nom du devoir... non, au nom de l'honneur, il faut que tu ailles l'apporter
+				… sa mŠre. Je peux compter sur toy?
+				\g Aber Ihr wart es doch, der den Ring gefunden und Torwin als letzter lebend 
+				gesehen hat. Es ist Eure Pflicht, das Schmuckstck zu seiner Mutter zurckzubringen. 
+				Und Ihr wollt das nicht tun?");
+				askList-=<<"No, I won't.
+							\f Non, c'est hors de question question.
+							\g Nein, das kommt nicht in Frage.">>;
+				askList+=<<"I said no! \f Non, c'est non! \g Nein! Das habe ich doch schon gesagt.">>;
+			}
+
+			case "I said no! \f Non, c'est non! \g Nein! Das habe ich doch schon gesagt."
+			{
+				bark("It seems then, that I've severely misjudged you.
+					\f Il sembleroit que je t'ai mal jug‚.
+					\g Nun, was Euren Charakter angeht, habe ich mich wohl sehr get„uscht.");
+				exitConvo();
+				return;
+			}
+
+			case "Why will you suffer? 
+					\f Pourquoi vas-tu souffrir?
+					\g Weshalb werdet Ihr leiden?"
+			{
+				bark("It was with the power of Stratos that I was able to stay
+				alive. Now that the link has been severed, I will no longer
+				receive those blessings which prolong my life. Even now, I
+				feel the years creeping up on me. I am afraid I can last no
+				longer. Goodbye, my friend, use the power well, for it comes
+				at great cost.
+				
+				\f C'est grƒce au pouvoir de Stratos que j'ai pu rester en vie. 
+				Maintenant que le lien a ‚t‚ bris‚, je ne pourroi plus profiter de ces
+				bienfaits qui prolongent ma vie. D‚j…, j'en sens les effets. Je vais
+				mourir d'icy peu. Adieu, mon amy, use de ce
+				pouvoir avec sagesse, car il a coust‚ un grand prix.
+				
+				\g Nur durch Stratos' Macht konnte ich am Leben bleiben. Aber jetzt
+				ist das Band durchtrennt. Ich kann den Segen, der mein Leben
+				verl„ngerte, nicht mehr empfangen. Ich fhle, wie die Jahre auf mir 
+				zu lasten beginnen. Ich kann die Last nicht mehr l„nger tragen. Lebt
+				wohl, mein Freund. Nutzt Eure Macht, denn sie hat viel gekostet.");
+
+				turnToFace(4,0,20);
+				spawn safePlaySFX(LTNING1A,100) -> return;
+				LightningBolt();
+				spawn safePlaySFX(WIND4,100) -> return;
+				doAnim(AS_FALL_DOWN,getDir(),NO_ANIM_LIMIT,FALSE);
+				Stellos.clrImmortal();
+				safePlaySFX(WIND3,100);
+				Stellos.setDead();
+				exitConvo();
+				return;
+			}
+
+
+
+			case "bye \f bon vent \g Lebt wohl."
+			{
+				bark("May you be well. \f Que la sant‚ soit avec toy
+					\g M”ge Euch nichts zustoáen.");
+
+				exitConvo();
+				return;
+			}
+		}
+	}
+}
+
+

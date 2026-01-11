@@ -1,0 +1,48 @@
+uses "free";
+uses "item";
+
+npcclass Avatar inherits Npc
+{
+	process look();
+	process use();
+}
+
+process Avatar::use()
+{
+	askList:String List;
+	answer:String;
+	askList=<<"Hyundi", "Yugo", "neither">>;
+
+		bark ("Hi there, could I interest you in a good used Hyundi? How
+		about a Yugo? It was driven by my aged grandmother.");
+
+	while answer!="neither"
+	{
+		answer = ask(askList);
+		switch answer
+		{
+			case "Hyundi"
+			{
+				bark("Are you sure? The Yugo is a heck of a deal!");
+			}
+
+			case "Yugo"
+			{
+				bark("Hmmmm, maybe you ought to take a little longer to
+				decide, the Hyundi is really cherry.");
+			}
+
+			case "neither"
+			{
+				bark("Hmmmph, you'll be sorry!");
+			}
+		}
+	}
+}
+
+process Avatar::look() 
+{
+	// nothing here yet
+}
+
+

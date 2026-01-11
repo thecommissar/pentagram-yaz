@@ -1,0 +1,1386 @@
+uses "flags";
+uses "free";
+uses "npc";
+
+npcclass Ezrekal inherits Npc
+{
+
+	process look();
+	process use();
+	process schedule(currentTime:Long);
+	process enterFastArea();
+	process leaveFastArea();
+
+//	process cast(ref:Referent);
+}
+
+
+process Ezrekal::look()
+{
+	if Ezrekal.isDead()
+	{
+		bark("Ezrekal's lifeless body");
+		return;
+	}
+
+	if ezrekalName and ezrekalJob
+	{
+		bark("Ezrekal the High Priestess");
+		return;
+	}
+
+	else if ezrekalName
+	{
+		bark("Ezrekal");
+		return;
+	}
+
+	else if ezrekalJob
+	{
+		bark("High Priestess");
+		return;
+	}
+
+	else
+	{
+		bark("old woman");
+		return;
+	}
+}
+/****************************************
+process Ezrekal::schedule(currentTime:Long)
+{
+	point:WorldPoint;
+	map:MapNum;
+	sched:Number;
+
+	point.x = numberhere
+	point.y = numberhere
+	point.z = numberhere
+	sched = at_home;
+	map = MapNameHere
+
+	if canSafeTeleport(point,Map)
+	{
+		EzrekalSchedule = sched;
+		safeTeleport(point,map);
+	}
+}
+
+process Ezrekal::enterFastArea()
+{
+	resetRef(referent,PT_ACTIVITY);
+	resetRef(referent,PT_PATHFIND);
+	resetRef(referent,PT_ANIM);
+	resetRef(referent,PT_BARK);
+
+	if (EzrekalSchedule = at_home)
+	{
+		spawn atHome() -> return;
+	}
+}
+
+
+process Ezrekal::leaveFastArea()
+{
+	killProcess(referent,PT_ACTIVITY);
+	resetRef(referent,PT_PATHFIND);
+	resetRef(referent,PT_ANIM);
+	resetRef(referent,PT_BARK);
+
+	if isDead()
+	{
+		teleport(urandom(10000),urandom(10000),0,0);
+	}
+}
+***********************************************************/
+
+
+/**********************************************************
+  this is for calling the guard                   
+
+process Ezrekal::cast(ref:Referent)
+{
+	count:Number;
+	count = 10;
+	while(notgetTarget()) and (cou
+	{
+		wait(1);
+		count--:
+	}
+
+	ref=getTarget();
+	if ref = Avatar:Referent
+	{
+		spawn callTheGuards(NULL_REF) -> return;
+
+		if not isDead()
+		{
+			killProcess(referent,PT_ACTIVITY);
+			killProcess(referent,PT_BARK);
+			bark("Help! Help!");
+		}
+	}
+}
+***********************************************************/
+
+
+process Ezrekal::use()
+{
+	ran:Number;
+	if not ezrekalMet 
+	{
+		if not zealanMark
+		{
+			Avatar.bark("Greetings!");
+			yelledAtAvatar = true;
+			ran = urandom(6);
+			if ran = 1
+			{
+				bark("Eh? What? A Pagan! A Pagan here? NO! Get gone,
+				you foul creature of the dark! Leave me or call
+				upon the Ancient Ones I will and blast you from my sight
+				they will!");
+				exitConvo();
+				return;
+			}
+
+			if ran = 2
+			{
+				bark("A Pagan? In my home? Begone, you filth! Fouls my home
+				your evil presence does! BEGONE!");
+				exitConvo();
+				return;
+			}
+
+			if ran = 3
+			{
+				bark("EEEEEEEHHH!!! A PAGAN!! Come to finish what
+				your grandfathers started have you? Tolerate this not I will
+				not! Leave my sight, or call the powers of the Ancient Ones
+				to destroy you I shall!");
+				exitConvo();
+				return;
+			}
+
+			if ran = 4
+			{
+				bark("What is this? Why a horrid Pagan I believe it is!
+				NO! Tolerate it I shall not! Leave me, you vile wretch!
+				LEAVE!");
+				exitConvo();
+				return;
+			}
+
+			if ran  = 5
+			{
+				bark("Believe what I see, I can not! A PAGAN it is! Filth!
+				Wretch! Slime! Away with you! Darken not my door! AWAY!");
+				exitConvo();
+				return;
+			}
+		}
+		else
+		{
+//if not met ezrekal, but have the mark
+			Avatar.bark("Hail!");
+			bark("Hello");
+		}
+	}
+
+	else
+	{
+		ran = urandom(6);
+		if ran = 1
+		{
+		Avatar.bark("Greetings, Ezrekal!");
+		}
+
+		if ran = 2
+		{
+			Avatar.bark("Hello again, Ezrekal.");
+		}
+
+		if ran = 3
+		{
+			Avatar.bark("Hail, Ezrekal!");
+		}
+
+		if ran = 4
+		{
+			Avatar.bark("Well met, Ezrekal.");
+		}
+
+		if ran = 5
+		{
+			Avatar.bark("Good to see you, Ezrekal.");
+		}
+
+		if (climbedCliffs=true) and (spokeOfAwaken =true) and (shieldFixed = false)
+		{
+			bark("Go on. Return to the Cloud City and continue
+			your search!");
+			exitConvo();
+			return;
+		}
+
+		if (spokeOfOpenTemple = true) and (godsFree=false)
+		{
+			bark("Hurry, we must go to the temple!");
+			exitConvo();
+			return;
+		}
+
+	}
+
+	askList:String List;
+	answer:String;
+	CliffKey,item:Item;
+	shield:Item;
+	myMan:WorldPoint;
+	enterConvo();
+
+	if not ezrekalMet
+	{
+		askList=<<"May I know your name?">>;
+	}
+
+	else
+	{
+		if avatarPoisoned
+		{
+			if shieldFixed
+			{
+				askList+=<<"Please heal me.">>;
+			}
+			else
+			{
+				if climbedCliffs
+				{
+					askList+=<<"I climbed the cliffs!">>;
+				}
+				else
+				{
+					askList+=<<"Can you help me?">>;
+				}
+			}
+		}
+		else
+		{
+			if templeOpen
+			{
+				if godsFree
+				{
+					askList+=<<"I have freed your gods!">>;
+				}
+				else
+				{
+					askList+=<<"I have opened your temple!">>;
+				}
+			}
+			else
+			{
+				askList+=<<"Tell me of the Vale.">>;
+			}
+		}
+		if (mentionShield = true) and (shieldFixed = false)
+		{
+			askList+=<<"Tell me again of the Shield.">>;
+		}
+
+		if spokeOfCataclysm
+		{
+			askList^=<<"Tell me more of the Cataclysm.">>;
+		}
+	}
+
+	while answer!="bye"
+	{
+		askList-=<<"bye">>;
+		askList+=<<"bye">>;
+		answer=ask(askList);
+		switch answer
+		{
+
+			case "May I know your name?"
+			{
+				if yelledAtAvatar
+				{
+					bark("Ezrekal my name is. Sorry I am, acted so rudely
+					before I did. The mark of the Zeleans upon you see I
+					did not. Funny, not like a Zelean you look. Different you look,
+					different you speak. If not a Pagan you are, what are you?");
+					askList+=<<"I am from Brittania.">>;
+					yelledAtAvatar = false;
+					ezrekalName = true;
+				}
+				else
+				{
+					bark("Ezrekal my name is. The mark of the Zeleans upon you
+					I see. Funny, not like a Zelean you look. Different
+					you look, different you speak. If not a Pagan you are,
+					what are you?");
+					ezrekalName = true;
+				}
+				askList-=<<"May I know your name?">>;
+				askList+=<<"I am from Brittania.", "What do you do?">>;
+				ezrekalName = true;
+				if avatarPoisoned
+				{
+					askList^=<<"Can you help me?">>;
+				}
+				if templeOpen
+				{
+					askList^=<<"I have opened your temple!">>;
+				}
+			}
+
+			case "What do you do?"
+			{
+				bark("The High Priestess I am...or I was.");
+				askList-=<<"What do you do?", "I am from Brittania.">>;
+				askList+=<<"High Priestess of what?">>;
+				ezrekalJob = true;
+			}
+
+			case "High Priestess of what?"
+			{
+				bark("Of what you ask? Why of the Ancient Ones!");
+				askList-=<<"High Priestess of what?">>;
+				askList+=<<"What does the High Priestess do?">>;
+			}
+
+			case "What does the High Priestess do?"
+			{
+				bark("Hmmmm, obvious it is from your dress and your
+				speech that not from here you are. The mouth piece of the
+				Ancient Ones the High Priestess is. On special days
+				to their followers through me they speak.");
+				askList-=<<"What does the High Priestess do?">>;
+				askList+=<<"How do they speak through you?", "When are the
+				special days?">>;
+			}
+
+			case "When are the special days?"
+			{
+				bark("Very sacred the special days were. Ruled by the great
+				ball of fire in the sky they were. Knew the
+				days the ball of fire would light the skies for the longest
+				time and the shortest time, the High Priestess did. Held on
+				these days the ceremonies were. Sad I am no more
+				special days there are.");
+				askList-=<<"When are the special days?">>;
+				askList+=<<"Why are there no more special days?", "Ball of
+				fire in the sky?">>;
+			}
+
+			case "Ball of fire in the sky?"
+			{
+				bark("Said that the ball of fire lit the skies for
+				many hours each day, it is. So great its power was,
+				kept the great mushrooms from growing the heat did.
+				Great plants with brilliant colors grew and blue was
+				the sky!");
+				askList-=<<"Ball of fire in the sky?">>;
+				askList+=<<"What happened to the ball of fire?">>;
+			}
+
+			case "What happened to the ball of fire?"
+			{
+				if spokeOfCataclysm
+				{
+					bark("Again, it was destroyed in the great Cataclysm.
+					You see, all the troubles of this world can be related
+					back to the Titans, curse them, and the terrible
+					damage they wrought during the Great Cataclysm.");
+				}
+				else
+				{
+					bark("It was during the Great Cataclysm. Have I not
+					spoken of it? It is the most tragic day in the history
+					our people.");
+					askList+=<<"Tell me more of the Great Cataclysm.">>;
+					spokeOfCataclysm = true;
+				}
+				askList-=<<"What happened to the ball of fire?">>;
+			}
+
+
+			case "How do they speak through you?"
+			{
+				bark("A very sacred ceremony it is. Takes place in
+				the Temple of the Ancients it does. Call upon them I would
+				to let them know willing to recieve them I was. Take control
+				of my body they would and my mouth they use their
+				wisdom to speak.");
+				askList-=<<"How do they speak through you?">>;
+			}
+
+			case "Why are there no more special days?"
+			{
+				if spokeOfCataclysm
+				{
+					bark("Of the Great Cataclysm you I told. Since then
+					silent the Ancient Ones have been. Never experienced
+					the rapture of the Ancients speaking through me
+					have I, nor my mother did nor her mother before
+					her. Yet still we wait. return to us they will
+					and here we will be, ready to recieve their
+					wisdom again.");
+				}
+				else
+				{
+					bark("With the Great Cataclysm the days of
+					hearing the Ancient Ones speak did end. Stopped speaking
+					to us then the Ancients did. But back they will be and
+					when return they do, waiting to recieve their wisdom
+					we will be.");
+					spokeOfCataclysm = true;
+				}
+					askList-=<<"Why are there no more special days?">>;
+					askList^=<<"Tell me more of the Great Cataclysm.">>;
+			}
+
+			case "I am from Brittania."
+			{
+				bark("Brittania?....No place in the Vale called
+				'Brittania' there is. From 'outside' the barrier are you?");
+				askList-=<<"I am from Brittania.", "What do you do?">>;
+				askList+=<<"Yes, I am from outside.", "No, I am not from outside.">>;
+			}
+
+			case "No, I am not from outside."
+			{
+				bark("Well, away from my people longer I have been than I
+				thought . Cities I have never heard of have they?
+				Where exactly this 'Brittania' is?");
+				askList-=<<"No, I am not from outside.", "Yes, I am from outside.">>;
+				askList+=<<"Why have you been away from your people?",
+				"Brittania is not in the Vale.", "Brittania is near the
+				barrier.">>;
+			}
+
+			case "Brittania is near the barrier."
+			{
+				bark("Hmmm, perhaps faster the Vale is growing than
+				I know. A new town, then we have.");
+				askList-=<<"Brittania is not in the Vale.", "Brittania is near the
+				barrier.">>;
+			}
+
+			case "Brittania is not in the Vale."
+			{
+				bark("That much guess I can by the way you act and certainly
+				by the way you speak. Very difficult to understand you are.
+				In your Brittania as well the Titans are?");
+				askList-=<<"Brittania is not in the Vale.", "Brittania is near the
+				barrier.">>;
+				askList+=<<"The Titans are in Brittania.", "The Titans are
+				not in Brittania.">>;
+			}
+
+			case "The Titans are in Brittania."
+			{
+				bark("Ah, perhaps that is where our Ancient Ones are then.
+				Fighting the Titans in your Brittania, they have been.");
+				askList-=<<"The Titans are in Brittania.", "The Titans are
+				not in Brittania.">>;
+			}
+
+			case "The Titans are not in Brittania."
+			{
+				bark("No? Then our Ancient Ones are there? Perhaps
+				resting there they are. Strengh to return and the
+				Titans to defeat they are gaining.");
+				askList-=<<"The Titans are in Brittania.", "The Titans are
+				not in Brittania.">>;
+				askList+=<<"The Ancient Ones are in Brittania.", "The Ancient
+				Ones are not in Brittania.">>;
+				if not askedAboutAncients
+				{
+					askList+=<<"Who are the Ancient Ones?">>;
+				}
+			}
+
+			case "The Ancient Ones are in Brittania"
+			{
+				bark("Ah, relieves my heart does this news. Perhaps
+				in my lifetime return to us they will.");
+				askList-=<<"The Ancient Ones are in Brittania.", "The Ancient
+				Ones are not in Brittania.">>;
+			}
+
+			case "The Ancient Ones are not in Brittania."
+			{
+				bark("Well, whereever they are, resting they are and
+				for their return preparing, I hope. Waiting will be the
+				Zealans.");
+				askList-=<<"The Ancient Ones are in Brittania.", "The Ancient
+				Ones are not in Brittania.">>;
+			}
+
+			case "Why have you been away from your people?"
+			{
+				if spokeOfCataclysm
+				{
+					bark("Back to the Great Cataclysm I mentioned it all goes.
+					When occured that did, rush to the High Priestess the
+					people did and demanded an answer from the Ancient Ones
+					she get on how the battles to stop. Answer her the Ancients
+					would not. Accused her of lying the people did. Out of
+					their village her they ran and come back they forbade her
+					until communicated with the Ancient Ones she had. Many,
+					many years ago that was. Allow me back, the people of
+					the village will not. Crazy, me they call. A fake
+					they say I am. But watch for the return of the Ancients
+					someone must, so for the Ancients to speak I still
+					wait as my mother did and her mother before her.");
+					askList-=<<"Why have you been away from your people?">>;
+				}
+				else
+				{
+					bark("It all goes back to the Great Cataclysm.
+					During the chaos, rush to the High Priestess the
+					people did and demanded an answer from the Ancient
+					Ones she get on how the battles to stop. Answer
+					her the Ancients would not. Accused her of lying
+					the people did. Out of their village her they ran
+					and come back they forbade her until communicated
+					with the Ancient Ones she had. Many, many years
+					ago that was. Allow me back, the people of
+					the village will not. Crazy, me they call. A fake
+					they say I am. But watch for the return of the Ancients
+					someone must, so for the Ancients to speak I still
+					wait as my mother did and her mother before her.");
+					spokeOfCataclysm = true;
+					askList-=<<"Why have you been away from your people?">>;
+					askList^=<<"Tell me more of the Great Cataclysm.">>;
+				}
+			}
+
+			case "Yes, I am from outside."
+			{
+				bark("Oh, my! And not a Pagan you are? Well, of course not,
+				the mark you bear. Well, an interesting day this
+				has become, met someone from outside I have.
+				Goes it well on the other side of the barrier does it? Still
+				running amuck the Titans are? Heard from the Ancient Ones
+				have you?");
+				askList-=<<"Yes, I am from the outside.">>;
+				askList=<<"Can you help me?", "The Titans are still in
+				control.", "Who are the Ancient Ones?", "I have heard from
+				the Ancient Ones.", "I have not heard from the Ancient Ones.",
+				"What do you do?">>;
+			}
+
+			case "Who are the Ancient Ones?"
+			{
+				bark("The Ancient Ones are who? Sunk so far has it
+				the names of the Ancients the young do not know? Oh, sad
+				this is. Wounded I am, but tell you of them I will.
+				Control all emotions, the Ancients do. Rich in power
+				they are. Power to heal the world they have... and power
+				it to destroy. Worshipped by all of Pagan they were until
+				the Titans arrived. A great battle it was. Ended in the Great
+				Cataclysm it did.");
+				askedAboutAncients = true;
+				askList-=<<"Who are the Ancient Ones?">>;
+				askList^=<<"Tell me more of the Great Cataclysm.">>;
+			}
+
+			case "The Titans are still in control."
+			{
+				bark("Oh, sad news this is. Perhaps why we
+				have not heard from the Ancient Ones this is.
+				Still battling those terrible Titans they are.");
+				askList-=<<"The Titans are still in control.">>;
+			}
+
+			case "I have heard from the Ancient Ones."
+			{
+				bark("You have? Oh what great news this is! Where hear
+				from them did you? Mention their poor devoted
+				followers here in the vale did They? Say when return they
+				would, did they?");
+				askList-=<<"The Titans are still in control.", "I have not
+				heard from the Ancient Ones.", "I have heard from the Ancient
+				Ones.", "Who are the Ancient Ones?">>;
+				askList+=<<"They did mention you.", "They did
+				not mention you.", "I was in their temple.">>;
+			}
+
+			case "They did mention you."
+			{
+				bark("Oh, wonderful! Ready to return they must be. If
+				only the Shield of the Ancients I had.");
+				askList-=<<"They did mention you.", "They did not mention
+				you.">>;
+				mentionShield = true;
+				askList^=<<"Shield of the Ancients?">>;
+			}
+
+			case "They did not mention you."
+			{
+				bark("Forgotten us can they have? Certainly not! Terribly
+				busy they must be. Fighting the Titans still are they?
+				Oh, if only the Shield of the Ancients I had.");
+				mentionShield = true;
+				askList-=<<"They did not mention you.", "They did mention you.">>;
+				mentionShield = true;
+				askList^=<<"Shield of the Ancients?">>;
+			}
+
+			case "I was in their temple."
+			{
+				bark("The temple on the other side you mean? Destroyed long
+				ago I thought it had been.");
+				askList-=<<"I was in their temple.">>;
+				askList+=<<"It is not destroyed.", "It is destroyed.">>;
+			}
+
+			case "It is not destroyed."
+			{
+				bark("Joyful this news is! Hope there is that 
+				return they
+				shall!");
+				askList-=<<"It is not destroyed.", "It is destroyed.">>;
+			}
+
+			case "It is destroyed."
+			{
+				bark("Sad, this news is. Lost then hope is. Return to us
+				the Ancient Ones may never.");
+				askList-=<<"It is not destroyed.", "It is destroyed.">>;
+			}
+
+			case "Can you help me?"
+			{
+				bark("Ah, hard to understand you are. Help you need
+				say did you?");
+				askList=<<"I have been poisoned.">>;
+			}
+
+			case "I have been poisoned."
+			{
+				bark("Poisoned? Nothing of poisons I know. Help you I can
+				not.");
+				askList-=<<"I have been poisoned.">>;
+				if testFromThordis
+				{
+					askList=<<"Thordis sent me to you.">>;
+				}
+				if testFromAtli
+				{
+					askList=<<"Atli sent me to you.">>;
+				}
+				else
+				{
+					askList=<<"But I'm dying!">>;
+				}
+			}
+
+			case "But I'm dying!"
+			{
+				bark("Sorry I am. A nice young man you seemed, too. A
+				little hard to understand you are, but nice. Well,
+				prepare a nice funeral for you the least I can do is.");
+				askList-=<<"But I'm dying.">>;
+				askList+=<<"Prepare my funeral?!">>;
+			}
+
+			case "Atli sent me to you."
+			{
+				bark("He did? Most odd this I find. He refuses to acknowledge
+				my presence. Hmmmmm, sent you to me, did he...? How sad
+				this is. A nice young man you seemed. A little hard to
+				understand you are, but nice you are. Well, prepare
+				a nice funeral for you the least I can do is.");
+				askList-=<<"Atli sent me to you.">>;
+				askList+=<<"Why does he hate you?", "Prepare my
+				funeral!?">>;
+			}
+
+			case "Thordis sent me to you."
+			{
+				bark("She did? Most odd this I find. Not friends we
+				are. Dispises me she does. Sent you to me, did she...?
+				How sad, a nice young man you seemed, too. A
+				little hard to understand you are, but nice. Well,
+				prepare a nice funeral for you the least I can do is.");
+				askList-=<<"Thordis sent me to you.">>;
+				askList+=<<"Why does she hate you?", "Prepare my funeral!?">>;
+			}
+
+			case "Why does he hate you?"
+			{
+				bark("Now, I wouldn't say he hate me. Rather, he refuses
+				to acknowlege my presence. He blames all the problems
+				of this Vale on me. He says that if the High Priestess
+				hadn't let the Shield be stolen, the Vale would
+				still be lush and green.");
+				askList-=<<"Why does he hate you?">>;
+			}
+
+			case "Why does she hate you?"
+			{
+				bark("For all the ills of her people, me she blames,
+				particularly for her brother.");
+				askList-=<<"Why does she hate you?">>;
+				if toldAboutAddiction
+				{
+					askList+=<<"You mean his drinking problem?">>;
+				}
+				else
+				{
+					askList+=<<"Why her brother?">>;
+				}
+			}
+
+			case "You mean his drinking problem?"
+			{
+				bark("Afraid so I am. Although see I do not how the cause
+				of it I could be. But everyone she blames for
+				her brother's problems except her brother.");
+				askList-=<<"You mean his drinking problem?", "Why her brother?">>;
+			}
+
+			case "Why her brother?"
+			{
+				bark("Ah, not met Tjorvi have you? To say it suffice,
+				a slight problem with liquor he has.");
+				askList-=<<"You mean his drinking problem?", "Why her brother?">>;
+			}
+
+			case "Prepare my funeral?!"
+			{
+				bark("A nice funeral it will be. burn the finest
+				incense I will and some of the old songs sing I will.
+				Invoke the Ancient Ones of Love and Joy I will and
+				perform the ritual to chase away Sorrow I will.");
+				askList-=<<"Prepare my funeral?", "Why does she hate you?">>;
+				askList+=<<"I want to be healed!", "I don't want a funeral!">>;
+			}
+
+			case "I want to be healed!"
+			{
+				bark("This I cannot do. But I will begin preparations for
+				your funeral right away. I will have to gather the
+				appropriate mushrooms and prepare the ceremonial pyre.
+				Hmmm, that will require some time. I hope you can hold
+				out for a little while longer, I need time to prepare!");
+				askList-=<<"I want to be healed!">>;
+			}
+
+			case "I don't want a funeral!"
+			{
+				bark("What mean do you? If buried with proper ceremoneis
+				you are not, accept you the Ancient Ones will not and
+				acheive eternal peace you will not.");
+				askList-=<<"I don't want a funeral!">>;
+				askList+=<<"You said the Ancient Ones were gone!">>;
+			}
+
+			case "You said the Ancient Ones were gone!"
+			{
+				bark("Yes, well, so it seems. But when return they do, 
+				accept you they will.");
+				askList-=<<"You said the Ancient Ones were gone!">>;
+				askList+=<<"Where will I be until then?", "When will they
+				return?">>;
+			}
+
+			case "When will they return?"
+			{
+				bark("Oh, my friend, asking that question for 200 years
+				my ancestor have been!");
+				askList-=<<"When will they return?">>;
+			}
+
+			case "Where will I be until then?"
+			{
+				bark("Well....ummm....unknown that is. Some there are
+				who believe those horrid undead water things,dead
+				Zealans are. Believe they do this is how await
+				the return of the Ancients, they will.");
+				askList-=<<"Where will I be until then?">>;
+				askList+=<<"I don't want to be an undead!", "Those cannot be
+				Zealans!">>;
+			}
+
+			case "Those cannot be Zealans!"
+			{
+				bark("Agree with you, I tend to, however, saw one that
+				like my grandmother looked, I did.");
+				askList-=<<"Those cannot be Zealans!">>;
+			}
+
+			case "I don't want to be an undead!"
+			{
+				bark("Oh, believe it is so I do not! Remnants of that
+				horrid water Titan I believe they are. Believe the undead
+				Zealans go to the Cloud City I do, the return of the
+				Ancients to await.");
+				askList-=<<"I don't want to be an undead!", "Those cannot
+				be Zealans waiting for the Ancients!">>;
+				askList+=<<"Cloud City?", "Remnants of the Water Titan?">>;
+			}
+
+			case "Remnants of the Water Titan?"
+			{
+				bark("Some of the minions the Titans set upon
+				us when during the Great Cataclysm they were. Mentioned
+				that to you have I not? Undead from the water,
+				whirlwinds, raining fire, earthquakes. Terrible it was.");
+				askList-=<<"Remnants of the Water Titan?">>;
+			}
+
+			case "Cloud City?"
+			{
+				bark("The home of the Ancient Ones the Cloud City is. Atop
+				those very tall cliffs you see off to the North it is.
+				Hmmmm, now that about it I think. A possible way for you
+				to be healed there may be.");
+				askList-=<<"Cloud City?", "Remnants of the Water Titan?">>;
+				askList+=<<"How?! How can I be healed?">>;
+			}
+
+			case "How?! How can I be healed?"
+			{
+				bark("Well, not a very good chance it is, but better than
+				no chance any chance is. Before the Cataclysm, those
+				poisoned in the Trial would be healed by the High Priestess.
+				but the Shield is now gone and the High Priestess cannot
+				perform any ceremonies without it. Only the Ancient Ones
+				can heal you. It is said by some that the
+				Ancient Ones are not gone, but merely sleeping in their
+				Cloud City. Perhaps you could go and awaken them and ask
+				them to heal you.");
+				askList=<<"Tell me of the Shield.", "Where is the Cloud
+				City?", "How can I awaken the Ancients?">>;
+
+// this finds out if the Avatar is carrying the original shield
+				foreach recursive shield where (type = TypeShields)
+				and (frame = 0) within container Avatar 
+				{
+					askList^=<<"I have the Ancient Shield.">>;
+				}
+			}
+
+			case "How can I awaken the Ancients?"
+			{
+				bark("Ah, that is something I have thought on for many
+				years. I confess, though, I have no answer. Perhaps
+				once you arrive there, you will find something with
+				which to awaken them.");
+				askList-=<<"How can I awaken the Ancients.">>;
+			}
+
+			case "I have the Ancient Shield."
+			{
+				bark("Hmmmm, I see that. I am afraid that what you
+				have is a forgery. While it is the same shape and
+				look as the Shield of the Ancients, it has the wrong
+				symbols. Those are the symbols of whoever is in the
+// SHERI get the names of the AO's right!!!
+				temple in Pagan. On the Shield of the Ancients are
+				the symbols for the ones in this temple.");
+				askList-=<<"I have the Ancient Shield.">>;
+				askList+=<<"I found it in the Temple in Pagan.">>;
+			}
+
+			case "I found it in the Temple in Pagan."
+			{
+				bark("That is very interesting, although our history only
+				tells of one shield. I'm afraid what you have there
+				may be a forgery.");
+				askList-=<<"I found it in the Temple in Pagan.">>;
+			}
+
+			case "Tell me of the Shield.", "Tell me again of the Shield."
+			{
+				bark("The shield is that great powerful artifact the
+				Ancient Ones used to communicate with us. Their magic
+				is so powerful it would sear the flesh from the
+				High Priestess so a shield was constructed to
+				protect her when she was receiving their
+				presence. But the shield was lost many years ago.");
+				askList-=<<"Tell me of the Shield.">>;
+				askList+=<<"How was it lost?", "Can you make
+				another sheild?">>;
+			}
+
+			case "How was it lost?"
+			{
+				bark("The shame of the High Priestess it is. After the
+				Great Cataclysm the High Priestess became terribly
+				depressed. She stopped eating and spent all her time
+				in ritual and prayer. One night, the shield disappeared
+				from her house. At the same time, two young boys
+				disappeared from the villages as well. When the villagers
+				found out, they became angry. The families of the boys
+				began to fight. Each claimed that the other boy had
+				stolen the shield and their boy had only gone to
+				retrieve it. Neither boy nor the shield was ever found.
+				The families have been fighting ever since.");
+				askList-=<<"How did it get lost?">>;
+				askList^=<<"Can you make another shield?", "When did this
+				happen?">>;
+			}
+
+			case "When did this happen?"
+			{
+				bark("Shortly after the Great Cataclysm. That would be
+				nearly 200 years ago.");
+				askList-=<<"When did this happen?">>;
+			}
+
+			case "Can you make another shield?"
+			{
+				bark("No. The shield was not made by Zealan hands. It
+				was a gift from the Ancient Ones to Casera, our first
+				High Priestess.");
+				askList-=<<"Can you make another shield.">>;
+			}
+
+			case "Where is the Cloud City?"
+			{
+				bark("Do you not see the great cliffs to the 
+// SHERI get side of village the cliffs are on.
+				south of our vale? At the top of those
+				cliffs lies the fabled Cloud City.");
+				askList-=<<"Where is the Cloud City?">>;
+				askList^=<<"Tell me more of the Cloud City.">>;
+			}
+
+			case "Tell me more of the Cloud City."
+			{
+				bark("It is said to be the most beautiful land. The
+				clouds which we see as our ceiling, serve as the
+				floor for the Cloud City. The buildings are of white
+				polished stone and sparkle with gold. It is the home
+				of the Ancient Ones.");
+				askList-=<<"Tell me more of the Cloud City.">>;
+				askList+=<<"Are the Ancient Ones still there?", "Has
+				anyone ever been there?">>;
+			}
+
+			case "Are the Ancient Ones still there?"
+			{
+				bark("No one knows. The Cliffs which guard the Cloud
+				City are steep and trecherous. Shortly after the Cataclysm
+				many young Zealans tried to climb the cliffs. They all
+				met their deaths on the rocks below. So many died, the
+				High Priestess, Casera, sealed off the way to the Cliffs.
+				Now, only those who bear the seal of the High Priestess may
+				approach the Cliffs.");
+				askList-=<<"Are the Ancient Ones still there?">>;
+				askList+=<<"Perhaps I will try the Cliffs.">>;
+			}
+
+			case "Has anyone ever been there?"
+			{
+				bark("A story is told about Casera, the first High
+				Priestess. It is said the Ancient carried her
+				up to their City. She was gone for 3 days. The Zealans all
+				began to morn, thinking her dead. Then, on the morning of the
+				fourth day, the ground rumbled and the clouds parted and
+				Casera descended a stairway of radiant light. She brought with
+				her the Shield Of The Ancients. She often told stories of
+				the brilliance of the Cloud City.");
+				askList-=<<"Has anyone ever been there?">>;
+			}
+
+			case "Perhaps I will try the Cliffs."
+			{
+				bark("Hmmmm, it may be your only chance. For if the Ancient
+				Ones are still there, you may be able to wake them and ask
+// SHERI find out what the token is
+				them to heal you poison. Here, let me give you the token
+				which will allow you to approach the cliffs. I wouldn't
+				normally let someone in your condition attempt the climb,
+				but you are different. There is a strengh about you that
+				just might help you to suceed. I will go to the sacred
+				place and perform the rituals that will help quide your
+				path. I will remain there until you return, or news of your
+				death is brought to me.");
+// SHERI find out the name of the sacred place
+				myMan.x = Avatar.getX();
+				myMan.y = Avatar.getY();
+				myMan.z = Avatar.getZ();
+// get correct key type
+				if give(Avatar:Referent,TypeKey,0,48,1)
+				{
+				}
+// get correct key type here
+				else if createNear(myMan,TypeKey,0,48,1)
+				{
+				}
+				askList-=<<"Perhaps I will try the Cliffs.">>;
+				askList^=<<"Where is the Sacred Circle?">>;
+				if toldOfShield = false
+				{
+					askList+=<<"Tell me of the Shield.">>;
+				}
+			}
+
+			case "Where is the Sacred Circle?"
+			{
+				bark("It is on top of the plateau on the west
+				side of the Vale.");
+				askList-=<<"Where is the Sacred Circle.">>;
+			}
+
+
+			case "Please heal me."
+			{
+				bark("I thought you might change your mind. Certainly
+				I will heal you.");
+				if (Avatar.getHp() < (Avatar.getStr() * 2))
+				{
+					healingTouch(Avatar:Referent);
+					bark("I must rest now. Please leave me.");
+					exitConvo();
+					return;
+				}
+				else
+				{
+					bark("Hmmm, it seems I can heal you no more. Your
+					strengh has been sapped. Only the Ancient Ones
+					can repair that damage. I am sorry.");
+					exitConvo();
+					return;
+				}
+			}
+
+
+			case "I climbed the cliffs!"
+			{
+				bark("Did you find the Ancient Ones?");
+				askList-=<<"I climbed the cliffs.">>;
+				askList=<<"No, I did not.", "Yes, I did.">>;
+			}
+
+			case "No, I did not."
+			{
+				spokeOfAwaken = true;
+				bark("Ah, I thought as much. For had you awakend them,
+				I would have known it. Perhaps you did not search
+				hard enough. I know the way is perilous, but you might
+				consider returning and looking for clues as to where the
+				Ancient Ones are.");
+				exitConvo();
+				return;
+			}
+
+			case "Yes, I did."
+			{
+				spokeOfAwaken = true;
+				bark("Strange that is. Had you found them, sure I am that
+				known it I would have. Well, obvious it is awaken them you
+				did not. The way is perilous I know, consider returning
+				and looking for clues you might.");
+				exitConvo();
+				return;
+			}
+
+			case "I have freed your gods!"
+			{
+				if hasBag
+				{
+					bark("Yes yes! I know! It is wonderful. I know the
+					bag I gave you is not enought to repay you. Thank
+					you again for your help. Now, there is much for me
+					to do. If you will excuse me?");
+					exitConvo();
+					return;
+				}
+				else
+				{
+					bark("What a wonderful time this is! I will once again
+					be able to fulfill my duties as High Priestess! There
+					is nothing I can give you to repay you for your
+					trouble, but there is this I can give you. It is a
+					magical bag. It will provide you with any magical
+					reagents you need. Take it, with our heartfelt thanks!");
+					exitConvo();
+					return;
+				}
+			}
+
+				case "I have opened your temple!"
+				{
+					if spokeOfOpenTemple
+					{
+					bark("Yes, Yes, now, I must get Atli and Thordis. Please
+					go back to the temple. I will meet you there.");
+					exitConvo();
+					return;
+					}
+					else
+					{
+						bark("You have opened the temple?! I knew
+						something had happened. I sensed it!
+						How did you manage it? How did you...oh, never mind
+						what is important is you did it! What did you find?");
+						askList-=<<"I have opened your temple!">>;
+						askList=<<"I found the Ancient Ones!", "I found
+						great treasure!", "I found nothing.">>;
+					}
+				}
+
+				case "I found the Ancient Ones!"
+				{
+					bark("I knew something had happened! Will they contact
+					us then? Will they make their presence known to me?");
+					askList-=<<"I found the Ancient Ones!", "I found great
+					treasure!", "I found nothing.">>;
+					askList+=<<"They are encased in amber.">>;
+				}
+
+				case "They are encased in amber."
+				{
+					bark("Oh dear, this is the work of the Titans. We
+					must release them. Quickly, return to the temple.
+					I will bring Atli and Thordis and meet you there.");
+					ezToTemple = true;
+					spokeOfOpenTemple = true;
+					exitConvo();
+					return;
+				}
+
+				case "I found great treasure."
+				{
+					bark("Great treasure? What sort of treasure?");
+					askList-=<<"I found the Ancient Ones!", "I found great
+					treasure!", "I found nothing.">>;
+					askList+=<<"I found the Ancient Ones!", "I found gold.",
+					"I found gems!">>;
+				}
+
+				case "I found gold."
+				{
+					bark("You lie! There was never something as worthless
+					as gold in the temple!");
+					askList-=<<"I found gold.", "I found gems!">>;
+				}
+
+				case "I found gems!"
+				{
+					bark("I do not believe you. The temple was not a
+					storage house of treasure and there certainly were no
+					gems kept there!");
+					askList-=<<"I found gold.", "I found gems!">>;
+				}
+
+				case "I found nothing."
+				{
+					bark("I can hardly believe that. I felt a surge of
+					power down in the depth of my heart. I know you found
+					something. Now, what did you find?");
+					askList-=<<"I found nothing.">>;
+				}
+
+
+
+				case "Tell me of the Vale."
+				{
+					if toldValeOne = false
+					{
+						toldValeOne = true;
+						bark("The Vale was once a lush, green place.
+						It is said that the ground was green and the
+						sky was blue. One day, High Priestess Casera
+						was walking along the shore of a small stream.
+						A fish jumped up from the water. 'Hello.' it
+						said to her. 'Hello.' she said. 'If you will
+						give me a kiss, I will become a handsome man
+						and will abide with you forever.' High
+						Priestess Casera picked up the fish from
+						the stream. 'You say you will become a handsome
+						man and abide with me forever?' she asked.
+						'Yes,' said the fish. 'I was bewitched by
+						an evil mage. You need only kiss me to release me.'
+						Casera thought for a moment then said, 'You were
+						careless to get caught by a mage. I don't want to live
+						with someone so careless,' and she had fried fish
+						for dinner that night!");
+						exitConvo();
+						return;
+					}
+					if (toldValeOne = true) and (toldValeTwo = false)
+					{
+						toldValeTwo = true;
+						bark("Before the Titans, before the Pagans and
+						even before the Zealans, the Ancient Ones
+						were here. They had all of Pagan to live in.
+						Their favorite place was the vale. Now all the
+						Ancient Ones were happy, except Joy. She grew
+						weary of the company of the other Ancients.
+						She found them somewhat stuffy and boring. She
+						longed for something more to occupy her time, so
+						she picked up a bit of the ground, mixed in a bit
+						of the clouds and formed a small figure. She blew
+						gently into the figure's mouth and it
+						came to life. She made several more just like it
+						and, once they were all breathing, she set them
+						in the Vale. That is how the Zealans came to
+						live in the vale.");
+						exitConvo();
+						return;
+					}
+					if (toldValeOne=true) and (toldValeTwo =true) and (toldValeThree = false)
+					{
+						toldValeThree=true;
+						bark("There is a story told about the water
+						Zombies. Once, long ago, a Zealan named ");
+						exitConvo();
+						return;
+					}
+					else
+					{
+						bark("I am sorry, I am just too tired to tell
+						you another tale of our vale.");
+						exitConvo();
+						return;
+					}
+				}
+
+
+				case "Tell me more of the Cataclysm."
+				{
+					if shieldFixed
+					{
+						if templeOpen
+						{
+							ran = urandom(4);
+							if ran = 1
+							{
+								bark("Temple open story one.");
+							}
+							if ran = 2
+							{
+								bark("Temple open story two.");
+							}
+							if ran = 3
+							{
+								bark("Temple open story three.");
+							}
+						}
+						else
+						{
+							ran= urandom(4);
+							if ran = 1
+							{
+								bark("The day of the Great Cataclysm started
+								as a day of Celebration. It was the time of
+								year when the High Priestess stood on the
+								altar of the Temple of the Ancient Ones
+								and received their presence. She would
+								hold the Shield of the Ancients before
+								her and begin the chants to call the
+								Ancient Ones from their home in the clouds.
+								As the Ancients arrived, they took control
+								of the High Priestess. They would use her
+								to give their messages to the followers.
+								On that particular day, the Ancients had
+								just begun to arrive when a great roar
+								went up. The Titans arrived and attacked
+								the Temple. Some fled, but many Zealans
+								stayed and fought. It was all in vain, by
+								the end of the day, the Temple was destroyed
+								and the Shield of the Ancients had been
+								broken. The Ancient Ones have not been
+								heard of since.");
+							}
+							if ran = 2
+							{
+								bark("On the Day of the Great Cataclysm, the
+								High Priestess knew something was not quite
+								right. She spent twice as long as usual in
+								her preparation rituals and checked all
+								all her ceremonial items twice. When she
+								reached the Temple, she did a most unusual
+								thing, she sent her daughter home. Now,
+								her daughter took this quite hard, not
+								understanding what she was being punished
+								for. But this was a fortunate thing as when
+								the battle started, the place where the
+								daughter ");
+							}
+							if ran = 3
+							{
+								bark("Temple not open, story three.");
+							}
+						}
+					}
+					else
+					{
+						ran = urandom (3);
+						if ran = 1
+						{
+							bark("Shield not fixed story one.");
+						}
+						if ran = 2
+						{
+							bark("Shield not fixed, story two.");
+						}
+						if ran = 3
+						{
+							bark("Shield not fixed, story three.");
+						}
+					}
+					exitConvo();
+					return;
+				}
+
+
+			case"bye"
+			{
+				ran = urandom(4);
+				if ran = 1
+				{
+					bark("Farewell, friend.");
+				}
+				if ran = 2
+				{
+					bark("Visit me again, friend.");
+				}
+				if ran = 3
+				{
+					bark("Take care.");
+				}
+				exitConvo();
+				return;
+			}
+		}
+	}
+}
+
+
+
+
+/**********************
+
+GAME FLAGS USED
+(not necessarily in any
+particular order)
+
+
+toldValeThree
+toldValeTwo
+toldValeOne
+spokeOfAwaken
+testFromAtli
+testFromThordis
+mentionSheild
+templeOpen
+exrekalJob
+ezrekalName
+yelledAtAvatar
+avatarPoisoned
+spokeOfCataclysm
+haveSheild
+climbedCliffs
+askedAboutAncients
+
+***********************/

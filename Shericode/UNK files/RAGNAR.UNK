@@ -1,0 +1,945 @@
+uses "npc";                                                                                                                      
+uses "flags";
+uses "item";
+uses "free";
+uses "snddefs";
+
+npcclass Ragnar inherits Npc
+{
+	process look();
+	process use();
+	process schedule (currentTime:Long);
+	process enterFastArea();
+	process leaveFastArea();
+	process cast(ref:Referent);
+}
+
+process Ragnar::look()
+{
+	if ragnarName
+	{
+		bark ("Ragnar
+		\g Ragnar");
+	}
+	else
+	{
+		bark ("Man
+		\g Mann");
+	}
+}
+
+process Ragnar::schedule(currentTime:Long)
+{
+
+	point : WorldPoint;
+	map : MapNum = 10;
+
+
+	//home
+
+   if (getPeriod() = eventide)
+	
+	{
+		point.x = 14207;
+		point.y = 13055;
+		point.z =64;
+	}
+
+
+
+	//in the field
+
+
+	if (getPeriod() = firstebb) 
+	or (getPeriod() = lastebb)
+	or (getPeriod()=bloodwatch) 
+	or (getPeriod() = daytide)
+	or (getPeriod()= threemoons)
+
+	{
+		point.x = 13695;
+		point.y = 19071;
+		point.z = 64;
+	}
+
+
+	safeTeleport(point,map);
+}
+
+process Ragnar::enterFastArea()
+{
+	if isDead()
+	{
+		return;
+	}
+
+	cSetActivity(ACT_LOITER);
+}
+
+
+process Ragnar::leaveFastArea()
+{
+	killProcess(referent,PT_ACTIVITY);
+}
+
+
+process Ragnar::cast(ref:Referent)
+{
+	count:Number;
+	count = 10;
+	while (not getTarget()) and (count)
+	{
+		wait(1);
+		count--;
+	}
+
+	ref=getTarget();
+	if ref = Avatar:Referent
+	{
+		spawn callTheShades() -> return;
+
+		if not isDead()
+		{
+			killProcess(referent,PT_ACTIVITY);
+			killProcess(referent,PT_BARK);
+			bark("Help! Help!
+				\g Hilfe! Hilfe!");
+		}
+	}
+}
+
+
+process Ragnar::use()
+{
+	enterConvo();   
+
+	answer:String = "";
+	askList: String List;
+	ragnarMet = false;
+
+	if ragnarMet
+	{
+		bark ("Greetings I say.
+			\g Sei gegrÅ·t.");
+	}
+	else
+	{
+// @@@ CHANGE F G
+		bark ("So we meet again.
+		\g Sei gegrÅ·t, Avatar.");
+	}
+
+	if ragnarMet
+	{
+ 		if sentToRagnar
+		{
+		 	askList^=<<"Atli sent me to you.
+							\g Atli hat mich zu dir geschickt."	>>;
+		}
+		
+		if thordisMet
+		{
+			if spokeOfThordis
+			{
+				askList+=<<"I have met Thordis.">>;
+			}
+			else
+			{
+				askList+=<<"I met someone named Thordis.">>;
+			}
+		}
+		
+		if ragnarPissed
+		{
+			askList=<<"Ragnar?">>;
+		}
+			   
+  		
+	}
+	else
+	{
+		askList = <<"What is your name?
+			\g Wie hei·t du?", 
+			"What do you do here?
+			\g Was machst du hier?">>;
+		ragnarMet = true;
+	}
+ while answer != "Farewell."
+	{
+		askList -= <<"Farewell.
+				\g Lebwohl.">>;
+		askList += <<"Farewell.
+				\g Lebwohl.">>;
+		answer = ask(askList);
+		switch answer
+		{
+
+// @@@ CHANGE F G
+			case "What do you do here?"
+			{
+				bark("Do here? Hard to understand you are. Strangly you
+				speak. But try to answer your question I will. A hunter I am.
+				Bring back food for the clan I do. When find it I can.");
+				askList-=<<"What do you do?">>;
+				askList+=<<"When you can find game?">>;
+			}
+
+// @@@ CHANGE F G
+			case "When you can find game?"
+			{
+				bark("Not easy it is. Dry this land is...and barren. Little
+				game to hunt there is. Wild torax, mainly. Remember stories
+				I do about the old days.");
+				askList+=<<"When you can find game?">>;
+				askList+=<<"The old days?">>;
+
+			}
+
+// @@@ CHANGE F G
+			case "The old days?"
+			{
+				bark("Stories my grandmother told. Plenty of game
+				these was, she said. Walk out the door of your
+				house you could and waiting	the game would be.
+				Plentiful and big. Feed an entire village just one
+				could.");
+				askList-=<<"The old days?">>;
+				askList+=<<"What kind of game?", "What happened to them?">>;
+			
+			}
+
+
+// @@@ CHANGE F G
+			case "What kind of game?"
+			{
+				bark("Bigger than a torax they were. Out of their head two
+				horns grew. Spread as wide as your arms, the horns did. Tined
+				the horns were, and as sharp as knives. Kill you as quick
+				as look at you, they would. Covered with a short fine hair
+				their bodies were. Used to make clothes their skins were.
+				Then other game there was. Some big, some small. Small
+				creatures that flew in the sky there were and large
+				creatures that fed on grasses. Wish I could see them, I do.");
+				askList-=<<"What kind of game?">>;
+			}
+
+// @@@ CHANGE F G
+			case "What happened to them?"
+			{
+				bark("History don't you know? The same thing that happend
+				to our land it was. The Great Cataclysm. Dried up the water,
+				it did. All but the hardiest plants it killed. So died
+				off the game did. Now, barely survive the few wild torax
+				do.");
+				askList-=<<"What happened to them?">>;
+			}
+			
+			
+// @@@ CHANGE F G
+			case "Ragnar?"
+			{
+				bark("Told you I did wish to see you I do not. Why back
+				bothering me are you?");
+				askList-=<<"Ragnar?">>;
+				askList+=<<"Nothing.", "I wish to apologize.">>;
+			}
+// @@@ CHANGE F G			
+			case "Nothing."
+			{
+				bark("Then out of my sight get!");
+				exitConvo();
+				return;
+			}
+
+// @@@ CHANGE F G			
+			case "I wish to apologize."
+			{
+				bark("Well, not a vengful man I am. Forgiven all is. Now,
+				What do for you can I?");
+				askList-=<<"I wish to apologize.", "Nothing.">>;
+				if (sentToRagnar = true) and (hasMark = false)
+				{
+					askList^=<<"Atli sent me to you.
+								\g Atli hat mich zu dir geschickt.">>;
+				}
+				
+				if (thordisMet = true)
+				{
+					askList^=<<"I have met Thordis.">>;
+				}
+				askList^=<<"Tell me of the Vale.">>;
+			} 												
+
+// @@@ CHANGE F G
+			case "Tell me of the Vale."
+			{
+				bark("What to tell there is? A barren, dry place it is.
+				Little game to hunt there is. Wander far and wide I must
+				fresh meat to find. Mostly torax I hunt. Caught one of
+				those flying evil thing once I did. Not too good for eating
+				they are. Greasy.");
+				askList-=<<"Tell me of the Vale.">>;
+			}
+
+
+// @@@ CHANGE F G
+			case "What is your name?
+				\g Wie hei·t du?"
+			{
+				bark ("Ragnar called I am. Never seen one such as you
+					have I. Where come from do you?
+					\g Ragnar hei·e ich. Wahrlich, so einen wie dich
+					hab' ich noch nie gesehen. Woher kommst du?");
+				askList += <<"From very far away.
+						\g Von sehr weit her.", 
+
+						"I am new to your land.
+						\g Ich bin neu in deinem Land.">>;
+				askList -= <<"What is your name?
+						\g Wie hei·t du?">>;
+				ragnarName = true;
+			}
+
+// @@@ CHANGE F G
+			case "I am new to your land.
+						\g Ich bin neu in deinem Land."
+				{
+				bark("Obvious that is. Know all places in the Vale I do.
+				Saying you come from outside the Vale are you? Believe
+				it I do not.");
+				askList-=<<"I am new to your land.
+						\g Ich bin neu in deinem Land.">>;
+				}
+
+
+
+			case "From very far away.
+			\g Von sehr weit her."
+				{
+					if thordisMet
+					{
+						bark ("The stranger Thordis talked to you must be.
+						\g Du mu·t der Fremde sein, mit dem Thordis gesprochen hat.");
+						askList += <<"Yes, I have met Thordis.
+								g\ Ja, ich habe Thordis getroffen.">>;
+					}
+					else
+					{ 
+						bark ("Know that I do! Never seen anything like you I have. 
+						Come in peace do you?
+							\g FÅrwahr, das wei· ich. Wahrlich, ich habe nie so etwas wie
+							dich gesehen. Kommst du in Frieden?");
+						askList += <<"Yes, I'm peaceful.
+								\g Ja, ich bin friedfertig.", 
+
+								"Leave me alone.
+								\g La· mich in Ruhe.">>;
+					}
+					askList -= <<"From very far away.
+							\g Von sehr weit her.">>;
+				}
+			
+			case "Yes, I'm peaceful.
+					\g Ja, ich bin friedfertig."
+
+			    {
+				bark ("Peacful you are, but peaceful with Gunnar clan? If peaceful
+						with Gunnar clan you are, then at war with Huskold clan
+						you are.
+						\g Friedfertig bist du, aber in Frieden mit dem Gunnar
+						Clan? Im Frieden mit dem Gunnar Clan zu sein hei·t im
+						Krieg mit dem Huskold Clan zu sein.");
+			      
+					askList += <<"I am peaceful with all.
+						\g Ich lebe mit allen in Frieden.", 
+						"I have no fight with you.
+						\g Ich habe keinen Streit mit dir.">>;
+					askList -= <<"Yes, I am peaceful.
+						\g Ja, ich bin friedfertig.">>;
+			    }
+
+			case "Leave me alone.
+			\g La· mich in Ruhe."
+				{
+				bark ("Then do so I will. Rude stranger you are. Go from here now!
+					\g Das werde ich tun. Wahrlich, ein unhîflicher Fremder bist
+					du. Verschwinde jetzt!");
+					askList -= <<"Leave me alone.
+					\g La· mich in Ruhe.">>;
+				ragnarPissed = true;
+					exitConvo();
+					return;
+				 }
+			     
+		    case "I am peaceful with all.
+			\g Ich lebe mit allen in Frieden."
+				 {                                                   
+					bark ("Then a fool you are. No disrespect do I mean, but
+						  be peaceful with all a man cannot be.
+						  Too many others there are who would not be 
+						  peaceful with you.
+							\g Dann bist du ein Narr. Nimm's mir
+							nicht Åbel, aber ein Mann kann
+			   				nicht mit allen in Frieden leben. Es
+							gibt zu viele andere, die nicht
+							in Frieden mit dir leben wollen.");
+					askList += <<"There is goodeness in all.
+									\g In allen Menschen steckt etwas Gutes.", 
+								"You have a point.
+									\g Da hast du recht.">>;
+					askList -= <<"I am peaceful with all.
+									\g Ich lebe mit allen in Frieden.">>;
+				 }
+			     
+			case "There is goodness in all.
+				\g In allen Menschen steckt etwas Gutes."
+				 {
+					bark ("How naive you are. The body of a grown man you have
+						but in it the mind of a child there is. Led such
+						a sheltered life you must have. Never have
+						had to face adversity, have you?
+							\g Wie naiv du bist. Du hast fÅrwahr den Kîrper eines
+							erwachsenen Mannes, aber darin steckt der Verstand eines 
+							Kindes. Wahrlich, du mu·t ein wohlbehÅtetes Leben gefÅhrt 
+							haben. Du hast wohl nie Probleme gehabt.");
+					askList -= <<"There is goodness in all.
+						\g In allen Menschen steckt etwas Gutes.">>;     
+				 }       
+								
+	    case "You have a point.
+		\g Da hast du recht."
+			 {
+				bark ("Yes, not unwise it is to greet people
+					with kindness but be wary
+					of them until know them you do. But
+					unwise it is to believe that good all people
+					are. A great capacity for
+					wicked behavior people have.
+
+						\g Ja, es ist sinnvoll, Leute freundlich zu begrÅ·en, aber
+						vorsichtig zu sein, bis man sie kennt. Wahrlich, es ist nÑrrisch zu
+						glaubem, da· alle Leute gut sind. Menschen kînnen ungemein bîse
+						sein.");
+
+					askList += <<"You are a cautious fellow
+						\g Du bist ein vorsichtiger Kerl.", 
+						"Yes, people can be wicked.
+						\g Ja, Leute kînnen bîse sein.">>;
+					askList -= <<"You have a point.
+						\g Da hast du recht.">>;
+				 }
+			
+			case "You are a cautious fellow.
+				\g Du bist ein vorsichtiger Kerl."
+				 {
+					bark ("With Gunnar's's clan in the
+					valley one must be. Never trust one of them you should.
+					Treacherous, evil people they are.
+						\g Das mu· man bei Gunnars Clan im Talauch sein. FÅrwahr, traue
+						nie einem von ihnen. Sie sind verrÑterische, bîse Menschen.");
+				
+						if atliMet
+							{
+								askList += <<"That's what they said about you.
+									\g Genau das haben sie Åber euch gesagt.">>;
+							}
+						else if sentToRagnar
+							{
+								askList += <<"Atli sent me to you.
+									\g Atli hat mich zu dir geschickt.">>;
+							}
+						else
+							{
+								askList += <<"What have they done?
+									\g Was haben sie denn getan?">>;
+							}
+					askList -= <<"You are a cautious fellow.
+						\g Du bist ein vorsichtiger Kerl.">>;
+			     }
+			 
+		   case "Yes, people can be wicked.
+			\g Ja, Leute kînnen bîse sein."
+				{
+					bark ("Know that well, I do. Though good for me hunting is
+					Rather deal with the torax and the
+					kith I would than with many people met I have.
+
+						\g FÅrwahr, das wei· ich wohl. Ich wÅrde lieber mit den Torax und den Kith
+						umgehen, als mit vielen Leuten, die ich getroffen habe.");
+
+					askList -= <<"Yes, people can be wicked.
+						\g Ja, Leute kînnen bîse sein.">>;
+			}
+			 
+		   case "That's what they said about you.
+			\g Genau das haben sie Åber euch gesagt."
+				{
+					bark ("The treachery of Gunnar's's clan this is! And I
+					see that fallen in with them you have. To me
+					no longer speak, strange one, lest to die by my
+					hand you wish!
+
+						\g Das ist die HinterhÑltigkeit von Gunnars Clan. Und
+						ich sehe, da· du mit ihnen unter einer Decke steckst,
+						fÅrwahr. Sprich nicht mehr mit mir, Fremdling,
+						oder ich bringe dich eigenhÑndig um!");
+
+					askList -= <<"That's what they said about you.
+						\g Genau das haben sie Åber euch gesagt.">>;
+					ragnarPissed = true;
+					exitConvo();
+					return;
+				}
+			
+			case "What have they done?
+				\g Was haben sie denn getan?"
+				{
+					bark ("If you want to know what
+					done they have, then go and ask Thordis you should of the
+					acts of Gunnar's clan. No wish to speak
+					of it I have, but tell you Thordis will.
+						\g Wenn du wissen willst, was sie getan haben, dann geh und frag'
+						Thordis Åber die Untaten von Gunnars Clan. Ich hab' keine Lust,
+						darÅber zu reden, aber Thordis wird es dir erzÑhlen.");
+					
+					if not thordisMet
+					{
+						askList += <<"Who is Thordis?
+							\g Wer ist Thordis?">>;
+					}
+					askList -= <<"What have they done?
+						\g Was haben sie denn getan?">>;
+
+				}
+			
+// @@@ CHANGE F G
+			case "I have met Thordis."
+				{
+				if likedThordis
+					{
+						bark("Ah, then understand you do my attraction.");
+						askList-=<<"I have met Thordis.">>;
+						askList+=<<"Yes, I do.", "No, I don't.">>;
+					}
+				else
+					{
+						bark("Ah, then changed your mind about her, have you?");
+						askList+=<<"Yes, I have.", "No, I haven't.">>;
+					}
+				}
+				
+// @@@ CHANGE F G				
+			case "Yes, I do."
+				{
+				bark("Well, for me she is not. A great leader she is. Time
+				for someone like me she has not. Besides what life offer
+				her can I? A simple hunter's life in the woods? No, think
+				so I do not. Content I will be with just watching her.");
+				askList-=<<"Yes, I do.", "No, I don't.">>;
+				}
+
+// @@@ CHANGE F G
+			case "No, I don't.", "No, I haven't."
+				{
+				bark("Blind are you? Stupid? Wonderful she is. Beautiful
+				and wise she is! Appreciate this you can not, then
+				waste my time with you I will not!");
+				exitConvo();
+				return;
+				}
+
+// @@@ CHANGE F G
+			case "Yes, I have."
+				{
+				bark("Ah, then seen the light you have. Beautiful and
+				wise is Thordis. Say... not thinking of her for yourself
+				are you?");
+				askList-=<<"Yes, I have.", "No, I haven't.">>;
+				askList+=<<"Certainly not.", "Why, yes.">>;
+				}
+
+// @@@ CHANGE F G
+			case "Certainly not."
+				{
+				bark("Then feel awed by her you do, as I do. Understand
+				this I do. Felt this way for years I have. Solace in
+				my solitude I must find.");
+				askList-=<<"Certainly not.", "Why, yes.">>;
+				}
+
+// @@@ CHANGE F G
+			case "Why, yes."
+				{
+				bark("Well, good luck you I wish, my strange friend. For
+				married to her job she is. Time for no man in her life
+				there is. Afraid headed for heart break you are. But
+				welcome to try you are. If win her you do, however, 
+				treat her well you will, or kill you I will.");
+				askList-=<<"Why, yes.", "Certainly not.">>;
+				}
+
+					
+			case "Yes, I have met Thordis.
+					\g Ja, ich habe Thordis getroffen.",
+				 "I met someone named Thordis."
+				{
+					bark ("Good that is. What of Thordis think you?
+
+					\g Wahrlich, das ist gut. Was hÑltst du von Thordis?");
+
+					spokeOfThordis = true;
+					askList += <<"Thordis is a good person.
+						\g Thordis ist ein guter Mensch.", 
+						"I was not impressed.
+						\g Ich war nicht sehr beeindruckt.">>;
+
+					askList -= <<"Yes, I have met Thordis.
+						\g  Ja, ich habe Thordis getroffen.">>;
+				}
+			
+			case "Thordis is a good person.
+				\g Thordis ist ein guter Mensch."
+			    {
+					bark ("A great woman Thordis is! Not only a shrewd
+					leader she is, but the most beautiful woman in the
+					valley as well, she is.	Kind and compassionate Thordis
+					is. Noble and wise Thordis is. No better person
+					anywhere than Thordis is. Think that you are a good
+					man I do.
+
+						\g FÅrwahr, Thordis ist eine gro·artige Frau. Sie ist nicht
+						nur eine kluge AnfÅhrerin, das ist sie wohl, sondern auch
+						die schînste Frau im ganzen Tal. Nett und freundlich  
+						ist Thordis, fÅrwahr. Edel und weise ist Thordis. Wahrlich,
+						es gibt nirgendwo eine bessere als Thordis. FÅrwahr, ich
+						glaube, da· du ein guter Mensch bist.");
+
+					likedThordis = true;
+					askList -= <<"Thordis is a good person.
+						\g Thordis ist ein guter Mensch.">>;
+				}
+
+			case "I was not impressed.
+				\g Ich war nicht sehr beeindruckt."
+				{
+					bark ("Then a fool you are! No better person in the
+					world than Thordis there is. Think you are
+					a shallow witted and treacherous I do. Go now
+					and leave me.
+						\g Dann bist du ein Narr! Wahrlich, es gibt keinen
+						besseren Menschen als Thordis in der ganzen Welt. Mir
+						dÅnkt, du bist dumm und heimtÅckisch, fÅrwahr. Geh
+						jetzt und la· mich in Ruhe.");
+					askList -= <<"I was not impressed.
+						\g Ich war nicht sehr beeindruckt.">>;
+					exitConvo();
+					return;
+				}
+
+			case "Atli sent me to you.
+				\g Atli hat mich zu dir geschickt."
+				{
+					bark ("Sent you to me that cur did? Leader of Huskold
+					clan Atli is! Why trust a man sent from a cursing
+					fool should I?
+
+						\g Dieser Schurke hat dich zu mir geschickt? FÅrwahr,
+						Atli ist der AnfÅhrer des Huskold Clans. Wahrlich, warum
+						soll ich einem Mann vertrauen, der von einem unflÑtigen
+						Narren geschickt wurde?");
+
+					askList += <<"Atli admires you.
+						\g Atli bewundert dich.", 
+						"Atli does curse a lot.
+						\g Atli flucht wirklich viel.">>;
+					askList -= <<"Atli sent me to you.
+						\g Atli hat mich zu dir geschickt.">>;
+				}
+
+			case "Atli admires you.
+				\g Atli bewundert dich."
+				{
+					bark ("No surprise that is. Only natural for one
+					to admire his superiors it is. Either that or says
+					that he does to subvert me.
+
+						\g Wundert mich gar nicht. FÅrwahr, es ist doch nur natÅrlich,
+						da· man Åberlegene Persînlichkeiten bewundert. Entweder das, 
+						oder er sagt das, um mir zu schaden.");
+					askList += <<"I believe that he is sincere.
+						\g Ich glaube, er meint es im Ernst.">>;
+					askList -= <<"Atli admires you.
+						\g Atli bewundert dich.">>;
+				}
+		   
+			case "Atli does curse a lot.
+				\g Atli flucht wirklich viel."
+				{
+					bark ("Agree with me much you do. A little
+					too much I think. If saying
+					yes all of the time you want, go and talk
+					to Atli. Like man talking to my back side all
+					the time I do not.
+
+						\g Wahrlich, du stimmst mir sehr oft zu. Ein bi·chen zu oft,
+						meine ich. FÅrwahr, wenn du die ganze Zeit ja sagen willst, dann
+						geh und sprich mit Atli. Ich mage keine Leute, die die ganze Zeit
+						hinter meinem RÅcken reden.");
+
+					askList -= <<"Atli does curse a lot.
+						\g Atli flucht wirklich viel.">>;
+				}
+				
+			case "I believe that he is sincere.
+				\g Ich glaube, er meint es im Ernst."
+				{
+					bark ("Fine for you that is. Yet what reason to believe
+					this should I have?
+
+						\g Das pa·t dir wohl. Aber warum sollte ich das glauben, fÅrwahr?");
+
+					askList += <<"He spoke of you and his daughter.
+						\g Er sprach von dir und seiner Tochter.", 
+						"He said you know many things.
+						\g Er sagte, da· du viel wei·t.">>;
+
+					askList -= <<"I believe that is sincere.
+						\g Ich glaube, er meint es im Ernst.">>;
+				}
+
+			case "He said you know many things.
+				\g Er sagte, da· du viel wei·t."
+				{
+					bark ("Yes, know many things I do. Know everything
+					in this valley I do. Know everything that grows
+					and everything that moves, I do. And, know many
+					terrible things done by Huskold clan I do.
+
+						\g Ja, ich wei· wahrlich vieles. FÅrwahr, ich kenne alles in diesem
+						Tal. Kenne alles, was wÑchst und alles, was sich bewegt. Und ich
+						kenne auch die vielen Untaten, die der Huskold Clan verÅbt hat. ");
+// @@@ CHANGE F G
+					askList += <<"Do you know of the Passage Stone?
+						\g Kennst du den sprechenden Stein?", 
+						"How do know so much?
+						\g Woher wei·t du so viel?">>;
+
+					askList -= <<"He said you know many things.
+						\g Er sagte, da· du viel wei·t.">>;
+				}
+			
+			case "How do you know so much?
+				\g Woher wei·t du so viel?"
+				{
+					bark ("Roamed this valley all of my life I have. Fool
+					would I be to not have learned so much.
+
+						\g Bin mein ganzes Leben lang in diesem Tal herumgzogen. Wahrlich,
+						ich wÑre ein narr, wenn ich nicht soviel gelernt hÑtte.");
+
+					askList -= <<"How do you know so much?
+						\g Woher wei·t du so viel? ">>;  
+				}
+
+// @@@ CHANGE F G
+			case "Do you know of the Passage Stone?
+				\g Kennst du den sprechenden Stein?"
+				{
+					bark ("Yes, seek it do you?
+						\g Ja, suchst du ihn wohl?");
+
+					askList-=<<"Do you know of the Passage Stone?
+						\g Kennst du den sprechenden Stein?">>;
+
+					askList += <<"Yes, I do.
+						\g Ja.", 
+						"No, I don't.
+						\g Nein.">>;
+				}
+
+			case "Yes, I do.
+				  	\g Ja."
+				{
+// @@@ CHANGE F G
+					bark ("Hmmmm, Legends say found the body was
+					by the waters of the southern lakes. Go there
+					often I do not.");
+					askList-=<<"Yes, I do.
+						\g Ja.", 
+						 "No, I don't.
+						 \g Nein.">>;
+					askList+=<<"Tell me of the legends.", "Why
+					do you not go there?">>;
+				}
+
+// @@@ CHANGE F G
+				case "Tell me of the legends."
+				{
+					bark("Long ago it was. After the Great Cataclysm. Decided
+					to take the Rite of Passage a young woman did. Thought
+					she did, bring the Ancient Ones back it would.
+					Made it to the test, she never did. Found her body was
+					by the lake. Done by the Gunnars it was.");
+					askList-=<<"Tell me of the legends.">>;
+					askList+=<<"Why did the Gunnars kill her?", "How
+					was she killed?">>;
+				}
+
+// @@@ CHANGE F G
+				case "How was she killed?"
+				{
+					bark("Said it is her head was crushed. Sometimes, said
+					it is partially eaten her body was.");
+					askList-=<<"How was she killed?">>;
+					askList+=<<"Her body was eaten?!">>;
+				}
+
+// @@@ CHANGE F G
+				case "Her body was eaten?"
+				{
+					bark("Gone her legs were. Chewed off at the knees
+					they were. Gruesome it is. Horrible those Gunnars are!");
+					askList-=<<"Her body was eaten?">>;
+				}
+
+
+// @@@ CHANGE F G
+				case "Why did the Gunnars kill her?"
+				{
+					bark("Why? What evil purpose the Gunnars have, say who
+					can? Maybe want they did not anyone but them
+					to take the test. But surprised I would not be if 
+					want the Ancient Ones back they did not. The 
+					favorites of the Ancient Ones the Hoskulds are. 
+					If come	back the Ancient Ones did, be able to wipe
+					out the	Gunnars the Hoskulds would.");
+					askList-=<<"Why did the Gunnars kill her?">>;
+				}
+
+// @@@ CHANGE F G
+				case "Why do you not go there?"
+				{
+					bark("Too dangerous it is. Full of undead water
+					creature it is. Eat anything alive that wanders
+					near they do. So find wild torax or kith I do not.
+					But came close one day I did. A small bag
+					hidden in the ruins I saw. Before get it I could 
+					after me the undead water creaturs came. Left in
+					a hurry I did. Never been back I have.");
+					askList-=<<"Why do you not go there?">>;
+					ragnarToldStone = true;
+
+					bag,stone : Item;
+
+					bag.create(TypeBag, 0);
+					stone.create(TypeBushKey, 0);
+					stone.pop(bag.referent);
+					bag.pop(16447,25727,64);
+
+		   			}
+			
+			case "No, I don't
+				\g Nein."
+				{
+					bark ("Then why bother me with these questions do you?
+					Leave me now. Bothersome you are.
+
+						\g Warum belÑstigst du mich dann mit diesen Fragen? 
+						Verschwinde jetzt. Wahrlich, du gehst mir auf die Nerven.");
+
+					askList -= <<"Yes, I do.
+						\g Ja.", 
+						"No, I don't.
+						\g Nein.">>;
+					ragnarPissed = true;
+					exitConvo();
+					return;
+				}
+
+ // @@@ CHANGE F G			
+			case "He spoke of you and Hrodny.
+				\g Er sprach von dir und seiner Tochter." 
+				{
+					bark ("Hrodny? For me to meet Hrodney he wants?
+					Hrodny... Her have I seen. Beautiful she is. No
+					Thordis she is, but beautiful still. Send
+					you to tell me this did Atli?
+
+						\g Hrodny? Er will, da· ich Hrodny treffe, fÅrwahr?
+						Hrodny...ich habe sie gesehen, das habe ich. Wahrlich, sie 
+						ist schîn. Sie ist keine Thordis, fÅrwahr, aber sie ist
+						trotzdem schîn. Hat Atli dich geschickt, um mir das zu sagen?");
+
+					askList += <<"Do you like her?
+						\g Magst du sie?", 
+						"He said you could help me.
+						\g Er sagte, da· du mir helfen kînntest.">>;
+// @@@ CHANGE F G
+					askList -= <<"He spoke of you and Hrodny.
+				\g Er sprach von dir und seiner Tochter.">>;
+				} 
+
+				case "Now do you believe me?
+				\g Glaubst du mir jetzt?"
+				{
+					bark ("Believe you I do, yet unsure of Atli I am.
+					Still, look into this I shall.
+
+						\g Ich galube dir wohl, aber ich bin mir  Åber Atli nicht sicher.
+						Dennoch bin ich interessiert.");
+
+					askList -= <<"Now do you believe me?
+						\g Glaubst du mir jetzt?">>;
+				}       
+
+
+			case "He said you could help me.
+				\g Er sagte, da· du mir helfen kînntest."
+				{
+					if ragnarToldStone
+						{
+							bark ("Help you already I have. Told you
+							where I think the speaking stone lies, I did.
+							What further help need do you?
+
+							\g Wahrlich, ich habe dir schon geholfen. Ich habe dir gesagt,
+							wo der sprechende Stein liegt, das habe ich. Was brauchst du
+							noch an Hilfe?");
+
+							askList += <<"None, thank you.
+							\g Nichts mehr, danke.">>;
+					}
+				    else
+					{
+							bark ("Yes, know much of the valley I do. What
+							help need do you?
+
+								\g Ja, ich wei· viel Åber das Tal. Wie kann ich dir
+								helfen?");
+
+							askList += <<"Do you know of the speaking stone?
+								\g Kennst du den sprechenden Stein?">>;
+						}
+				}
+
+			case "Farewell.
+				\g Lebwohl."
+				{
+					bark ("Well you travel, I hope.
+					\g FÅrwahr, ich hoffe du hast eine gute Reise.");
+					askList -= <<"Farewell.
+					\g Lebwohl.">>;
+					exitConvo();
+					return;
+				}
+		}
+	}
+}
+					
+
+
+
+
+
+
+

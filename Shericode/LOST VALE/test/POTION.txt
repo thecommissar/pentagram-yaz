@@ -1,0 +1,247 @@
+uses "item";
+uses "free";
+uses "npc";
+
+typeclass TypePotion inherits Item
+{
+	process look();
+	process use();
+
+	process [[PT_DEFAULT, referent]] invisible();
+	process [[PT_DEFAULT, referent]] protection();
+}
+
+process TypePotion::look()
+{
+	bark("potion \g Zaubertrank \f potion magique");
+}
+
+
+
+process TypePotion::use()
+{
+	fram:Number = getFrame();
+	heal:Number;
+
+	if fram = 0
+	{
+		Avatar.bark("it's empty...
+				\f C'est vide...
+				\g Es ist leer...");
+	}
+	if fram = 1
+	{
+
+		if (Avatar.getHp()) >= (Avatar.getStr() * 2)
+		{
+		  		Avatar.setHp( Avatar.getStr());
+
+				spawn Avatar.bark("Augh! \f Pouah! \g Aaargh!") -> return;
+				setFrame(0);
+				return; 
+		} 
+		else
+		{
+			spawn Avatar.bark("I feel much better!
+						\f Ah, je me sens d‚j… beaucoup mieux!
+						\g Ah, jetzt fhle mich schon viel besser!") -> return;
+			Avatar.setHp(Avatar.getStr() * 2);
+			setFrame(0);
+		}
+	}
+
+	if fram = 2
+	{
+		heal = urandom(4) + 5;
+
+		if (heal + Avatar.getMana()) < (Avatar.getInt() * 2) 
+		{
+
+			spawn Avatar.bark("I have regained power!
+							\f Ah, j'ai retrouv‚ ma force!
+							\g Ich habe meine Kr„fte wieder!") -> return;
+
+			Avatar.setMana(heal + Avatar.getMana());
+		}
+		else
+		{
+			Avatar.setMana(Avatar.getInt() * 2);
+
+			spawn Avatar.bark("Yummm... \f Mmmm, quel r‚gal... \g Mmmm... lecker.") -> return;
+		}
+
+		setFrame(0);
+	}
+
+	if fram = 3
+	{
+
+		heal = urandom(5) + 5;
+		
+		if (heal + Avatar.getHp()) >= (Avatar.getStr() * 2) 
+		{
+		  	Avatar.setHp( Avatar.getStr() * 2); 
+		}
+		else 
+		{
+			spawn Avatar.bark("I feel better!
+					\f Ah, je me sens bien mieux!
+					\g Ah, jetzt fhle ich mich viel besser!") -> return;
+			Avatar.setHp(heal + Avatar.getHp());
+		}
+		setFrame(0);
+	}
+	if fram = 4
+	{
+		Avatar.receiveHit(referent, urandom(7), urandom(2) + 5);
+		setFrame(0);
+		
+	}
+	if fram = 5
+	{
+		spawn protection() -> return;
+	}
+	if fram = 6
+	{
+		sub:Item;
+		sub.referent = referent;
+
+		[[PT_DEFAULT, NULL_REF]];
+		setAvatarInStasis(true);
+		setFrame(0);
+		Avatar.realDoAnim(AS_FALL_DOWN,Avatar.getDir());
+		wait(100);
+
+		spawn Avatar.bark("Zzzzz... \f Rrrrrzzzzz...\g Schnarch...") -> return;
+		wait(500);
+		Avatar.realDoAnim(AS_GET_UP,Avatar.getDir());
+		Avatar.realDoAnim(AS_STAND,Avatar.getDir());
+		Avatar.turnToFace(3,0,10);
+		Avatar.realDoAnim(AS_LOOK_LEFT,Avatar.getDir());
+		spawn safePlaySFX(WHOA1A,200) -> return;
+		Avatar.realDoAnim(AS_STAND,Avatar.getDir());
+		Avatar.realDoAnim(AS_LOOK_RIGHT,Avatar.getDir());
+		Avatar.realDoAnim(AS_STAND,Avatar.getDir());
+		Avatar.realDoAnim(AS_LOOK_LEFT,Avatar.getDir());
+		Avatar.realDoAnim(AS_STAND,Avatar.getDir());
+		Avatar.realDoAnim(AS_LOOK_RIGHT,Avatar.getDir());
+		Avatar.realDoAnim(AS_STAND,Avatar.getDir());
+		Avatar.realDoAnim(AS_LOOK_LEFT,Avatar.getDir());
+		Avatar.realDoAnim(AS_STAND,Avatar.getDir());
+		setAvatarInStasis(false);
+	}
+
+	if fram = 7
+	{
+		spawn invisible() -> return;
+	}
+
+	if fram = 8
+	{
+
+      [[PT_DEFAULT,NULL_REF]];
+
+		setFrame(0);
+		spawn makeAvatarTiny() -> return;
+		wait(2000);
+		spawn makeAvatarBig() -> return;
+	}
+
+
+}
+
+
+
+
+process TypePotion::protection()
+{
+	startup
+	{
+		counter,limit:Number;
+	
+		sub:Item;
+		sub.referent = referent;
+
+		[[PT_DEFAULT, NULL_REF]];
+		setFrame(0);
+
+		spawn safePlaySFX(SPELLGO2,200) -> return;
+		spawn Avatar.bark("I feel like fighting!
+						\f €a me donne envie de me battre!
+						\g Ich fhle mich richtig kampflustig!") -> return;
+		Avatar.realDoAnim(AS_VERT_LEAP,Avatar.getDir());
+
+		Avatar.setImmortal();
+		limit=(Avatar.getInt()*2);
+	}
+
+	process
+	{
+		wait(60);
+		counter++;
+		if counter > limit
+		{
+			Avatar.clrImmortal();
+		   	safePlaySFX(MAGIC2,200);
+			return;
+		}
+	}
+}
+
+
+process TypePotion::invisible()
+{
+
+	startup
+	{
+		playSFX(SPELLGO4,200);
+
+		sub:Item;
+		sub.referent = referent;
+		limit,counter:Number;
+
+		[[PT_DEFAULT, NULL_REF]];
+		setFrame(0);
+	
+		if Avatar.getStatus() & OWNED
+		{
+			// detect if avatar is owned... 
+		}
+		else
+		{
+			Avatar.toggleStatus(OWNED);
+		}
+
+		Avatar.toggleStatus(INVISIBLE);
+		Avatar.setFrame(Avatar.getFrame());
+		if Avatar.getStatus() & INVISIBLE 
+		{
+			limit=(Avatar.getInt() * 2);
+		}
+		else 
+		{
+			return;
+		}
+	}
+
+	process 
+	{
+		if Avatar.getStatus() & INVISIBLE 
+		{
+			wait(60);
+			counter++;
+			if counter > limit 
+			{
+				Avatar.toggleStatus(INVISIBLE);
+			   	playSFX(MAGIC2,200);
+				Avatar.setFrame(Avatar.getFrame());
+				return;
+			}
+		}
+		else 
+		{
+			playSFX(MAGIC2,200);
+			return;
+		}
+	}
+}

@@ -1,0 +1,94 @@
+// Stick these in FREE.UNK and FREE.DEF
+
+
+process makeAvatarTiny()
+{
+	[[PT_DEFAULT,NULL_REF]];
+
+	setAvatarInStasis(true);
+
+	while Avatar.isBusy()
+	{
+		wait(1);
+	}
+
+	playSFX(MIXSPELL,100);
+	Avatar.turnToFace(southeast,RANDOM,7);
+	
+	LightningBolt();
+	wait(10);
+	playSFX(LTNING1A,100);
+	
+	setAvatarInStasis(true);
+	Camera::setCenterOn(0);
+
+	Avatar.setType(TypeTinyAvatar);
+	Avatar.setFrame(60);
+
+	while Avatar.getFrame() < 69
+	{
+		Avatar.setFrame(Avatar.getFrame() + 1);
+		
+		if Avatar.getFrame() < 69
+		{
+			Camera::move_to(Camera::getX(),Camera::getY(),Camera::getZ() - 1, Avatar.getMap());
+			wait(5);
+			
+			Camera::move_to(Camera::getX(),Camera::getY(),Camera::getZ() - 1, Avatar.getMap());
+			wait(5);
+		}
+	}
+
+	Avatar.realDoAnim(AS_STAND,southeast);
+	Camera::setCenterOn(Avatar:Referent);
+
+	setAvatarInStasis(false);
+}
+
+process makeAvatarBig()
+{
+	[[PT_DEFAULT,NULL_REF]];
+
+	setAvatarInStasis(true);
+
+	while Avatar.isBusy()
+	{
+		wait(1);
+	}
+
+	playSFX(MIXSPELL,100);
+	Avatar.turnToFace(southeast,RANDOM,7);
+
+	LightningBolt();
+	wait(10);
+	playSFX(LTNING1A,100);
+
+	setAvatarInStasis(true);
+	Avatar.setFrame(69);
+
+	Camera::setCenterOn(0);
+
+	while Avatar.getFrame() > 60
+	{
+		Avatar.setFrame(Avatar.getFrame() - 1);
+		Avatar.touch();
+		
+		if Avatar.getFrame() > 60
+		{
+			Camera::move_to(Camera::getX(),Camera::getY(),Camera::getZ() + 1, Avatar.getMap());
+			wait(5);
+	
+			Camera::move_to(Camera::getX(),Camera::getY(),Camera::getZ() + 1, Avatar.getMap());
+			wait(5);
+		}
+	}
+
+	Avatar.setType(TypeAvatar);
+	Avatar.setFrame(3);
+	Avatar.realDoAnim(AS_STAND,southeast);
+
+	Camera::setCenterOn(Avatar:Referent);
+
+	setAvatarInStasis(false);
+}
+

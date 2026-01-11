@@ -1,0 +1,1296 @@
+uses "flags";
+uses "free";
+uses "npc";
+uses "snddefs";
+
+npcclass Mordea inherits Npc
+{
+	process look();
+	process use();
+	process schedule(currentTime:Long);
+	process enterFastArea();
+	process leaveFastArea();
+	process cast(ref:Referent);
+	process AvatarStoleSomething(ref:Referent);
+
+	process onThrone();
+	process chowDown();
+	process chowBark();
+	process throwArms();
+	process walkInCircles();
+	process randomBark();
+	process salkindAnswerMordea();
+	process fireBlast();
+}
+
+
+process Mordea::look()
+{
+	if mordeaName and mordeaJob 
+	{
+		bark("Mordea the Tempest \f Mordea la Tempeste
+			\g Die GezeitenfÅrstin Mordea");
+		return;
+	}
+	else if mordeaName 
+	{
+		bark("Mordea");
+		return;
+	}
+	else if mordeaJob 
+	{
+		bark("Tempest \f Tempeste \g GezeitenfÅrstin");
+		return;
+	}
+	else 
+	{
+		bark("woman \f femme \g Frau");
+		return;
+	}
+}
+
+
+
+
+process Mordea::schedule(currentTime:Long) 
+{ 
+	point : WorldPoint;
+	sched:Number;
+
+// SET SCENES, DONT DO ANYTHING
+
+	if (toranDead = false) or (secondexecution = true) or (isDead() = true)
+	{
+		return;
+	}
+
+
+// TIME FOR BEDDY BYE!
+
+	if (getPeriod() = bloodwatch) 
+	{
+		point.x = 13151;
+		point.y = 7999;
+		point.z = 0;	
+	
+		if canSafeTeleport(point,MapCentralTenebrae) 
+		{
+			resetRef(referent,PT_ACTIVITY);
+			resetRef(referent,PT_PATHFIND);
+			resetRef(referent,PT_ANIM);
+			resetRef(referent,PT_BARK);
+
+			mordeaSchedule = in_bed;
+			safeTeleport(point,MapCentralTenebrae);
+
+			if Avatar.getMap() = MapCentralTenebrae
+			{ 
+				realDoAnim(AS_STAND,2);
+			}
+
+			//Do Aramina now!
+
+				point.x = 16735;
+				point.y = 16127;
+				point.z = 48;
+
+				if Aramina.canSafeTeleport(point, MapEastTenebrae) 
+				{
+					resetRef(Aramina:Referent,PT_ACTIVITY);
+					resetRef(Aramina:Referent,PT_PATHFIND);
+					resetRef(Aramina:Referent,PT_ANIM);
+					resetRef(Aramina:Referent,PT_BARK);
+
+					araminaSchedule = at_home;
+					Aramina.safeTeleport(point, MapEastTenebrae);
+				} 
+
+			//Do Salkind now!
+
+				point.x = 20191;
+				point.y = 12639;
+				point.z = 72;
+
+				if Salkind.canSafeTeleport(point,MapEastTenebrae) 
+				{
+			
+					resetRef(Salkind:Referent,PT_ACTIVITY);
+					resetRef(Salkind:Referent,PT_PATHFIND);
+					resetRef(Salkind:Referent,PT_ANIM);
+					resetRef(Salkind:Referent,PT_BARK);
+
+					SalkindSchedule = at_home;
+					Salkind.safeTeleport(point,MapEastTenebrae);
+				} 
+		}
+	}
+
+// TIME TO HEAD FOR THE COURT
+
+	if (getPeriod() = daytide) or (getPeriod() = threemoons) or (getPeriod() = lastebb) 
+	{
+		point.x = 13119;
+		point.y = 8637;
+		point.z = 48;
+
+		if canSafeTeleport(point,MapCentralTenebrae) 
+		{
+			resetRef(referent,PT_ACTIVITY);
+			resetRef(referent,PT_PATHFIND);
+			resetRef(referent,PT_ANIM);
+			resetRef(referent,PT_BARK);
+
+			mordeaSchedule = on_throne;
+			safeTeleport(point,MapCentralTenebrae);
+
+
+			if Avatar.getMap() = MapCentralTenebrae
+			{ 
+				realDoAnim(AS_SIT_DOWN,4);
+			}
+
+		//Do Aramina now!
+
+			point.x = 12927;
+			point.y = 8575;
+			point.z = 48;
+
+			if (Aramina.canSafeTeleport(point,MapCentralTenebrae))
+			{
+				resetRef(Aramina:Referent,PT_ACTIVITY);
+				resetRef(Aramina:Referent,PT_PATHFIND);
+				resetRef(Aramina:Referent,PT_ANIM);
+				resetRef(Aramina:Referent,PT_BARK);
+
+				araminaSchedule = on_throne;
+				Aramina.safeTeleport(point,MapCentralTenebrae);
+			} 
+
+		//Do Salkind now!
+
+			point.x = 13279;
+			point.y = 8575;
+			point.z = 48;
+
+			if (Salkind.canSafeTeleport(point,MapCentralTenebrae)) 
+			{
+				resetRef(Salkind:Referent,PT_ACTIVITY);
+				resetRef(Salkind:Referent,PT_PATHFIND);
+				resetRef(Salkind:Referent,PT_ANIM);
+				resetRef(Salkind:Referent,PT_BARK);
+
+				SalkindSchedule = at_court;
+				Salkind.safeTeleport(point,MapCentralTenebrae);
+			} 
+
+		}
+	}
+
+// TIME TO EAT
+
+	if (getPeriod() = firstebb) or (getPeriod() = eventide) 
+	{
+		point.x = 13540;
+		point.y = 9916;
+		point.z = 48;
+
+		if canSafeTeleport(point,MapCentralTenebrae) 
+		{
+			resetRef(referent,PT_ACTIVITY);
+			resetRef(referent,PT_PATHFIND);
+			resetRef(referent,PT_ANIM);
+			resetRef(referent,PT_BARK);
+
+			mordeaSchedule = chow_down;
+			safeTeleport(point,MapCentralTenebrae);
+
+			if Avatar.getMap() = MapCentralTenebrae
+			{ 
+				realDoAnim(AS_CLIMB_4,4);
+			}
+
+		//Do Aramina now!
+
+			point.x = 14111;
+			point.y = 11007;
+			point.z = 48;
+
+			if Aramina.canSafeTeleport(point,MapCentralTenebrae) 
+			{
+				resetRef(Aramina:Referent,PT_ACTIVITY);
+				resetRef(Salkind:Referent,PT_PATHFIND);
+				resetRef(Salkind:Referent,PT_ANIM);
+				resetRef(Salkind:Referent,PT_BARK);
+
+				araminaSchedule = chow_down;
+				Aramina.safeTeleport(point,MapCentralTenebrae);
+			} 
+
+		//Do Salkind now!
+
+			point.x = 20191;
+			point.y = 12639;
+			point.z = 72;
+
+			if Salkind.canSafeTeleport(point,MapEastTenebrae) 
+			{
+				resetRef(Salkind:Referent,PT_ACTIVITY);
+				resetRef(Salkind:Referent,PT_PATHFIND);
+				resetRef(Salkind:Referent,PT_ANIM);
+				resetRef(Salkind:Referent,PT_BARK);
+
+				SalkindSchedule = at_home;
+				Salkind.safeTeleport(point,MapEastTenebrae);
+			} 
+		}
+	}
+}
+
+
+
+
+
+process Mordea::enterFastArea()
+{
+
+	if (toranDead = false) or (secondexecution = true) or (isDead() = true)
+	{
+		return;
+	}
+
+	bed:Item;
+
+	resetRef(referent,PT_ACTIVITY);
+	resetRef(referent,PT_PATHFIND);
+	resetRef(referent,PT_ANIM);
+	resetRef(referent,PT_BARK);
+
+	if (mordeaSchedule = in_bed) 
+	{
+		// Do nothing!
+	}
+
+	else if (mordeaSchedule = on_throne) 
+	{
+		spawn onThrone() -> return;
+	}
+
+	else if (mordeaSchedule = chow_down) 
+	{
+		spawn chowDown() -> return;
+	}
+
+}
+
+
+
+
+process Mordea::leaveFastArea() 
+{
+	resetRef(referent,PT_ACTIVITY);
+	resetRef(referent,PT_PATHFIND);
+	resetRef(referent,PT_ANIM);
+	resetRef(referent,PT_BARK);
+}
+
+
+
+
+process Mordea::AvatarStoleSomething(ref:Referent)
+{
+	item:Item;
+	item.referent = ref;
+
+	if (item.getType() = TypePlateWithFood) and (mordeaSchedule = chow_down) 
+	{
+		resetRef(referent,PT_BARK);
+		resetRef(referent,PT_ACTIVITY);
+
+		setAvatarInStasis(true);
+		spawn scrollTo(Mordea.getX(),Mordea.getY(),Mordea.getZ()+ 40,35) -> return;
+
+
+		bark("Playing with my food, eh?
+			\f Alors! Ainsy on joue avec mes victuailles!
+			\g Wag' es blo· nicht, mit meinem Essen zu spielen!");
+
+		realDoAnim(AS_CLIMB_4,4);
+		Avatar.turnToFace(Avatar.getDirToItem(referent),false,10);
+
+
+		bark("You need to be taught some manners!
+			\f Il faudroit que tu apprennes les bonnes maniäres!
+			\g Dir sollte man auch mal Manieren beibringen!");
+
+	
+		spawn fireBlast() -> return;
+	}
+
+	if (item.getType() = TypeKey) and (mordeaSchedule = on_throne) 
+	{
+		resetRef(referent,PT_BARK);
+		resetRef(referent,PT_ACTIVITY);
+		setAvatarInStasis(true);
+		spawn scrollTo(Mordea.getX(),Mordea.getY(),Mordea.getZ()+ 40,35) -> return;
+
+		if (getLastAnimSet() = AS_STAND) or (getLastAnimSet() = AS_WALK)
+		   or (getLastAnimSet() = AS_TALK)
+		{
+			turnToFace(getDirToItem(Avatar:Referent),false,10);
+			realDoAnim(AS_ENTER_CAST,getDir());
+			realDoAnim(AS_CAST1,getDir());
+
+
+			bark("I saw you with that key!
+				\f Je t'ai vu, avec cette clef!
+				\g Ich habe dich mit dem SchlÅssel gesehen!");
+			Avatar.turnToFace(Avatar.getDirToItem(referent),false,10);
+
+	 		spawn fireBlast() -> return;
+			realDoAnim(AS_EXIT_CAST,getDir());
+		}
+		else
+		{
+
+			bark("I saw you with that key!
+				\f Je t'ai vu, avec cette clef!
+				\g Ich habe dich mit dem SchlÅssel gesehen!");
+			Avatar.turnToFace(Avatar.getDirToItem(referent),false,10);
+
+	 		spawn fireBlast() -> return;
+		}
+	}
+
+
+	if (item.getType() = TypeCusion) and (mordeaSchedule = on_throne)
+	{
+		resetRef(referent,PT_BARK);
+		resetRef(referent,PT_ACTIVITY);
+
+		if (getLastAnimSet() = AS_STAND) or (getLastAnimSet() = AS_WALK)
+		   or (getLastAnimSet() = AS_TALK)
+		{
+			turnToFace(getDirToItem(Avatar:Referent),false,10);
+		}
+		
+		scrollTo(Mordea.getX(),Mordea.getY(),Mordea.getZ()+ 40,35);
+
+			bark("Do not touch that!
+			\f Ne touche point Ö cela!
+			\g Wag' es blo· nicht, das anzufassen!");
+		scrollBack(35);
+
+		enterFastArea();
+		
+	}
+}
+
+
+
+
+
+process Mordea::cast(ref:Referent)
+{
+	if hydrosFree {
+
+		spawn callTheGuards(NULL_REF) -> return;
+
+			clrInCombat();
+			killProcess(referent,PT_ACTIVITY);
+			killProcess(referent,PT_BARK);
+
+			bark("Beren! I am assaulted!
+					\f Beren! On m'attaque!
+					\g Beren! Man hat mich angegriffen!");
+
+	}
+	else {
+		count:Number;
+		count = 10;
+	
+		// TEST TO MAKE SURE THAT THE NPC HAS A TARGET
+		// -------------------------------------------
+		while (not getTarget()) and (count) {
+			wait(1);
+			count--;
+		}
+	
+		ref = getTarget();
+	
+	
+	
+		if ref = Avatar:Referent
+		{
+			if (getLastAnimSet() = AS_STAND) or (getLastAnimSet() = AS_WALK)
+			   or (getLastAnimSet() = AS_TALK)
+			{
+	 
+				turnToFace(getDirToItem(Avatar:Referent),false,10);
+				bark("You will pay for that!
+					\f Ah, tu le paieras cher!
+					\g Das wirst du bÅ·en!");
+				realDoAnim(AS_ENTER_CAST,getDir());
+				realDoAnim(AS_CAST1,getDir());
+		 		spawn fireBlast() -> return;
+				realDoAnim(AS_EXIT_CAST,getDir());
+			}
+			else
+			{
+	
+	
+				bark("You will pay for that!
+					\f Ah, tu me le paieras!
+					\g Das wirst du bÅ·en!");
+
+		 		spawn fireBlast() -> return;
+			}
+		}
+	}
+}
+
+
+
+
+process Mordea::use()
+{
+
+	// if the first execution scene has not taken place...
+	// do not talk to the avatar!
+
+	if not toranDead
+	{
+		return;
+	}
+
+
+	askList:String List;
+	answer:String;
+	name:String;
+
+	if getMap() = MapDocks
+	{
+		if not devonJailed
+		{
+
+			bark("Imbecile! Do you wish to join Toran? Get out of my way!
+				\f ImbÇcile! Veux-tu le mesme destin que Toran?
+				Hors de ma vue!
+				\g Idiot! Willst du vielleicht ebenso wie Toran enden? 
+				Geh' mir aus dem Weg!");
+			exitConvo();
+			return;
+		}
+	}
+
+
+	if not mordeaMet 
+	{
+		Avatar.bark("Greetings! \f Salutations! \g Seid gegrÅ·t!");
+	}
+	else
+	{
+		Avatar.bark("Greetings, your Ladyship!
+			\f Salutations, MajestÇ!
+			\g Seid gegrÅ·t, Eure Hoheit!");
+	}
+
+	if getLastAnimSet() = AS_SIT_DOWN
+	{ 
+		enterConvo2();
+	}
+	else
+	{
+		enterConvo();
+	}
+
+
+// INITIAL GREETING
+	if not mordeaMet 
+	{
+		bark("Are you speaking to me?
+			\f C'est Ö moy que tu t'adresses?
+			\g Du wagst es, mich anzusprechen?");
+		askList=<<"Yes, I am. \f En effet. \g Ja.",
+		"bye \f adieu \g Lebt wohl.">>;
+		mordeaMet = true;
+	}
+
+// SUBSEQUENT GREETINGS
+	else 
+	{
+		if mordeaPissed 
+		{
+			bark("Oh, no. 'Tis you again...
+				\f Oh, non! Encore toy...
+				\g Oh nein, nicht du schon wieder...");
+			mordeaPissed = false;
+			}
+		else
+			{
+			ran:Number = urandom(10);
+
+			if ran < 5 
+			{
+				bark("Greeting's again. \f Salutations, derechef.
+					\g Guten Tag.");
+			}
+			else 
+			{
+				#if English
+				{
+					bark("How can I help you, "+getName()+"?");
+				}
+				#if French
+				{
+					bark("En quoi puis-je t'aider, "+getName()+"?");
+				}
+				#if German
+				{
+					bark("Und was willst du, "+getName()+"?");
+				}
+			}
+		}
+ 
+	askList^=<<"May I speak with you? \f Puis-je te parler? \g Kann ich Euch sprechen?", 
+		"bye \f adieu \g Lebt wohl.">>;
+	}
+
+	#if English
+	{
+		name = "I am " + getName()+ ".";
+	}
+	#if French
+	{
+		name = "Je suis "+getName()+ ".";
+	}
+	#if German
+	{
+		name = "Ich hei·e " + getName()+ ".";
+	}
+
+	while answer!="bye \f adieu \g Lebt wohl."
+	{
+		askList-=<<"bye \f adieu \g Lebt wohl.">>;
+		askList+=<<"bye \f adieu \g Lebt wohl.">>;
+		answer=ask(askList);
+		switch answer
+		{
+			case "Yes, I am. \f En effet. \g Ja."
+			{
+				mordeaJob = true;
+				bark("Who are you that you dare address the Tempest?
+				
+				\f Qui es-tu pour oser t'adresser de la sorte
+				Ö la Tempeste?
+				\g Wer bist du, da· du es wagst, die GezeitenfÅrstin 
+				anzusprechen?");
+				askList-=<<"Yes, I am. \f En effet. \g Ja.">>;
+				askList=<<name,
+				"That is not your concern.
+					\f Cela ne te regarde point.
+					\g Das geht Euch nichts an.",
+ 
+				"May I speak with you?
+					\f Puis-je te parler?
+					\g Kann ich Euch sprechen?",
+				"Who are you?
+					\f Qui es-tu?
+					\g Wer seid Ihr?",
+				"Tempest? \f Tempeste? \g GezeitenfÅrstin?",
+				"Tell me of the Tempestry.
+				\f Parle-moy de la Tempesterie
+				\g ErzÑhlt mir von der Gezeitenmacht.">>;
+			}
+
+			case name
+			{
+				bark("I know not your name nor your face. I think you are not
+				from Tenebrae. Where are you from?
+				
+				\f Je ne connois ni ton nom, ni ton visage. Tu n'es point
+				de Tenebrae. D'oó viens-tu?
+				\g Dein Name und dein Gesicht sind mir unbekannt. Du bist nicht 
+				aus Tenebrae. Woher kommst du?");
+				askList=<<"I am from Britannia.
+					\f Je viens de Britannia.
+					\g Ich komme aus Britannia.", 
+				"I am from Earth.
+					\f Je viens de la Terre.
+					\g Ich komme von der Erde.", 
+				"I am from far away.
+					\f Je viens de fort loin.
+					\g Ich komme von weither.",
+				"I am from Tenebrae.
+					\f Je viens de Tenebrae.
+					\g Ich bin aus Tenebrae.">>;
+			}
+		
+			case "I am from Tenebrae.
+				\f Je viens de Tenebrae.
+				\g Ich bin aus Tenebrae."
+			{
+				spawn throwArms() -> return;
+				bark("You are a liar. I know all my subjects...and they
+				know me. I will not tolerate such impudence.
+				
+				\f Tu es un menteur. Je connois tous mes sujets...
+				et ils me connoissent. Je ne saurois tolÇrer
+				une telle impudence.
+				
+				\g Du bist ein LÅgner. Ich kenne alle meine Untertanen... und sie 
+				kennen mich ebenso. Ich werde diese UnverschÑmtheit nicht dulden.");
+				exitConvo();
+				return;
+			}
+
+			case "Tempest? \f Tempeste? \g GezeitenfÅrstin?", 
+				"Tell me of the Tempestry.
+				\f Parle-moy de la Tempesterie
+				\g ErzÑhlt mir von der Gezeitenmacht."
+			{
+				spawn throwArms() -> return;
+
+				bark("Know you not of the Tempestry and its great power?
+				Perhaps, then you should like a taste of it. -When I feed
+				you to the Lurker!-
+				
+				\f Ne sais-tu donc rien de la Tempesterie et de ses grands 
+				pouvoirs? Tu auras peut-estre l'occasion d'y gouster. -Lorsque
+				je te jetteroi entre les griffes de La Glauque!-
+				
+				\g Wei·t du denn gar nichts Åber die Gezeitenmacht und die KrÑfte, 
+				Åber die die GezeitenfÅrstin verfÅgt? Nun, vielleicht solltest 
+				du meine Macht am eigenen Leibe erfahren - wenn ich dich an die 
+				Lauernde verfÅttere!");
+
+			 	exitConvo();
+				return;
+			}
+
+
+			case "May I speak with you?
+				\f Puis-je te parler?
+				\g Kann ich Euch sprechen?"
+			{
+				bark("I am not familiar with your name or your face. I think
+				you are not from Tenebrae. Where are you from?
+					
+				\f Je ne connois ni ton nom, ni ton visage. Tu n'es point
+				de Tenebrae. D'oó viens-tu?
+				
+				\g Ich kenne weder deinen Namen noch dein Gesicht. Du bist nicht 
+				aus Tenebrae. Wo kommst du her?");
+				mordeaPissed = false;
+				askList-=<<"By what are you called?
+					\f Comment t'appelle-t-on?
+					\g Wie hei·t Ihr?">>;
+				askList=<<"I am from Britannia.
+					\f Je viens de Britannia.
+					\g Ich komme aus Britannia.", 
+				"I am from far away.
+					\f Je viens de fort loin.
+					\g Ich komme von weither.",
+				"I am from Earth.
+					\f Je viens de la Terre.
+					\g Ich komme von der Erde.", 
+				"I am from Tenebrae.
+					\f Je viens de Tenebrae.
+					\g Ich bin aus Tenebrae.">>;
+			}
+
+			case "I am from Britannia.
+				\f Je viens de Britannia.
+				\g Ich komme aus Britannia."
+			{
+				spawn throwArms() -> return;
+				bark("I've never heard of such a place. You are either a 
+				liar or a fool. You don't look smart enough to be a liar
+				and I will not tolerate a fool.
+				
+				\f Je n'ai jamais entendu parler de ce lieu. Tu es un imbÇcile ou
+				un menteur. Tu ne m'as point l'air assez intelligent pour estre
+				un menteur et j'ai horreur des imbÇciles.
+				
+				\g Noch nie davon gehîrt. Du bist entweder ein LÅgner oder ein Narr. 
+				Du siehst mir nicht klug genug aus, um ein LÅgner zu sein, und 
+				ich dulde keine Narren.");
+			 	exitConvo();
+				return;
+			}
+
+			case "Who are you?
+					\f Qui es-tu? 
+					\g Wer seid Ihr?"
+			{
+				spawn throwArms() -> return;
+
+				mordeaName = true;
+				bark("Fool! I am the Lady Mordea, the Tempest of Tenebrae. You
+				will use reverence when dealing with me in the future or I
+				shall have you thrown to the Lurker!
+				
+				\f Pauvre gueux! Je suis Dame Mordea, la Tempeste de Tenebrae. A l'avenir,
+				tu t'adresseras Ö moy avec plus de vÇnÇration ou je te feroi jeter
+				Ö La Glauque.
+				
+				\g Idiot! Ich bin die Herrin Mordea, die GezeitenfÅrstin. 
+				Wenn du mir in Zukunft nicht die gebÅhrende Verehrung erweist, 
+				dann werde ich dich der Lauernden vorwerfen.");
+				exitConvo();
+				return;
+			}
+
+			case "That is not your concern.
+					\f Cela ne te regarde point.
+					\g Das geht Euch nichts an."
+			{
+				spawn throwArms() -> return;
+				bark("Knave! Keep a civil tongue in your head or I shall have
+				it cut out and fed to the fishes!
+				
+				\f Ah, maraud! Surveille ta langue ou je la feroi couper
+				pour en nourrir les poissons.
+				
+				\g Halunke! HÅte deine Zunge, oder ich werde sie dir aus dem Mund 
+				schneiden und an die Fische verfÅttern!");
+			 	exitConvo();
+				return;
+			}
+
+			case "I am from far away.
+					\f Je viens de fort loin.
+					\g Ich komme von weither."
+			{
+				spawn throwArms() -> return;
+				bark("Do not toy with me, rogue. I will not tolerate such
+				rudeness. Begone from my sight.
+				
+				\f Ne t'avise point Ö te jouer de moy, vaurien. Je ne toläreroi point
+				une telle hardiesse. Oste-toy de ma vue.
+				
+				\g Versuche nur nicht, deine Spielchen mit mir zu spielen, ungehobelter 
+				Flegel! Ich	dulde keine UnverschÑmtheiten. Scher dich weg.");
+				mordeaPissed = true;
+				exitConvo();
+				return;
+			}
+
+			case "I am from Earth.
+					\f Je viens de la Terre.
+					\g Ich komme von der Erde."
+			{
+				spawn throwArms() -> return;
+				bark("Earth? What sort of nonsense is this? A place called
+				Earth? There is no such place by that name. You are nothing
+				more than a simpleminded fool. Begone.
+				
+				\f La Terre? Quelle est cette plaisanterie? Un lieu appelÇ Terre?
+				Il n'y a nul endroit de ce nom. Tu n'es qu'un crÇtin
+				de la pire espäce. Va-t'en.
+				
+				\g Erde? Was ist das denn fÅr ein Unsinn? Ein Ort namens Erde? 
+				Einen solchen Ort gibt es nicht. Du bist nichts als ein einfÑltiger Narr. Scher dich weg.");
+			 	exitConvo();
+				return;
+			}
+
+
+			default
+			{
+			ranNum:Number = urandom(10);
+
+			if ranNum < 5 
+			{
+				bark("Waste not my time!
+					\f Ne me fais point perdre mon temps!
+					\g Du vergeudest meine Zeit!");
+			}
+			else 
+			{
+				bark("I have better things to do...
+						\f J'ai mieux Ö faire...
+						\g Ich habe etwas Besseres zu tun...");
+				bark("Leave me now.
+						\f Laisse-moy, maintenant.
+						\g La· mich jetzt gefÑlligst alleine.");
+				}
+
+			exitConvo();
+			return;
+			}
+
+		}
+	}
+
+	bark("Begone! I wish to be alone.
+		\f Va-t'en! Je dÇsire estre seule.
+		\g Scher dich weg! Ich will alleine sein.");
+	exitConvo();
+}
+
+
+
+process Mordea::walkInCircles()
+{
+	[[PT_ACTIVITY, referent]];
+
+	startup
+		{
+		dir:Number = 0;
+		count:Number = 0;
+		}
+	process
+		{
+		count ++;
+		if count > 3
+			{
+			dir ++;
+			if dir > 6
+				{
+				dir = 0;
+				}
+			}
+		realDoAnim(AS_WALK,dir);
+		}
+}
+
+
+
+process Mordea::throwArms()
+{
+	[[PT_ACTIVITY, referent]];
+
+	if not getLastAnimSet() = AS_SIT_DOWN 
+	{
+
+		realDoAnim(AS_ENTER_CAST,getDir());
+		realDoAnim(AS_EXIT_CAST,getDir());
+	}
+	 mordeaPissed = true;
+}
+
+
+
+
+process Mordea::onThrone() 
+{
+
+	[[PT_ACTIVITY, referent]];
+
+	startup 
+	{
+		chair,pathEgg : Item;
+		counter,dir,ran:Number;
+		chairThere : Boolean;
+	}
+
+	process {
+		chairThere = false;
+		if getLastAnimSet() = AS_SIT_DOWN 
+		{
+			realDoAnim(AS_SIT_UP,4);
+			foreach	pathEgg where type = TypeWoodThrone within 5 cells of Mordea {
+				chairThere = true;
+			}
+			if not chairThere 
+			{
+				chair.create(TypeWoodThrone,4);
+				chair.pop(Mordea.getX() + 10,Mordea.getY() - 50,Mordea.getZ());
+			}
+
+			realDoAnim(AS_STAND,4);
+		}
+
+		for counter = 0 to urandom(3)+ 1 
+		{
+			ran = urandom(3) + 1;
+			
+
+			switch ran 
+			{
+				case 1 { dir = 1; }
+				case 2 { dir = 0; }
+				case 3 { dir = 1; }
+				case 4 { dir = 7; }
+			}
+
+			foreach	pathEgg where (type = TypePathMarker) and (frame = ran) within 30 cells of Mordea 
+			{
+				pathfind(pathEgg.referent,10);
+				turnToFace(dir,0,1);
+				randomBark();
+				wait(urandom(200)+200);
+			}
+		}
+
+
+		if urandom(10) > 8 
+		{
+			foreach	pathEgg where (type = TypePathMarker) and (frame = 0) within 50 cells of Mordea 
+			{
+				pathfind(pathEgg.referent,10);
+				turnToFace(6,0,4);
+				realDoAnim(AS_STAND,6);
+				bark("What an ugly painting!
+					\f Quel affreux tableau!
+					\g Pfui, was fÅr ein scheu·liches GemÑlde!");
+			wait(urandom(50)+200);
+			}
+		}
+
+	
+		foreach	pathEgg where (type = TypePathMarker) and (frame = 5) within 50 cells of Mordea 
+		{
+			pathfind(pathEgg.referent,10);
+			turnToFace(0,0,4);
+			randomBark();
+		}
+
+		foreach	pathEgg where (type = TypePathMarker) and (frame = 6) within 50 cells of Mordea 
+		{
+			pathfind(pathEgg.referent,5);
+		}
+
+		foreach	pathEgg where (type = TypePathMarker) and (frame = 7) within 50 cells of Mordea 
+		{
+			if pathfind(pathEgg.referent,5) 
+			{
+				teleport(13119,8605,48,MapCentralTenebrae);
+				turnToFace(4,0,4);
+				wait(60);
+				realDoAnim(AS_SIT_DOWN,4);
+			}
+			else 
+			{
+				turnToFace(getDirToItem(Avatar:Referent),0,5);
+				bark("Away from there!
+					\f Eloigne-toy de lÖ!
+					\g Verschwinde da!");
+			}
+		}	
+
+		wait(urandom(50)+200);
+	}
+}
+
+
+
+
+
+process Mordea::chowDown()
+{
+	[[PT_ACTIVITY, referent]];
+
+	startup
+	{
+		plate:Item;
+		realDoAnim(AS_CLIMB_5,4);
+	}
+
+	process 
+	{
+		if somebodyTalking
+		{
+	
+			foreach	plate where (type = TypePlateWithFood) within 10 cells of Mordea 
+			{
+				if (plate.getFrame() > 0)
+					{
+					realDoAnim(AS_CLIMB_4,4);
+					plate.setFrame(plate.getFrame() - 1);
+					realDoAnim(AS_CLIMB_5,4);
+					}
+				else {
+					realDoAnim(AS_CLIMB_4,4);
+					realDoAnim(AS_CLIMB_5,4);
+					}
+			}
+			wait(urandom(250)+400);
+		}
+		else
+		{
+			chowBark();
+		}
+	}
+}
+	
+	
+
+process Mordea::chowBark()
+{
+	[[PT_ACTIVITY, referent]];
+
+	ran:Number;
+	plate,p:Item;
+	foundPlate,foundFullPlate:Boolean;
+
+
+	foreach	p where (type = TypePlateWithFood) within 10 cells of Mordea 
+	{
+		foundPlate = true;
+		plate.referent = p.referent;
+
+		if (plate.getFrame() > 0)
+		{
+			foundFullPlate = true;
+		}
+	}
+
+	if foundPlate
+	{
+		if foundFullPlate
+		{
+			realDoAnim(AS_CLIMB_4,4);
+			plate.setFrame(plate.getFrame() - 1);
+			realDoAnim(AS_CLIMB_5,4);
+	
+			ran = urandom(5);
+	
+			if ran = 1 
+			{
+				bark("Where's the butter?
+					\f Passe-moy le beurre!
+					\g Wo ist die Butter?");
+			}
+			if ran = 2 
+			{
+				bark("Aramina, my cup is empty!
+					\f Aramina, ma coupe est vide!
+					\g Aramina, mein Becher ist leer!");
+			}
+			if ran = 3 
+			{
+				bark("Who cooked this slop?
+					\f Qui a prÇparÇ cet infasme graillon?
+					\g Wer hat denn diesen Fra· gekocht?");
+			}
+			if ran = 4 
+			{
+	  
+				bark("Too much salt!
+					\f C'est trop salÇ!
+					\g Zuviel Salz!");
+			}
+			if ran = 5 
+			{
+				bark("The torax is undercooked!
+					\f Le torax n'est point assez cuit!
+					\g Dieses Toraxfleisch ist ja noch roh!");
+			}
+	
+	
+			wait(urandom(150)+200);
+			return;
+		}
+		else
+		{
+
+
+			if urandom(10) > 5
+			{
+			bark("Hey! People are starving here!
+				\f HÇ! On cräve de faim, icy!
+				\g He! Gibt's hier auch was zu Essen!");
+			}
+			else 
+			{
+				bark("My plate is empty!
+					\f Mon assiette est vide!
+					\g Mein Teller ist leer!");
+			}
+
+			wait(urandom(150)+200);
+			return;
+		}
+	}
+	else
+	{
+
+		if urandom(10) > 5 
+		{
+			bark("I need a plate!
+				\f Il me faut une assiette!
+				\g Wie wÑre es, wenn ich langsam mal einen Teller bekÑme!");
+		}
+		else 
+		{
+			bark("I can not eat off the table!
+				\f Tu ne veux tout de mesme point que je mange sans assiette!
+				\g Ich kann schlie·lich nicht vom Tisch essen!");
+		}
+	
+		wait(urandom(150)+200);
+	}
+}
+
+
+
+process Mordea::randomBark()
+{
+	[[PT_ACTIVITY, referent]];
+
+	if somebodyTalking {
+		return;
+	}
+
+		ran:Number = urandom(8);
+
+		if ran = 1 
+		{
+			bark("Off with his head!
+				\f Qu'on luy coupe la teste!
+				\g Kîpft ihn!");
+		}
+		if ran = 2 
+		{
+
+			bark("Feed them all to the Lurker!
+				\f Jettez-les tous Ö La Glauque!
+				\g Werft sie alle der Lauernden vor!");
+		}
+		if ran = 3 
+		{
+			bark("More executions!
+				\f Il nous faut bien plus d'exÇcutions!
+				\g Wir brauchen viel mehr Hinrichtungen!");
+			wait(45);
+			spawn salkindAnswerMordea() -> return;
+		}
+		if ran = 4 
+		{
+			bark("Flog the peasants!
+				\f Qu'on roue de coups ces moins que rien!
+				\g Peitscht die Bauern aus!");
+			wait(45);
+			spawn salkindAnswerMordea() -> return;
+		}
+		if ran = 5 
+		{
+
+			bark("More work for less pay!
+				\f Augmentez le travail! Diminuez les gages!
+				\g Schafft sofort alle Feiertage ab! Und kÅrzt die GehÑlter!");
+			wait(45);
+			spawn salkindAnswerMordea() -> return;
+		}
+		if ran = 6 
+		{
+
+			bark("Double the taxes!
+				\f Qu'on double les imposts!
+				\g Verdoppelt die Steuern!");
+			wait(45);
+			spawn salkindAnswerMordea() -> return;
+		}
+		if ran = 7 
+		{
+
+			bark("No more days of rest!
+				\f TerminÇs, les jours de repos!
+				\g Ruhetage werden abgeschafft!");
+			wait(45);
+			spawn salkindAnswerMordea() -> return;
+		}
+
+}
+
+
+process Mordea::salkindAnswerMordea()
+{
+	[[PT_ACTIVITY, referent]];
+
+	if somebodyTalking {
+		return;
+	}
+
+	bandito:Item;
+
+	foreach	bandito where (type = TypeSalkind) within 20 cells of Mordea 
+	{
+		
+		ran:Number = urandom(8);
+
+		if ran = 1 
+		{
+			Salkind.bark("You are correct! \f Tu as raison!
+				\g Ihr habt recht!");
+		}
+		if ran = 2 
+		{
+			Salkind.bark("Yes! Yes! \f Oui! Oui! Certainement, MajestÇ!
+				\g Ja! SelbstverstÑndlich, MajestÑt! Ja!");
+		}
+		if ran = 3 
+		{
+			Salkind.bark("You are so generous!
+				\f Ta grandeur est sans limites!
+				\g Eure Gro·zÅgigkeit ist grenzenlos!");
+		}
+		if ran = 4 
+		{
+			Salkind.bark("I will attend to it!
+				\f Je m'en occupe tout de suite!
+				\g Ich werde mich sofort darum kÅmmern!");
+		}
+		if ran = 5 
+		{
+			Salkind.bark("Yes, your Ladyship!
+				\f Oui, MajestÇ!
+				\g Ja, Eure Hoheit!");
+		}
+		if ran = 6 
+		{
+			Salkind.bark("Pure genius!
+				\f Quel gÇnie!
+				\g Ihr seid wahrlich ein Genie!");
+		}
+		if ran = 7 
+		{
+			Salkind.bark("I agree completely!
+				\f Entiärement d'accord!
+				\g Ich kînnte Euch nicht mehr zustimmen!");
+		}
+	}
+}
+
+
+process Mordea::fireBlast() {
+
+[[PT_DEFAULT, referent]];
+
+	fire,lightning:Item;
+	counter:Number;
+	offSet:Number = (250 - Avatar.getZ()) * 4;
+
+
+	spawn safePlaySFX(LTNING1A,100) -> return;
+	LightningBolt();
+	scrollBack(35);
+	lightning.create(TypeLightning,0);
+	lightning.pop(Avatar.getX() + offSet,Avatar.getY() + offSet,250);
+	playSFX(EXPLODE3,200);
+
+	for counter = 0 to 4 {
+		lightning.setFrame(counter);
+		wait(4);
+	}
+
+	spawn safePlaySFX(LTNING1A,100) -> return;
+	lightning.destroy();
+
+	fire.create(TypeFireblast,0);
+	fire.pop(Avatar.getX() + offSet,Avatar.getY() + offSet,249);
+
+	Avatar.receiveHit(referent, 4, Avatar.getHp(),DMG_FULL);
+
+//	spawn Avatar.realDoAnim(AS_FALL_DOWN,3) -> return;
+
+	for counter = 0 to 9 {
+		fire.setFrame(counter);
+		wait(10);
+		}
+	fire.destroy();
+	spawn safePlaySFX(LTNING1A,100) -> return;
+	LightningBolt();
+}
+

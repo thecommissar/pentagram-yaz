@@ -1,0 +1,508 @@
+// @@@ CHANGE F & G 8-11
+uses "plaque";					   
+
+typeclass TypeNSGoldPlaque inherits GoldPlaque 
+{
+	process look();
+	process use();
+}
+
+process TypeNSGoldPlaque::look() 
+{
+	bark("plaque \f enseigne \g Schrifttafel");
+}
+
+
+process TypeNSGoldPlaque::use() 
+{
+	spawn readPlaque() -> return;
+}
+
+
+process GoldPlaque::readPlaque()
+{
+	qual:Number = getQuality();
+
+
+
+	if qual = 1
+	{
+		read(16,"THE MONASTERY*OF THE*THEURGISTS
+				\f LE MONASTERE*DES*THEURGISTES
+				\g DAS KLOSTER*DER*THEURGISTEN");
+		return;
+	}
+
+	else if qual = 2
+	{
+		read(16,"THE PALACE*OF THE TEMPEST
+				\f LE PALAIS*DE LA TEMPESTE 
+				\g DER PALAST DER*GEZEITENFUERSTEN");
+		return;
+	}
+
+	else if qual = 3
+	{
+		read(16,"MESS HALL \f CANTINE \g SPEISESAAL");
+		return;
+	}
+	else if qual = 4
+	{
+		read(16,"PALACE*BARRACKS
+				\f LES QUARTIERS*DU PALAIS
+				\g KASERNE DER*PALASTWACHEN");
+		return;
+	}
+	else if qual = 5
+	{
+		read(16,"THE*ROYAL*HALL 
+				\f LA*HALLE*ROYALE
+				\g DER*FUERSTENSAAL");
+		return;
+	}
+	else if qual = 6
+	{
+		read(16,"AUTHORIZED*PERSONNEL*ONLY
+				\f ENTREE*RESERVEE
+				\g UNBEFUGTEN*ZUTRITT*VERBOTEN");
+		return;
+	}
+	else if qual = 7
+	{
+		read(16,"WATERS*OF THE*TEMPEST
+				\f EAUX*DE*LA*TEMPESTE
+				\g WASSER*DER*GEZEITENFUERSTEN");
+		return;
+	}
+
+
+	else if qual = 8
+	{
+		read(16,"DANGER*DO NOT*ENTER
+				\f DANGER*ENTREE*INTERDITE
+				\g GEFAHR*ZUTRITT*VERBOTEN");
+		return;
+	}
+	else if qual = 9
+	{
+		read(16,"BLACKALLER*FINALLY RESTING
+				\f BLACKALLER*ENFIN AU REPOS
+				\g BLACKALLER*RUHT ENDLICH");
+		return;
+	}
+	else if qual = 10
+	{
+		read(16,"T'IS FAR*TOO LATE*FOR ME
+				\f IL EST*BIEN TROP TARD*POUR MOY
+				\g ES IST VIEL*ZU SPAET*FUER MICH");
+		return;
+	}
+	else if qual = 11
+	{
+		read(16,"TOWARDS*FATE DO YOU*TRAVEL
+				\f TU MARCHES*VERS TON DESTIN
+				\g IHR REIST*EUREM SCHICKSAL*ENTGEGEN");
+		return;
+	}
+	else if qual = 12
+	{
+		read(16,"KAYLITH*-TREASURER-
+				\f KAYLITH*-TRESORIER-
+				\g KAYLITH*-SCHATZMEISTER-");
+		return;
+	}
+	else if qual = 13
+	{
+		read(16,"MASTER OF KEYS
+				\f MAISTRE DES CLEFS
+				\g HERR*DER*SCHLUESSEL");
+		return;
+	}
+	else if qual = 14
+	{
+		read(16,"JOHAH \g JOHAH \f JOHAH");
+		return;
+	}
+	else if qual = 15
+	{   
+		read(16,"HEGLAND HEGWOOD \f HEGLAND HEGWOOD \g HEGLAND HEGWOOD");
+		return;
+	}
+	else if qual = 16
+	{
+		read(16,"DON'T*LOOK*NOW \f NE POINT*REGARDER \g NICHT*HINSEHEN");
+		return;
+	}
+	else if qual = 17
+	{
+		read(16,"SCHOENROCK \f BELROC \g SCHOENSTEIN");
+		return;
+	}
+	else if qual = 18
+	{
+		read(16,"HEAVRIN*ARCHITECT*LAID TO REST*IN HIS OWN PLAN
+				\f HEAVRIN*ARCHITECTE*CI-GIST SELON*SON PLAN
+				\g HEAVRIN DER*ARCHITEKT RUHT*HIER NACH SEINEM*EIGENEN PLAN");
+		return;
+	}
+	else if qual = 19
+	{
+		read(16,"TO*LOWER CATACOMBS
+				\f VERS*CATACOMBES*INFERIEURES 
+				\g ZU DEN*UNTEREN*KATAKOMBEN");
+		return;
+	}
+	else if qual = 20
+	{
+		read(16,"R.E.M.*G.T.H.*A.S.T.");
+		return;
+	}
+	else if qual = 21
+	{
+		read(16,"JOHN*OF*GARLAND
+				\f JEAN*DE*GARLAND
+				\g JOHANN*VON*GARLAND");
+		return;
+	}
+	else if qual = 22
+	{
+		read(16,"LESIFER*BELOVED*SISTER*M.F.H.
+				\f LESIFER*SOEUR ADOREE*M.F.H.
+				\g LESIFER*GELIEBTE*SCHWESTER*M.F.H.");
+		return;
+	}
+	else if qual = 23
+	{            
+		read(16,"GOOD RIDDANCE
+				\f BON DEBARRAS
+				\g GOTT SEI DANK");
+		return;
+	}
+	else if qual = 24
+	{
+		read(16,"JUST LOOK*AT ME*NOW
+				\f REGARDE*OU J'EN SUIS*ARRIVE
+				\g SCHAUT MICH*JETZT*AN");
+		return;
+	}
+	else if qual = 25
+	{
+		read(16,"WHEW**I FEEL BETTER
+				\f AH*JE ME SENS MIEUX
+				\g PUH*JETZT FUEHLE*ICH MICH*BESSER");
+		return;
+	}
+	else if qual = 26
+	{
+		read(16,"BITTER RAGE*FILLED WITH HATE*SO LIES*THIS INGRATE
+				\f PLEIN DE HAINE*ET DE RAGE* ICY REPOSE L'INGRAT
+				\g VOLLER HASS*UND RACHLUST*LIEGT ER*VOLLER FRUST");
+		return;
+	}
+	else if qual = 27
+	{
+		read(16,"I TOLD YOU*IT WAS MY*ECHIDNAS
+			\f TU VOIS BIEN*QUE C'ESTOIT*MON ECHIDNAS
+			\g ICH SAGTE EUCH*SCHON, ES WAR*MEIN ECHIDNAS");
+		return;
+	}
+	else if qual = 28
+	{
+		read(16,"TENEBRAE*LIBRARY
+				\f BIBLIOTHEQUE*DE TENEBRAE
+				\g BIBLIOTHEK*VON*TENEBRAE");
+		return;
+	}
+	else if qual = 29
+	{
+		read(16,"FIGHTMASTER
+				\f MAISTRE*ES*COMBAT
+				\g KAMPFLEHRER");
+		return;
+	}
+	else if qual = 30
+	{
+		read(16,"DO*NOT*ENTER
+				\f ENTREE*INTERDITE
+				\g ZUTRITT*VERBOTEN");
+		return;
+	}
+	else if qual = 31
+	{
+		read(16,"TEMPLE*OF THE*DIVINE*HYDROS
+				\f TEMPLE*DE LA DIVINE*HYDROS
+				\g DER TEMPEL*DER*GOETTLICHEN*HYDROS");
+		return;
+	}
+	else if qual = 32
+	{
+		read(16,"SALKIND*THE*SENESCHAL
+				\f SALKIND*LE*SENECHAL
+				\g DER*MAJORDOMUS*SALKIND");
+		return;
+	}
+	else if qual = 33
+	{
+		read(16,"QUIET \f SILENCE \g RUHE");
+		return;
+	}
+	else if qual = 34
+	{
+		read(16,"SPRING*OF THE*ETERNAL*HYDROS
+				\f SOURCE*DE*L'ESTERNELLE*HYDROS
+				\g BRUNNEN*DER EWIGEN*HYDROS");
+		return;
+	}
+	else if qual = 35
+	{
+		read(16,"THE HALL*OF THE*SORCERERS
+				\f HALLE*DES*SORCIERS
+				\g SAAL*DER*HEXER");
+		return;
+	}
+	else if qual = 36
+	{
+		read(16,"THE*LIBRARY*OF SORCERY
+				\f BIBLIOTHEQUE*DE LA*SORCELLERIE
+				\g BIBLIOTHEK*DER*HEXER");
+		return;
+	}
+	else if qual = 37
+	{
+		if (acolyteKilled = vardionDead) and (goToInnerSanctum = true) {
+			read(16,"FIRST ACOLYTE*BANE
+					\f PREMIER ACOLYTE*BANE
+					\g OBERSTER*AKOLUTH*BANE");
+		}
+		else {
+			read(16,"FIRST ACOLYTE*VARDION
+					\f PREMIER ACOLYTE*VARDION
+					\g OBERSTER*AKOLUTH*VARDION");
+		}
+		return;
+	}
+	else if qual = 38
+	{
+		if (acolyteKilled > noOneDead) and (goToInnerSanctum = true) {
+			read(16,"DO*NOT*ENTER
+					\f ENTREE*INTERDITE
+					\g ZUTRITT*VERBOTEN");
+		}
+		else {
+			read(16,"ACOLYTE*BANE
+					\f ACOLYTE*BANE
+					\g AKOLUTH*BANE");
+		}
+		return;
+	}
+	else if qual = 39
+	{
+		read(16,"ACOLYTE*BEREN
+				\f ACOLYTE*BEREN
+				\g AKOLUTH*BEREN");
+		return;
+	}
+	else if qual = 40
+	{
+		read(16,"ACOLYTE*GORGROND
+				\f ACOLYTE*GORGROND
+				\g AKOLUTH*GORGROND");
+		return;
+	}
+	else if qual = 41
+	{
+		read(16,"FLAM POR");
+		return;
+	}
+	else if qual = 42
+	{
+		read(16,"AN FLAM");
+		return;
+	}
+	else if qual = 43
+	{
+		read(16,"SANCT FLAM");
+		return;
+	}
+	else if qual = 44
+	{
+		read(16,"VAS SANCT FLAM");
+		return;
+	}
+	else if qual = 45
+	{
+		read(16,"FORENCIA*BELOVED WIFE*DEVOTED MOTHER*DIED IN ACCIDENT
+				\f FORENCIA*ESPOUSE ET MERE* MORTE ICY*PAR ACCIDENT
+				\g FORENCIA*GELIEBTE FRAU*UND MUTTER*STARB HIER*DURCH EIN UNFALL");
+		return;
+	}
+	else if qual = 46
+	{
+		read(16,"THE UPPER CATACOMBS
+				\f CATACOMBES*SUPERIEURES
+				\g DIE OBEREN*KATAKOMBEN");
+		return;
+	}
+
+	else if qual = 47
+   	{
+		read(16,"REST IN PEACE
+				\f REPOSE EN PAIX
+				\g GEHT IN FRIEDEN");
+		return;
+	}
+
+	else if qual = 48
+	{
+		read(16,"WARNING:*TO THE SHRINE 
+			\f AVERTISSEMENT*VERS LE*SANCTUAIRE 
+			\g WARNUNG:*ZUM SCHREIN");
+		return;
+	}
+//=======================================================================
+	else if qual = 49
+	{
+		read(16,"WHY ARE YOU*READING THIS*WHEN YOU CAN*BE FIGHTING
+			\f POURQUOI LIS-TU*ALORS QUE TU*POURROIS COMBATTRE
+			\g WESHALB LEST*IHR, WENN*IHR KAEMPFEN*KOENNTET");
+		return;
+	}
+	else if qual = 50
+	{
+		read(16,"GABRIEL*LOVELY DAUGHTER*LOVE OF MY LIFE
+				\f GABRIELLE*FILLE ADOREE*LUMIERE DE*MA VIE
+				\g GABRIEL*LIEBLICHE TOCHTER*LICHT MEINES*LEBENS");
+		return;
+	}
+	else if qual = 51
+	{
+		read(16,"SYSAPHUS*EXECUTED*FOR MURDER*LEFT TO BURN
+				\f SYSAPHUS*EXECUTE*POUR MEUTRE*QU'IL BRUSLE
+				\g SYSAPHUS*WEGEN MORD*HINGERICHTET*ER SOLL*SCHMOREN");
+		return;
+	}
+	else if qual = 52
+	{
+		read(16,"NORTH \f NORD \g NORDEN");
+		return;
+	}
+  
+   	else if qual = 53
+	{
+		read(16,"WEST \f OUEST \g WESTEN");
+		return;
+	}
+	else if qual = 54
+	{
+		read(16,"MORATAIN*FAMILY*MAUSOLEUM*DO NOT DISTURB!
+				\f MORATAIN*MOSAULEE FAMILIAL*NE PAS DERANGER!
+				\g MORATAIN*FAMILIENMAUSOLEUM*ZUTRITT VERBOTEN!");
+		return;
+	}
+	else if qual = 55
+	{
+		read(16,"*ADMIRE*BUT*TOUCH NOT
+				\f ADMIRER*MAIS NE POINT*TOUCHER
+				\g NUR BEWUNDERN*NICHT BERUEHREN");
+		return;
+	}
+	else if qual = 56
+	{
+		read(16,"SHOPLIFTERS*WILL BE*FLOGGED
+				\f LES VOLEURS*SERONT FOUETTES
+				\g DIEBE WERDEN*AUSGEPEITSCHT");
+		return;
+	}
+
+	else if qual = 57
+	{
+		read(16,"PIT*OF DEATH
+				\f PUITS*DE LA*MORT
+				\g TOTENGRUFT");
+		return;
+	}
+	else if qual = 58
+	{
+		read(16,"MARIOTA*CONVENTICLER
+				\f MARIOTA*CONGRESSISTE
+				\g MARIOTA*VORSITZENDE");
+		return;
+	}
+	else if qual = 59
+	{
+		read(16,"NOW ENTERING*THE PIT*OF DEATH
+				\f ENTREE*DU PUITS*DE LA MORT
+				\g EINGANG*ZUR*TOTENGRUFT");
+		return;
+	}
+
+	else if qual = 60
+	{
+		read(16,"TO STONE COVE
+				\f VERS*CIRQUE*SACRE		
+				\g ZUR*STEINERNEN*BUCHT");
+		return;
+	}
+	else if qual = 61
+	{	
+		read(16,"TOWARDS*CARTHAX LAKE
+				\f VERS*LAC*CARTHAX		
+				\g ZUM*KARTHAXSEE");
+		return;
+	}
+	else if qual = 62
+	{
+		read(16,"TO*ARGENTROCK ISLE
+				\f VERS*ISLE DU ROC*D'ARGENT		
+				\g ZUR*INSEL*SILBERFELS");
+		return;
+	}
+	else if qual = 63
+	{
+		read(16,"TO*THE*UPPER CATACOMBS
+				\f VERS*CATACOMBES*SUPERIEURES
+				\g ZU DEN*OBEREN*KATAKOMBEN");
+		return;
+	}
+	else if qual = 64
+	{
+		read(16,"TO*THE*LOWER CATACOMBS
+				\f VERS*CATACOMBES*INFERIEURES		
+				\g ZU DEN*UNTEREN*KATAKOMBEN");
+		return;
+	}
+	else if qual = 65
+	{
+		read(16,"TO*DAEMONS*CRAG
+				\f VERS*ANTRE*DES DEMONS 
+				\g ZUR*DAEMONENKLIPPE");
+		return;
+	}
+	else if qual = 66
+
+// @@@ CHANGE TRANSLATE F/G 8/10/94 -BMARTIN
+	{
+		read(16,"BIRTHPLACE*OF*MORIENS");
+		return;
+	}
+
+// @@@ CHANGE F G    8-11  -sg
+
+	else if qual = 67
+	{
+		read(16,"Through Flame*Shall All*Be Released");
+		return;
+	}
+
+
+	//================================================================
+  	else
+	{
+		read(16,"NO SOLICITING
+			\f SOLLICITATION*INTERDITE
+			\g HAUSIEREN*VERBOTEN");
+		return;
+	}
+}
+
+

@@ -1,0 +1,180 @@
+uses "free";
+uses "flags";
+uses "item";
+
+
+
+
+typeclass TypePoisonPlant inherits Item
+{
+	process look();
+	process use();
+	process poisonAvatar();
+}
+
+process TypePoisonPlant::look()
+{
+	bark("Strange plant");
+}
+
+
+process TypePoisonPlant::use()
+{
+	item:Item;
+	plant,wind:Item;
+	counter:Number;
+
+	
+	setAvatarInStasis(true);
+	spawn safePlaySFX(EXPLODE1,200) -> return;
+
+//	realDoAnim(AS_EXPLODE,0);
+
+	Avatar.realDoAnim(AS_FALL_DOWN,0);
+	FadeToBlack();
+	Avatar.teleport(14207,29151,64,Avatar.getMap());
+	FadeFromBlack();
+	spawn safePlaySFX(MAGIC2,100) -> return;
+
+
+	wind.create(TypeMiniAirTitan,0);
+	wind.pop(14057,29353,64);
+	for counter = 0 to 9
+	{
+		wind.setFrame(counter);
+		wait(10);
+	}
+	plant.create(TypeStatue,0);
+	plant.pop(14047,29343,64);
+	spawn safePlaySFX(MAGIC1,200) -> return;
+	for counter = 25 to 34
+	{
+		wind.setFrame(counter);
+		wait(10);
+	}
+	wind.destroy();
+
+
+	wind.create(TypeMiniAirTitan,0);
+	wind.pop(14281,29545,64);
+	for counter = 0 to 9
+	{
+		wind.setFrame(counter);
+		wait(10);
+	}
+	plant.create(TypeStatue,0);
+	plant.pop(14271,29535,64);
+	spawn safePlaySFX(MAGIC1,200) -> return;
+	for counter = 25 to 34
+	{
+		wind.setFrame(counter);
+		wait(10);
+	}
+	wind.destroy();
+
+
+	wind.create(TypeMiniAirTitan,0);
+	wind.pop(14505,29705,64);
+	for counter = 0 to 9
+	{
+		wind.setFrame(counter);
+		wait(10);
+	}
+	plant.create(TypeStatue,0);
+	plant.pop(14495,29695,64);
+	spawn safePlaySFX(MAGIC1,200) -> return;
+	for counter = 25 to 34
+	{
+		wind.setFrame(counter);
+		wait(10);
+	}
+	wind.destroy();
+
+
+	spawn poisonAvatar() -> return;
+	setAvatarInStasis(false);
+}
+
+
+process TypePoisonPlant::poisonAvatar()
+{
+	[[PT_DEFAULT,NUL_REF]];
+
+	startup
+	{
+		hitCounter:Number=0;
+		avatarPoisoned = true;
+		firstPoisoned = true;
+	}
+
+	process
+	{
+		if avatarPoisoned = false
+		{
+			return;
+		}
+
+		if firstPoisoned
+		{
+			Avatar.bark("I think I've been poisoned!");
+			firstPoisoned = false;
+		}
+		else
+		{
+			ran:Number;
+			ran = urandom(10);
+			if ran = 1
+			{
+				Avatar.bark("I haven't this bad since Lydia poisoned
+				me!");
+			}
+			if ran = 2
+			{
+				Avatar.bark("I don't feel good.");
+			}
+
+			if ran = 3
+			{
+				Avatar.bark("Oh, my stomach!");
+			}
+			if ran = 4
+			{
+				Avatar.bark("My head really hurts.");
+			}
+			if ran = 5
+			{
+				Avatar.bark("I feel terrible!");
+			}
+			if ran = 6
+			{
+				Avatar.bark("All my joints hurt!");
+			}
+			if ran = 7
+			{
+				Avatar.bark("I feel so weak!");
+			}
+			if ran = 8
+			{
+				Avatar.bark("I've never felt so bad!");
+			}
+			if ran = 9
+			{
+				Avatar.bark("I feel sick.");
+			}
+		}
+
+		Avatar.receiveHit(referent, nodir, 1, DMG_FULL);
+		hitCounter++;
+		if (hitCounter = 3)
+		{
+			if (Avatar.getStr()>2) and (Avatar.getDex()>2)
+			{
+			Avatar.setStr( Avatar.getStr() - 1);
+			Avatar.setDex( Avatar.getDex() - 1);
+			hitCounter = 0;
+			}
+		}
+		wait(7200);
+	}
+}
+

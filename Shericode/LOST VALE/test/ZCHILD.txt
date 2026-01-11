@@ -1,0 +1,314 @@
+// @@@ CHANGE F   check it, mostly I just changed the word order.
+uses "pesant";
+
+typeclass TypeZealanChild1 inherits pesantBoy
+{
+	process use();
+	process look();
+	process cast(ref:Referent);
+	process leaveFastArea();
+}
+
+
+process TypeZealanChild1::leaveFastArea()
+{
+	resetRef(referent,PT_ACTIVITY);
+	resetRef(referent,PT_PATHFIND);
+	resetRef(referent,PT_ANIM);
+	resetRef(referent,PT_BARK);
+}
+
+
+
+process TypeZealanChild1::look()
+{
+	if isDead() 
+	{
+		bark("dead child \f enfant mort \g totes Kind");
+		return;
+	}
+
+	bark("child \f enfant \g Kind");
+}
+
+
+process TypeZealanChild1::cast(ref:Referent)
+{
+	[[PT_DEFAULT, NULL_REF]];
+
+	count:Number = 25;
+	
+	while (not getTarget()) and (count) 
+	{
+		wait(1);
+		count--;
+	}
+
+	if (getTarget() = Avatar:Referent) 
+	{
+		spawn callTheShades() -> return;
+
+		if not isDead()
+		{
+			if (urandom(100) > 50)
+			{
+
+				spawn bark("Mama! \f Maman! \g Mama!") -> return;
+			}
+			else
+			{
+// @@@ CHANGE F 
+				spawn bark("Ahhh! Don't hurt me! \f Ahhh! Un mÇchant monsieur! \g Ahhh! Tu mir nicht weh!") -> return;
+			}
+		}
+	}
+}
+
+
+process TypeZealanChild1::use()
+{
+	answer,nameStr:String;
+	askList:String List;
+
+	#if English 
+	{
+		nameStr = "I am "+getName()+".";
+	}
+	#if French
+	{
+		nameStr = " Je suis "+getName()+".";
+	}
+	#if German
+	{
+		nameStr = " Ich hei·e "+getName()+".";
+	}
+
+
+	killProcess(referent,PT_ACTIVITY);
+	killProcess(referent,PT_BARK);
+
+	if urandom(100) > 50
+	{
+// @@@ CHANGE F 
+		spawn Avatar.bark("Well, hello...
+							\f Bonjour...
+							\g Hallo...") -> return;
+	}
+	else
+	{
+// @@@ CHANGE F 
+		spawn Avatar.bark("Hello, little fellow...
+							\f Salut...
+							\g Na, Kleiner...") -> return;
+	}
+
+	enterConvo();
+	wait(30);
+	killProcess(Avatar:Referent,PT_BARK);
+
+
+	if urandom(100) > 50
+	{
+		bark("Know you I do not.
+			\f Je ne te connois point.
+			\g Ich kenn' dich nicht.");
+
+		bark("Told me never to talk to strangers my mama did.
+			\f Ma maman m'a dit de ne jamais parler avec des estrangers.
+			\g Meine Mami hat mir gesagt, ich soll nicht mit Fremden reden.");
+		bark("A stranger you are.
+			\f Tu es un estranger.
+			\g Du biss'n Fremder.");
+		bark("Talk to you I can not.
+			\f Je ne peux donc point te parler.
+			\g Also kann ich nicht mit dir reden.");
+  		exitConvo();
+  		cSetActivity(ACT_LOITER);
+		return;
+	}
+	else
+	{
+
+// @@@ CHANGE F 
+
+		bark("What called are you?
+			\f Quel est ton nom?
+			\g Wie hei·t du wohl?");
+		
+			askList=<<"I am the Avatar! \f Je suis l'Avatar! 
+					\g Ich bin der Avatar!",nameStr>>;
+
+		while answer!="Bye! \f Adieu! \g Lebt wohl!"
+		{
+			answer = ask(askList);
+			switch answer
+			{
+				case "I am the Avatar! \f Je suis l'Avatar! 
+				\g Ich bin der Avatar!",nameStr
+				{
+					bark("Yeah? \f Ah ouais? \g Ach so?");
+// @@@ CHANGE F 
+					bark("Where come from do you?
+						\f D'oó est-ce que tu viens?
+						\g Woher kommst du, fÅrwahr?");
+				
+						askList=<<"From another world.
+						\f D'un aultre monde.
+						\g Aus einer anderen Welt.",
+						"From another town.
+						\f D'une aultre ville.
+						\g Aus einer anderen Stadt.">>;
+				}
+	
+				case "From another world.
+					\f D'un aultre monde.
+					\g Aus einer anderen Welt.",
+					"From another town.
+					\f D'une aultre ville.
+					\g Aus einer anderen Stadt."  
+				{
+					bark("Yeah?
+						\f Ah ouais?
+						\g Ja?");
+					bark("What do there did you?
+						\f Qu'est-ce que tu faisois lÖ-bas?
+						\g Was hast du dort gemacht?");
+					askList=<<"I fought monsters!
+								\f Je combattois des monstres.
+								\g Ich habe Ungeheuer bekÑmpft.",
+							"I helped people.
+								\f Je rendois service aux gens.
+								\g Ich habe Menschen geholfen.",
+							"I baked bread.
+								\f Je faisois du pain.
+								\g Ich habe Brot gebacken.">>;
+				}
+
+				case "I fought monsters!
+						\f Je combattois des monstres.
+						\g Ich habe Ungeheuer bekÑmpft.",
+						"I helped people.
+						\f Je rendois service aux gens.
+						\g Ich habe Menschen geholfen.",
+						"I baked bread.
+						\f Je faisois du pain.
+						\g Ich habe Brot gebacken."   
+				{
+					bark("Yeah?
+						\f Ah ouais?
+						\g Ach so?");
+					bark("Why so tall are you?
+						\f Pourquoi es-tu aussy grand?
+						\g Weshalb bist du gro·?");
+					askList=<<"I was born this way.
+							\f Parce que je suis nÇ comme áa.
+							\g Ich wurde so geboren.",
+							"A troll stretched me!
+							\f Parce qu'un Troll m'a estirÇ.
+							\g Ein Troll hat mich gestreckt.">>;
+				}
+
+				case "I was born this way.
+					\f Parce que je suis nÇ comme áa.
+					\g Ich wurde so geboren.",
+					"A troll stretched me!
+					\f Parce qu'un Troll m'a estirÇ.
+					\g Ein Troll hat mich gestreckt."   
+				{
+					bark("Yeah?
+						\f Ouah!
+						\g Uih, toll!");
+					bark("How get here did you?
+						\f Comment t'es venu icy?
+						\g Wie bist du hierher gekommen?");
+					askList=<<"I walked.
+								\f A pied.
+								\g Zu Fu·.",
+								"I came by boat.
+								\f En bateau.
+								\g In einem Boot.",
+						"A big red hand dropped me.
+						\f Une grande main rouge m'a posÇ lÖ.
+						\g Eine gro·e, rote Hand hat mich fallengelassen.">>;
+				}
+
+				case "I walked.
+					\f A pied.
+					\g Zu Fu·.",
+					"I came by boat.
+					\f En bateau.
+					\g In einem Boot.",
+					 "A big red hand dropped me.
+					 \f Une grande main rouge m'a posÇ lÖ.
+					 \g Eine gro·e, rote Hand hat mich fallengelassen."
+				{
+					bark("Yeah?
+						\f Ah ouais?
+						\g Wirklich?");
+					bark("Wear those funny clothes always do you?
+					\f Tu portes toujours ce costume bizarre?
+					\g LÑufst du immer in diesem Aufzug herum?");
+					askList=<<"Yes, I do.
+					\f Oui, bien sñr.
+					\g Ja.",
+					"No, I do not.
+					\f Non, non.
+					\g Nein, nein.",
+					"What silly costume?
+					\f Quel costume bizarre?
+					\g Aufzug?",
+					"You ask too many questions.
+					\f Tu es trop curieux.
+					\g Du stellst zu viele Fragen.">>;
+				}
+
+				case "Yes, I do.
+					\f Oui, bien sñr.
+					\g Ja.",
+					"No, I do not.
+					\f Non, non.
+					\g Nein, nein.",
+					"What silly costume?
+					\f Quel costume bizarre?
+					\g Aufzug?",
+					"You ask too many questions.
+					\f Tu es trop curieux.
+					\g Du stellst zu viele Fragen."   
+				{
+					bark("Yeah?
+						\f Ah ouais?
+						\g Findest du?");
+				 	bark("Why big and brown are toraxes?
+						\f Pourquoi les Torax sont grands et bruns?
+						\g Warum sind Torax gro· und braun?");
+					askList=<<"Bye! \f Adieu! \g Lebt wohl!",
+						"Why are they not blue and red?
+						\f Pourquoi ils sont point bleu et rouge?
+						\g Wieso sind sie nicht blau und rot?">>;
+				}
+
+				case "Why are they not blue and red?
+					\f Pourquoi ils sont point bleu et rouge?
+					\g Wieso sind sie nicht blau und rot?"   
+				{
+				 	bark("Because then  kith they would be.
+						\f Parce que sinon ce seroient des kiths.
+						\g Weil sie sonst Kith wÑren.");
+				 	Avatar.bark("Yeah?
+							\f Ah, ouais?
+							\g Ja?");
+				 	bark("Yeah! \f Ouais! \g Ja!");
+					exitConvo();
+					cSetActivity(ACT_LOITER);
+					return;
+				}
+	
+			}
+		}
+	}
+
+	exitConvo();
+	cSetActivity(ACT_LOITER);
+}
+
+

@@ -1,0 +1,83 @@
+uses "free";
+
+typeclass TypeBedroll inherits Item
+{
+	process look();
+	process use();
+}
+
+process TypeBedroll::look()
+{
+	bark("bedroll \f sac de couchage \g Schlafsack");
+}
+
+// this code is duplicated in bedns.unk and bedew.unk
+// if you make any changes here, change the other files too.
+//
+process TypeBedroll::use()
+{
+	if (Avatar.isInCombat() or Avatar.areEnemiesNear())
+	{
+
+		spawn bark("This is no time to rest!
+					\f Ce n'est point le moment de se reposer!
+					\g Jetzt ist nicht die Zeit, um sich auszuruhen!") -> return;
+	}
+	else
+	{
+
+		unkCloseAllGumps();
+
+		bark("Rest for how many periods of time?
+			\f Du repos? Pendant combien de laps de temps?
+			\g Schlafen? Wie viele Zeiten?");
+	
+		askList:String List = <<"0","1","2","3","4","5">>;
+		answer:String = ask(askList);
+		hours:Number = 0;
+		if (answer="0")
+		{
+			hours = 0;
+		}
+		if (answer="1")
+		{
+			hours = 1;
+		}
+		if (answer="2")
+		{
+			hours = 2;
+		}
+		if (answer="3")
+		{
+			hours = 3;
+		}
+		if (answer="4")
+		{
+			hours = 4;
+		}
+		if (answer="5")
+		{
+			hours = 5;
+		}
+	
+		if (hours > 0)
+		{
+			oldstasis:Number = getAvatarInStasis();
+			setAvatarInStasis(1);
+	
+			FadeToBlack();
+
+			SetTimeInGameHours(TimeInGameHours() + (hours * 4));
+
+			wait(100);
+
+			Avatar.setHp(Avatar.getStr() * 2);
+			Avatar.setMana(Avatar.getInt() * 2);
+
+			FadeFromBlack();
+	
+			setAvatarInStasis(oldstasis);
+		}
+	}
+}
+

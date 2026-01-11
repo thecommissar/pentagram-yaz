@@ -1,0 +1,12 @@
+
+uses "item";
+
+typeclass TypeFedora inherits Item
+{
+	process look();
+}
+
+process TypeFedora::look()
+{
+	bark("Fedora");
+}

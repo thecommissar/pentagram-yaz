@@ -1,0 +1,14 @@
+
+uses "item";
+
+
+typeclass TypeBullwhip inherits Item
+{
+	process look();
+}
+
+process TypeBullwhip::look()
+{
+	bark("Bullwhip");
+}
+

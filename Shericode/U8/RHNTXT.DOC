@@ -1,0 +1,639 @@
+Logfile:          G:\projects\u8\src\usecode\vcs\rhian.unv
+Workfile:         rhian.unk
+Owner:            SGRANER
+Last trunk rev:   1.102
+Locks:            
+Rev count:        103
+Attributes:
+   WRITEPROTECT
+   CHECKLOCK
+   NOEXCLUSIVELOCK
+   EXPANDKEYWORDS
+   TRANSLATE
+   NOCOMPRESSDELTA
+   NOCOMPRESSWORKIMAGE 
+   COMMENTPREFIX = "   "
+   NEWLINE = "\r\n"
+Version labels:
+Description:
+
+-----------------------------------
+Rev 1.102
+Checked in:     01 Apr 1994 16:11:38
+Last modified:  01 Apr 1994 15:03:58
+Author id: HMILLER     lines deleted/added/moved: 3/3/0
+English spelling
+-----------------------------------
+Rev 1.101
+Checked in:     01 Mar 1994 18:45:44
+Last modified:  01 Mar 1994 18:44:08
+Author id: BPELTIER     lines deleted/added/moved: 1/4/0
+fixed bug
+-----------------------------------
+Rev 1.100
+Checked in:     25 Feb 1994 14:24:54
+Last modified:  25 Feb 1994 14:03:42
+Author id: MVITTEK     lines deleted/added/moved: 0/2/1
+ 
+-----------------------------------
+Rev 1.99
+Checked in:     25 Feb 1994 13:05:28
+Last modified:  25 Feb 1994 11:45:10
+Author id: MVITTEK     lines deleted/added/moved: 2/2/0
+ 
+-----------------------------------
+Rev 1.98
+Checked in:     22 Feb 1994 18:03:14
+Last modified:  22 Feb 1994 17:04:10
+Author id: AMORRIS     lines deleted/added/moved: 42/40/5
+ 
+-----------------------------------
+Rev 1.97
+Checked in:     21 Feb 1994 22:21:04
+Last modified:  21 Feb 1994 22:00:02
+Author id: MVITTEK     lines deleted/added/moved: 3/3/0
+ 
+-----------------------------------
+Rev 1.96
+Checked in:     21 Feb 1994 17:51:06
+Last modified:  21 Feb 1994 17:18:16
+Author id: MVITTEK     lines deleted/added/moved: 6/31/0
+ 
+-----------------------------------
+Rev 1.95
+Checked in:     21 Feb 1994 14:31:34
+Last modified:  21 Feb 1994 14:31:18
+Author id: SGRANER     lines deleted/added/moved: 3/1/0
+bug fixes -sg
+-----------------------------------
+Rev 1.94
+Checked in:     21 Feb 1994 12:17:16
+Last modified:  20 Feb 1994 16:58:42
+Author id: MMCSHAFFRY     lines deleted/added/moved: 1/10/0
+Fixed execution scene bugs
+-----------------------------------
+Rev 1.93
+Checked in:     18 Feb 1994 10:44:12
+Last modified:  18 Feb 1994 10:41:52
+Author id: SPOWERS     lines deleted/added/moved: 34/26/0
+ 
+-----------------------------------
+Rev 1.92
+Checked in:     17 Feb 1994 19:42:58
+Last modified:  17 Feb 1994 19:42:50
+Author id: MVITTEK     lines deleted/added/moved: 0/5/0
+ 
+-----------------------------------
+Rev 1.91
+Checked in:     17 Feb 1994 18:25:06
+Last modified:  17 Feb 1994 18:24:58
+Author id: BPELTIER     lines deleted/added/moved: 1/1/0
+typos
+-----------------------------------
+Rev 1.90
+Checked in:     17 Feb 1994 17:26:24
+Last modified:  17 Feb 1994 15:30:06
+Author id: SGRANER     lines deleted/added/moved: 0/3/0
+key work not turning off, fixed -sg
+-----------------------------------
+Rev 1.89
+Checked in:     15 Feb 1994 15:28:04
+Last modified:  15 Feb 1994 15:27:56
+Author id: KVAUGHAN     lines deleted/added/moved: 1/1/0
+german
+-----------------------------------
+Rev 1.88
+Checked in:     15 Feb 1994 11:10:38
+Last modified:  15 Feb 1994 11:10:30
+Author id: KVAUGHAN     lines deleted/added/moved: 4/8/0
+german
+-----------------------------------
+Rev 1.87
+Checked in:     15 Feb 1994 00:00:44
+Last modified:  15 Feb 1994 00:00:14
+Author id: KVAUGHAN     lines deleted/added/moved: 12/14/0
+german changes
+-----------------------------------
+Rev 1.86
+Checked in:     14 Feb 1994 18:10:28
+Last modified:  14 Feb 1994 18:08:50
+Author id: BPELTIER     lines deleted/added/moved: 13/16/0
+transl changes
+-----------------------------------
+Rev 1.85
+Checked in:     14 Feb 1994 17:48:10
+Last modified:  14 Feb 1994 17:40:28
+Author id: SGRANER     lines deleted/added/moved: 9/12/0
+convo bug fix -sg
+-----------------------------------
+Rev 1.84
+Checked in:     14 Feb 1994 16:48:10
+Last modified:  14 Feb 1994 16:39:02
+Author id: SGRANER     lines deleted/added/moved: 11/30/0
+added text so pc doesn't have to ask her name. as per McM instruc -sg
+-----------------------------------
+Rev 1.83
+Checked in:     11 Feb 1994 14:43:32
+Last modified:  11 Feb 1994 14:43:20
+Author id: BPELTIER     lines deleted/added/moved: 23/27/0
+fixed bugs and spell
+-----------------------------------
+Rev 1.82
+Checked in:     10 Feb 1994 21:52:54
+Last modified:  10 Feb 1994 21:52:40
+Author id: KVAUGHAN     lines deleted/added/moved: 1/1/0
+german changes
+-----------------------------------
+Rev 1.81
+Checked in:     10 Feb 1994 17:51:36
+Last modified:  10 Feb 1994 17:50:00
+Author id: MVITTEK     lines deleted/added/moved: 50/85/0
+ 
+-----------------------------------
+Rev 1.80
+Checked in:     04 Feb 1994 09:04:12
+Last modified:  04 Feb 1994 09:04:02
+Author id: BPELTIER     lines deleted/added/moved: 2/2/0
+fixed change
+-----------------------------------
+Rev 1.79
+Checked in:     03 Feb 1994 17:05:10
+Last modified:  03 Feb 1994 17:05:02
+Author id: SGRANER     lines deleted/added/moved: 14/6/0
+convo bug fix -sg
+-----------------------------------
+Rev 1.78
+Checked in:     02 Feb 1994 14:26:32
+Last modified:  02 Feb 1994 14:24:54
+Author id: KVAUGHAN     lines deleted/added/moved: 42/38/0
+german proofreading
+-----------------------------------
+Rev 1.77
+Checked in:     02 Feb 1994 13:32:26
+Last modified:  02 Feb 1994 13:32:08
+Author id: SGRANER     lines deleted/added/moved: 6/3/0
+bug fix...maybe...-sg
+-----------------------------------
+Rev 1.76
+Checked in:     02 Feb 1994 13:29:52
+Last modified:  02 Feb 1994 13:29:40
+Author id: KVAUGHAN     lines deleted/added/moved: 29/34/0
+german changes
+-----------------------------------
+Rev 1.75
+Checked in:     01 Feb 1994 13:57:26
+Last modified:  01 Feb 1994 13:57:20
+Author id: MVITTEK     lines deleted/added/moved: 3/0/0
+ 
+-----------------------------------
+Rev 1.74
+Checked in:     31 Jan 1994 21:51:18
+Last modified:  31 Jan 1994 21:47:20
+Author id: JWATSON     lines deleted/added/moved: 1/0/0
+ 
+-----------------------------------
+Rev 1.73
+Checked in:     27 Jan 1994 18:49:46
+Last modified:  27 Jan 1994 18:07:38
+Author id: BPELTIER     lines deleted/added/moved: 2/6/0
+transl cganges
+-----------------------------------
+Rev 1.72
+Checked in:     27 Jan 1994 15:06:08
+Last modified:  27 Jan 1994 15:05:58
+Author id: KVAUGHAN     lines deleted/added/moved: 30/44/0
+german
+-----------------------------------
+Rev 1.71
+Checked in:     27 Jan 1994 14:16:12
+Last modified:  27 Jan 1994 14:13:46
+Author id: MVITTEK     lines deleted/added/moved: 27/85/0
+ 
+-----------------------------------
+Rev 1.70
+Checked in:     26 Jan 1994 20:34:26
+Last modified:  26 Jan 1994 20:31:54
+Author id: BPELTIER     lines deleted/added/moved: 22/39/0
+transl changes
+-----------------------------------
+Rev 1.69
+Checked in:     26 Jan 1994 16:23:04
+Last modified:  26 Jan 1994 16:21:48
+Author id: SGRANER     lines deleted/added/moved: 7/5/0
+correct frames for clothing added -sg
+-----------------------------------
+Rev 1.68
+Checked in:     25 Jan 1994 22:30:10
+Last modified:  25 Jan 1994 22:02:56
+Author id: MVITTEK     lines deleted/added/moved: 16/43/2
+ 
+-----------------------------------
+Rev 1.67
+Checked in:     25 Jan 1994 19:18:02
+Last modified:  25 Jan 1994 19:17:40
+Author id: MVITTEK     lines deleted/added/moved: 260/59/0
+ 
+-----------------------------------
+Rev 1.66
+Checked in:     25 Jan 1994 12:15:04
+Last modified:  25 Jan 1994 12:14:46
+Author id: SGRANER     lines deleted/added/moved: 3/1/0
+bug fix -sg
+-----------------------------------
+Rev 1.65
+Checked in:     21 Jan 1994 18:36:14
+Last modified:  21 Jan 1994 17:07:20
+Author id: KVAUGHAN     lines deleted/added/moved: 1/2/0
+german
+-----------------------------------
+Rev 1.64
+Checked in:     21 Jan 1994 17:05:38
+Last modified:  21 Jan 1994 17:05:30
+Author id: KVAUGHAN     lines deleted/added/moved: 1/1/0
+german
+-----------------------------------
+Rev 1.63
+Checked in:     21 Jan 1994 13:48:44
+Last modified:  21 Jan 1994 10:18:24
+Author id: MMCSHAFFRY     lines deleted/added/moved: 3/1/0
+Took out flags and put them into flags.def
+-----------------------------------
+Rev 1.62
+Checked in:     17 Jan 1994 15:23:02
+Last modified:  17 Jan 1994 13:46:42
+Author id: KVAUGHAN     lines deleted/added/moved: 2/2/0
+german
+-----------------------------------
+Rev 1.61
+Checked in:     13 Jan 1994 14:23:06
+Last modified:  13 Jan 1994 14:22:52
+Author id: KVAUGHAN     lines deleted/added/moved: 15/16/0
+german
+-----------------------------------
+Rev 1.60
+Checked in:     12 Jan 1994 12:57:50
+Last modified:  11 Jan 1994 22:07:50
+Author id: MVITTEK     lines deleted/added/moved: 2/15/0
+ 
+-----------------------------------
+Rev 1.59
+Checked in:     11 Jan 1994 18:26:52
+Last modified:  11 Jan 1994 17:52:20
+Author id: SGRANER     lines deleted/added/moved: 2/20/4
+bug fixes -sg
+-----------------------------------
+Rev 1.58
+Checked in:     06 Jan 1994 13:38:46
+Last modified:  06 Jan 1994 13:37:10
+Author id: SGRANER     lines deleted/added/moved: 399/324/489
+polish buy/sell code -sg
+-----------------------------------
+Rev 1.57
+Checked in:     05 Jan 1994 15:44:22
+Last modified:  05 Jan 1994 15:44:14
+Author id: KVAUGHAN     lines deleted/added/moved: 1/1/0
+german bug fix
+-----------------------------------
+Rev 1.56
+Checked in:     05 Jan 1994 15:26:32
+Last modified:  05 Jan 1994 15:24:20
+Author id: KVAUGHAN     lines deleted/added/moved: 342/488/0
+german changes
+-----------------------------------
+Rev 1.55
+Checked in:     04 Jan 1994 15:58:06
+Last modified:  04 Jan 1994 15:56:40
+Author id: SGRANER     lines deleted/added/moved: 0/4/0
+added case sell gem  -sg
+-----------------------------------
+Rev 1.54
+Checked in:     04 Jan 1994 15:24:12
+Last modified:  04 Jan 1994 15:23:20
+Author id: BPELTIER     lines deleted/added/moved: 1/2/0
+transl missing sent
+-----------------------------------
+Rev 1.53
+Checked in:     04 Jan 1994 14:59:56
+Last modified:  04 Jan 1994 14:59:32
+Author id: BPELTIER     lines deleted/added/moved: 1/2/0
+transl missing sent.
+-----------------------------------
+Rev 1.52
+Checked in:     04 Jan 1994 11:52:04
+Last modified:  04 Jan 1994 10:48:58
+Author id: BPELTIER     lines deleted/added/moved: 93/152/0
+transl changes
+-----------------------------------
+Rev 1.51
+Checked in:     03 Jan 1994 20:13:58
+Last modified:  03 Jan 1994 18:38:22
+Author id: BPELTIER     lines deleted/added/moved: 0/0/0
+No change.
+-----------------------------------
+Rev 1.50
+Checked in:     03 Jan 1994 18:48:52
+Last modified:  03 Jan 1994 18:38:22
+Author id: SGRANER     lines deleted/added/moved: 6/189/0
+buy gems code added  -sg
+-----------------------------------
+Rev 1.49
+Checked in:     03 Jan 1994 16:24:52
+Last modified:  03 Jan 1994 16:06:16
+Author id: BPELTIER     lines deleted/added/moved: 202/333/0
+transl changes
+-----------------------------------
+Rev 1.48
+Checked in:     23 Dec 1993 22:52:12
+Last modified:  23 Dec 1993 22:50:20
+Author id: MVITTEK     lines deleted/added/moved: 3/1/0
+ 
+-----------------------------------
+Rev 1.47
+Checked in:     23 Dec 1993 17:15:42
+Last modified:  23 Dec 1993 17:12:36
+Author id: SGRANER     lines deleted/added/moved: 5/6/0
+changing buy -sg
+-----------------------------------
+Rev 1.46
+Checked in:     23 Dec 1993 11:17:30
+Last modified:  23 Dec 1993 11:16:48
+Author id: MVITTEK     lines deleted/added/moved: 206/155/0
+ 
+-----------------------------------
+Rev 1.45
+Checked in:     22 Dec 1993 18:20:50
+Last modified:  22 Dec 1993 18:19:44
+Author id: SGRANER     lines deleted/added/moved: 108/155/205
+ring plot in -sg
+-----------------------------------
+Rev 1.44
+Checked in:     22 Dec 1993 13:52:12
+Last modified:  21 Dec 1993 17:03:00
+Author id: BPELTIER     lines deleted/added/moved: 0/0/0
+No change.
+-----------------------------------
+Rev 1.43
+Checked in:     21 Dec 1993 17:05:10
+Last modified:  21 Dec 1993 17:03:00
+Author id: SGRANER     lines deleted/added/moved: 14/392/0
+added buy/sell code  -sg
+-----------------------------------
+Rev 1.42
+Checked in:     16 Dec 1993 17:11:26
+Last modified:  16 Dec 1993 17:06:20
+Author id: BPELTIER     lines deleted/added/moved: 13/13/0
+transl changes
+-----------------------------------
+Rev 1.41
+Checked in:     16 Dec 1993 14:32:04
+Last modified:  16 Dec 1993 14:31:56
+Author id: KVAUGHAN     lines deleted/added/moved: 1/1/0
+German fix
+-----------------------------------
+Rev 1.40
+Checked in:     16 Dec 1993 11:18:30
+Last modified:  16 Dec 1993 11:18:24
+Author id: KVAUGHAN     lines deleted/added/moved: 36/37/0
+German fixes
+-----------------------------------
+Rev 1.39
+Checked in:     08 Dec 1993 11:50:56
+Last modified:  08 Dec 1993 11:50:38
+Author id: SGRANER     lines deleted/added/moved: 22/32/0
+bug fix -sg
+-----------------------------------
+Rev 1.38
+Checked in:     01 Dec 1993 17:30:18
+Last modified:  01 Dec 1993 17:30:10
+Author id: KVAUGHAN     lines deleted/added/moved: 55/54/0
+German fixes
+-----------------------------------
+Rev 1.37
+Checked in:     29 Nov 1993 17:24:56
+Last modified:  29 Nov 1993 16:37:54
+Author id: KVAUGHAN     lines deleted/added/moved: 0/0/0
+No change.
+-----------------------------------
+Rev 1.36
+Checked in:     29 Nov 1993 16:38:04
+Last modified:  29 Nov 1993 16:37:54
+Author id: KVAUGHAN     lines deleted/added/moved: 2/4/0
+German changes
+-----------------------------------
+Rev 1.35
+Checked in:     29 Nov 1993 16:29:32
+Last modified:  29 Nov 1993 16:24:52
+Author id: BPELTIER     lines deleted/added/moved: 12/23/0
+transl fr changes
+-----------------------------------
+Rev 1.34
+Checked in:     29 Nov 1993 12:25:38
+Last modified:  24 Nov 1993 16:23:38
+Author id: KVAUGHAN     lines deleted/added/moved: 0/0/0
+No change.
+-----------------------------------
+Rev 1.33
+Checked in:     24 Nov 1993 16:27:10
+Last modified:  24 Nov 1993 16:23:38
+Author id: BPELTIER     lines deleted/added/moved: 22/32/0
+fixed bugs and translated more fr
+-----------------------------------
+Rev 1.32
+Checked in:     24 Nov 1993 16:09:30
+Last modified:  24 Nov 1993 16:09:14
+Author id: BPELTIER     lines deleted/added/moved: 1/1/0
+removed f
+-----------------------------------
+Rev 1.31
+Checked in:     24 Nov 1993 15:34:02
+Last modified:  24 Nov 1993 13:12:30
+Author id: MMCSHAFFRY     lines deleted/added/moved: 80/71/0
+German stuff
+-----------------------------------
+Rev 1.30
+Checked in:     22 Nov 1993 23:36:42
+Last modified:  22 Nov 1993 23:36:36
+Author id: KVAUGHAN     lines deleted/added/moved: 3/4/0
+German bug fix
+-----------------------------------
+Rev 1.29
+Checked in:     22 Nov 1993 23:28:12
+Last modified:  22 Nov 1993 23:28:04
+Author id: KVAUGHAN     lines deleted/added/moved: 118/140/0
+German changes implemented
+-----------------------------------
+Rev 1.28
+Checked in:     22 Nov 1993 16:56:36
+Last modified:  22 Nov 1993 16:50:38
+Author id: SGRANER     lines deleted/added/moved: 193/214/0
+bug fix -sg
+-----------------------------------
+Rev 1.27
+Checked in:     22 Nov 1993 14:41:52
+Last modified:  22 Nov 1993 14:27:54
+Author id: MVITTEK     lines deleted/added/moved: 35/390/112
+ 
+-----------------------------------
+Rev 1.26
+Checked in:     18 Nov 1993 21:52:34
+Last modified:  18 Nov 1993 21:51:14
+Author id: MVITTEK     lines deleted/added/moved: 68/236/76
+ 
+-----------------------------------
+Rev 1.25
+Checked in:     18 Nov 1993 16:54:28
+Last modified:  18 Nov 1993 16:35:54
+Author id: BPELTIER     lines deleted/added/moved: 3/5/0
+fr QA replace verrier  with tailleur de p.
+-----------------------------------
+Rev 1.24
+Checked in:     18 Nov 1993 15:17:26
+Last modified:  18 Nov 1993 15:13:42
+Author id: BPELTIER     lines deleted/added/moved: 23/34/0
+fr QA changes
+-----------------------------------
+Rev 1.23
+Checked in:     18 Nov 1993 14:00:38
+Last modified:  18 Nov 1993 13:33:14
+Author id: HMILLER     lines deleted/added/moved: 1/4/0
+killing all processes bad.
+-----------------------------------
+Rev 1.22
+Checked in:     17 Nov 1993 23:04:50
+Last modified:  17 Nov 1993 22:58:54
+Author id: MGREENE     lines deleted/added/moved: 5/16/3
+ 
+-----------------------------------
+Rev 1.21
+Checked in:     17 Nov 1993 12:05:08
+Last modified:  17 Nov 1993 12:01:08
+Author id: KVAUGHAN     lines deleted/added/moved: 126/293/0
+German
+-----------------------------------
+Rev 1.20
+Checked in:     16 Nov 1993 12:19:54
+Last modified:  16 Nov 1993 12:19:40
+Author id: BPELTIER     lines deleted/added/moved: 1/1/0
+removed F
+-----------------------------------
+Rev 1.19
+Checked in:     15 Nov 1993 19:58:00
+Last modified:  15 Nov 1993 19:54:56
+Author id: SGRANER     lines deleted/added/moved: 2/3/0
+bug fix -sg
+-----------------------------------
+Rev 1.18
+Checked in:     15 Nov 1993 09:37:20
+Last modified:  09 Nov 1993 14:29:56
+Author id: BPELTIER     lines deleted/added/moved: 0/0/0
+No change.
+-----------------------------------
+Rev 1.17
+Checked in:     15 Nov 1993 09:34:26
+Last modified:  09 Nov 1993 14:29:56
+Author id: BPELTIER     lines deleted/added/moved: 306/152/0
+trnansl
+-----------------------------------
+Rev 1.16
+Checked in:     12 Nov 1993 15:23:16
+Last modified:  11 Nov 1993 22:50:30
+Author id: SGRANER     lines deleted/added/moved: 58/52/4
+convo bug fixes -sg
+-----------------------------------
+Rev 1.15
+Checked in:     11 Nov 1993 22:25:18
+Last modified:  11 Nov 1993 22:18:18
+Author id: KVAUGHAN     lines deleted/added/moved: 0/0/0
+No change.
+-----------------------------------
+Rev 1.14
+Checked in:     11 Nov 1993 22:22:38
+Last modified:  11 Nov 1993 22:18:18
+Author id: KVAUGHAN     lines deleted/added/moved: 135/295/0
+sheri needs her -sg
+-----------------------------------
+Rev 1.13
+Checked in:     09 Nov 1993 14:41:42
+Last modified:  09 Nov 1993 14:41:26
+Author id: BPELTIER     lines deleted/added/moved: 1/1/0
+removed F
+-----------------------------------
+Rev 1.12
+Checked in:     09 Nov 1993 14:35:28
+Last modified:  09 Nov 1993 14:29:56
+Author id: BPELTIER     lines deleted/added/moved: 131/307/0
+transl fr
+-----------------------------------
+Rev 1.11
+Checked in:     08 Nov 1993 20:22:22
+Last modified:  08 Nov 1993 20:21:24
+Author id: SGRANER     lines deleted/added/moved: 1/4/0
+french for execution scene  -sg 
+-----------------------------------
+Rev 1.10
+Checked in:     08 Nov 1993 18:15:18
+Last modified:  08 Nov 1993 18:12:54
+Author id: SGRANER     lines deleted/added/moved: 32/56/0
+convo bug fixes and updates  -sg
+-----------------------------------
+Rev 1.9
+Checked in:     03 Nov 1993 18:45:58
+Last modified:  03 Nov 1993 18:44:10
+Author id: SGRANER     lines deleted/added/moved: 30/29/0
+made her sadder  -sg
+-----------------------------------
+Rev 1.8
+Checked in:     03 Nov 1993 11:32:10
+Last modified:  03 Nov 1993 11:28:38
+Author id: SGRANER     lines deleted/added/moved: 1/16/0
+convo bug fixes -sg
+-----------------------------------
+Rev 1.7
+Checked in:     02 Nov 1993 13:40:10
+Last modified:  01 Nov 1993 17:13:06
+Author id: SGRANER     lines deleted/added/moved: 0/0/0
+No change.
+-----------------------------------
+Rev 1.6
+Checked in:     01 Nov 1993 17:19:52
+Last modified:  01 Nov 1993 17:13:06
+Author id: HMILLER     lines deleted/added/moved: 1/1/0
+spelling
+-----------------------------------
+Rev 1.5
+Checked in:     26 Oct 1993 17:01:52
+Last modified:  26 Oct 1993 16:59:24
+Author id: JWATSON     lines deleted/added/moved: 4/4/0
+Dont bark in enterFastArea or leaveFastArea. This crashes the game!
+-----------------------------------
+Rev 1.4
+Checked in:     25 Oct 1993 17:03:42
+Last modified:  22 Oct 1993 16:05:20
+Author id: SGRANER     lines deleted/added/moved: 118/241/2
+update and bug fixes  -sg
+-----------------------------------
+Rev 1.3
+Checked in:     07 Oct 1993 20:05:28
+Last modified:  28 Aug 1993 15:52:48
+Author id: SGRANER     lines deleted/added/moved: 0/0/0
+No change.
+-----------------------------------
+Rev 1.2
+Checked in:     28 Aug 1993 18:04:38
+Last modified:  28 Aug 1993 15:52:48
+Author id: MMCSHAFFRY     lines deleted/added/moved: 3/13/0
+Fixed schedule and activity params
+-----------------------------------
+Rev 1.1
+Checked in:     18 Aug 1993 15:07:54
+Last modified:  18 Aug 1993 14:54:40
+Author id: MVITTEK     lines deleted/added/moved: 17/128/0
+ 
+-----------------------------------
+Rev 1.0
+Checked in:     12 Jul 1993 14:48:50
+Last modified:  04 May 1993 15:14:02
+Author id: SGRANER     lines deleted/added/moved: 0/0/0
+Initial revision.
+===================================
+

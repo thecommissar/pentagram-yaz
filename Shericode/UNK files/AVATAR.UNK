@@ -1,0 +1,1560 @@
+uses "pyros";
+uses "banevard";
+uses "npc";
+uses "free";
+uses "item";
+uses "flags";
+
+globalflag jumpedAhead;
+
+npcclass Avatar inherits Npc {
+	process look();
+	process use();
+
+	process cachein();
+	process justMoved();
+	
+	process afterEarth();
+
+	process schedule(currentTime:Long);
+	process guardianBark(x:Number);
+}
+
+process Avatar::use() {
+	if getStatus() & CONTAINER_GUMP_OPEN {
+		closeGump();
+	}
+	else {
+		openGump(Gump_MainMenu);
+	}
+}
+
+process Avatar::look() {
+// CHEAT CHECK
+// -----------
+
+	if AvatarCanCheat() {
+		if not afterDaemonScene {
+			afterDaemonScene = true;
+
+			safePlaySFX(CHEATER,100);
+			MakeAvatarACheater();
+		}
+
+		playSFX(TROODLE,100);
+	}
+	else {
+		return;
+	}
+
+// AVATAR CHEATER MENUS
+// --------------------
+
+	x,y : Coord;
+	z : Alti;
+	map : MapNum;
+	
+	typeNum : Type;
+	fram : Frame;
+
+	quan : Quantity;
+	qual : Quality;
+	egg,count,dur : Number;
+
+	caster : Npc;
+	item,cont : Item;
+	ref : Referent = NULL_REF;
+
+	point,destP : WorldPoint;
+
+	key,sentence : String;
+	tempList : String List;
+	keyList : String List = <<
+		"Demo","Spell Book","Information","Enemy Caster","Time",
+		"Key","Staff","Call Guards","Blow up!","Kill me", "EndGame",
+		"Jump ahead.","Done"
+	>>;
+
+	while key != "Done" {
+		key = ask(keyList);
+
+		if key = "Create" {
+			bark("Enter type number. (2-851 are valid) \&");
+			typeNum = getSliderInput(2,1000,1);
+
+			bark("Enter frame number. \&");
+			fram = getSliderInput(0,1024,1);
+
+			bark("Default quality and quantity? \&");
+
+			if askYesNo() {
+				qual = 0;
+				quan = 1;
+			}
+			else {
+				bark("Enter quality. \&");
+				qual = getSliderInput(0,1024,1);
+
+				bark("Enter quantity. \&");
+				quan = getSliderInput(0,666,1);
+			}
+
+			if quan != 0 {
+				bark("Select target to create item near. \&");
+
+				item.referent = target();
+				point.x = item.getX();
+				point.y = item.getY();
+				point.z = item.getZ();
+
+				if not createNear(point,typeNum,fram,qual,quan) {
+					bark("Create failed. \&");
+				}
+			}
+		}
+
+		counter : Number;
+		brock : Item;
+
+		if key = "EndGame" {
+			keyList = << "Create Blackrock Fragments",
+						 "Create Energized Fragments",
+						 "Nevermind" >>;
+
+			key = ask(keyList);
+
+			if key = "Create Blackrock Fragments" {
+				item.legal_create( TypeBlackrockFragments:Type, 0, getX()+randRange( 20,320), getY()+randRange( 20,320), getZ():Coord);
+				item.legal_create( TypeBlackrockFragments:Type, 1, getX()+randRange( 20,320), getY()+randRange( 20,320), getZ():Coord);
+				item.legal_create( TypeBlackrockFragments:Type, 2, getX()+randRange( 20,320), getY()+randRange( 20,320), getZ():Coord);
+				item.legal_create( TypeBlackrockFragments:Type, 3, getX()+randRange( 20,320), getY()+randRange( 20,320), getZ():Coord);
+				item.legal_create( TypeBlackrockFragments:Type, 4, getX()+randRange( 20,320), getY()+randRange( 20,320), getZ():Coord);
+                return;
+			}
+			else if key = "Create Energized Fragments" {
+				item.legal_create( TypeEnergizedBlackRock:Type, 0, getX()+randRange( 20,320), getY()+randRange( 20,320), getZ():Coord);
+				item.legal_create( TypeEnergizedBlackRock:Type, 1, getX()+randRange( 20,320), getY()+randRange( 20,320), getZ():Coord);
+				item.legal_create( TypeEnergizedBlackRock:Type, 2, getX()+randRange( 20,320), getY()+randRange( 20,320), getZ():Coord);
+				item.legal_create( TypeEnergizedBlackRock:Type, 3, getX()+randRange( 20,320), getY()+randRange( 20,320), getZ():Coord);
+				item.legal_create( TypeEnergizedBlackRock:Type, 4, getX()+randRange( 20,320), getY()+randRange( 20,320), getZ():Coord);
+				return;
+			}
+			else if key = "Nevermind" {
+				return;
+			}
+			return;
+		}
+
+		if key = "Demo" {
+			keyList = <<
+				"Run Pyros","Run Daemon","After Daemon","Make Symbols",
+				"Pyros","Malchir Death","Stratos","Execution","Casting",
+				"Guardian","Nevermind"
+			>>;
+
+			key = ask(keyList);
+
+			if key = "Malchir Death" {
+				x = 8374;
+				y = 2259;
+				z = 8;
+
+				map = MapObsidianFortress;
+
+				MalchirTest = ReturnedStaff;
+				malchirMet = true;
+			}
+			else if key = "Make Symbols" {
+				point.x = getX();
+				point.y = getY();
+				point.z = getZ();
+
+				createNear(point,TypeFireItem,20,0,4);
+				return;
+			}
+			else if key = "Guardian" {
+				count = true;
+
+				while count {
+					timedBark(50,"Choose the Guardian speech. (0 exits)");
+
+					count = getSliderInput(0,23,1);
+					guardianBark(count);
+				}
+
+				return;
+			}
+			else if key = "Casting" {
+				item.referent = target();
+
+				if not item.referent {
+					bark("Item is invalid. \&");
+					return;
+				}
+
+				if not item.isNpc() {
+					bark("Item is not an Npc. \&");
+					return;
+				}
+
+				caster.referent = item.referent;
+				if (caster.isMage() = false) and (caster.referent != Avatar:Referent) {
+					bark("Npc is not a mage. \&");
+					return;
+				}
+
+				keyList = <<
+					"Enter Cast","Turn","Done"
+				>>;
+
+				tempList = <<
+					"North","Northeast","East","Southeast",
+					"South","Southwest","West","Northwest"
+				>>;
+
+				while key != "Done" {
+					key = ask(keyList);
+
+					if key = "Enter Cast" {
+						caster.realDoAnim(AS_ENTER_CAST,caster.getDir());
+
+						keyList = <<
+							"Exit Cast","Cast One","Cast Two","Cast Three"
+						>>;
+					}
+					else if key = "Cast One" {
+						caster.realDoAnim(AS_CAST1,caster.getDir());
+					}
+					else if key = "Cast Two" {
+						caster.realDoAnim(AS_CAST2,caster.getDir());
+						wait(45);
+						caster.realDoAnim(AS_CAST2,caster.getDir());
+					}
+					else if key = "Cast Three" {
+						caster.realDoAnim(AS_CAST3,caster.getDir());
+						wait(45);
+						caster.realDoAnim(AS_CAST3,caster.getDir());
+					}
+					else if key = "Exit Cast" {
+						caster.realDoAnim(AS_EXIT_CAST,caster.getDir());
+						caster.realDoAnim(AS_STAND,caster.getDir());
+
+						keyList = <<
+							"Enter Cast","Turn","Done"
+						>>;
+					}
+					else if key = "Turn" {
+						key = ask(tempList);
+
+						if key = "North" {
+							count = north;
+						}
+						if key = "Northeast" {
+							count = northeast;
+						}
+						if key = "East" {
+							count = east;
+						}
+						if key = "Southeast" {
+							count = southeast;
+						}
+						if key = "South" {
+							count = south;
+						}
+						if key = "Southwest" {
+							count = southwest;
+						}
+						if key = "West" {
+							count = west;
+						}
+						if key = "Northwest" {
+							count = northwest;
+						}
+
+						caster.turnToFace(count,RANDOM,7);
+					}
+				}
+
+				return;
+			}
+			else if key = "Run Pyros" {
+				[[PT_DEFAULT,NULL_REF]];
+
+				keyList = <<"Bane dead","Vardion dead">>;
+
+				key = ask(keyList);
+
+				if key = "Bane dead" {
+					acolyteKilled = baneDead;
+				}
+				else {
+					acolyteKilled = vardionDead;
+				}
+
+				inDaemonScene = true;
+
+				FadeToBlack();
+				teleport(17382,19549,56,MapDaemonsCrag);
+
+				Avatar.toggleStatus(INVISIBLE);
+				Malchir.toggleStatus(INVISIBLE);
+
+				pentagram : LavaFireTitan;
+
+				foreach pentagram where
+					(type = TypePentagramBase) and
+					(frame = 2)
+					within 20 cells of Avatar {
+
+					setAvatarInStasis(true);
+					pentagram.pentagramDriver();
+				}
+
+				return;
+			}
+			else if key = "After Daemon" {
+				keyList = <<"Bane won.","Vardion won.">>;
+
+				key = "";
+				while key = "" {
+					key = ask(keyList);
+
+					if key = "Bane won." {
+						acolyteKilled = vardionDead;
+						Vardion.setDead();
+						Bane.clrDead();
+					}
+					if key = "Vardion won." {
+						acolyteKilled = baneDead;
+						Bane.setDead();
+						Vardion.clrDead();
+					}
+				}
+					
+				vardionMet = true;
+				vardionJoined = true;
+				baneMet = true;
+				baneJoined = true;
+
+				bark("Done! \&");
+
+				return;
+			}
+			else if key = "Run Daemon" {
+				acolyteKilled = false;
+				Bane.clrDead();
+				Vardion.clrDead();
+
+				vardionMet = true;
+				vardionJoined = true;
+				baneMet = true;
+				baneJoined = true;
+
+				bark("Done! \&");
+
+				return;
+			}
+			else if key = "Pyros" {
+				x = 19751;
+				y = 16172;
+				z = 56;
+
+				map = MapDaemonsCrag;
+			}
+			else if key = "Stratos" {
+				x = 14787;
+				y = 19195;
+				z = 56;
+
+				map = MapArgentrockIsle;
+			}
+			else if key = "Execution" {
+				x = 11619;
+				y = 3170;
+				z = 48;
+
+				map = MapDocks;
+			}
+
+			else if key = "Nevermind" {
+				return;
+			}
+
+			else {
+				return;
+			}
+
+			[[PT_DEFAULT,NULL_REF]];
+
+			setAvatarInStasis(true);
+
+			playSFX(THUNDR2A,100);
+			LightningBolt();
+			FadeToBlack();
+
+			playSFX(WIND3,100);
+			realDoAnim(AS_STAND, southeast);
+			teleport(x,y,z,map);
+
+			FadeFromBlack();
+			LightningBolt();
+			playSFX(THUNDR1A,100);
+
+			realDoAnim(AS_EDGE_BALANCE, southeast);
+			realDoAnim(AS_STAND, southeast);
+
+			count = 3;
+			while count {
+				setFrame(505);
+				wait(5);
+				setFrame(3);
+				wait(5);
+				setFrame(506);
+				wait(5);
+				setFrame(3);
+				wait(5);
+
+				count--;
+			}
+
+			wait(30);
+
+			realDoAnim(AS_STAND, southeast);
+			
+			setAvatarInStasis(false);
+			return;
+		}
+
+		if key = "Destroy" {
+			bark("Select the Avatar to exit delete mode. \&");
+
+			while item.referent != Avatar:Referent {
+				item.referent = target();
+	
+				if item {
+					if not item.isNpc() {
+						item.destroy();
+					}
+					else {
+						bark("Destroy failed : item is Npc. \&");
+					}
+				}
+				else {
+					bark("Destroy failed : No item. \&");
+				}
+			}
+
+			return;
+		}
+
+		if key = "Enemy Caster" {
+			timedBark(40, "Select spell caster. \&");
+
+			caster.referent = target();
+
+			if not caster.isNpc() {
+				bark("Spell caster must be an Npc. \&");
+				return;
+			}
+			else if caster.referent = referent {
+				bark("Spell caster may not be the Avatar. \&");
+				return;
+			}
+			else if caster.isMage() != Sorcerer {
+				bark("Spell caster must be a Sorcerer. \&");
+				return;
+			}
+
+			killProcess(caster.referent, PT_ACTIVITY);
+			killProcess(caster.referent, PT_PATHFIND);
+			killProcess(caster.referent, PT_ANIM);
+			killProcess(caster.referent, PT_BARK);
+
+			caster.realDoAnim(AS_STAND,caster.getDir());
+			spawn caster.turnToFace(caster.getDirToItem(Avatar:Referent),RANDOM,5)-> return;
+
+			destP.x = getX();
+			destP.y = getY();
+			destP.z = getZ();
+
+			keyList = <<
+				"Ignite","Extinguish","Flame Bolt","Endure Heat",
+				"Fire Shield","Armor Of Flames","Create Fire","Explosion",
+				"Summon Daemon","Banish Daemon","Conflagration","Done"
+			>>;
+			key = "";
+
+			while key != "Done" {
+				key = ask(keyList);
+
+				if key = "Ignite" {
+					caster.ignite(caster.referent);
+					wait(30);
+				}
+				else if key = "Extinguish" {
+					caster.extinguish(caster.referent);
+					wait(30);
+				}
+				else if key = "Flame Bolt" {
+					caster.flameBolt(Avatar:Referent);
+					wait(30);
+				}
+				else if key = "Fire Shield" {
+					spawn caster.fireShield() -> return;
+					return;
+				}
+				else if key = "Create Fire" {
+					caster.createFire(Avatar:Referent);
+					wait(30);
+				}
+				else if key = "Endure Heat" {
+					spawn caster.endureHeat() -> return;
+					return;
+				}
+				else if key = "Explosion" {
+					caster.explosion(Avatar:Referent);
+					wait(30);
+				}
+				else if key = "Armor Of Flames" {
+					spawn caster.armorOfFlames() -> return;
+					return;
+				}
+				else if key = "Summon Daemon" {
+					spawn caster.summonDaemon(Avatar:Referent) -> return;
+					return;
+				}
+				else if key = "Banish Daemon" {
+					dist : Number = 960;
+
+					daemon : Npc;
+					daemon.referent = NULL_REF;
+
+					foreach item where type = TypeDemon within 30 cells of
+						caster.referent {
+
+						if getDistance(item.referent,caster.referent) <= dist {
+							dist = getDistance(item.referent,caster.referent);
+							daemon.referent = item.referent;
+						}
+					}
+
+					if daemon.referent != NULL_REF {
+						spawn caster.banishDaemon(daemon.referent) -> return;
+					}
+
+					return;
+				}
+				else if key = "Conflagration" {
+					caster.conflagration();
+					wait(30);
+				}
+				else if key = "Done" {
+					return;
+				}
+			}
+		}
+
+		if key = "Spell Book" {
+			item.referent = NULL_REF;
+					
+			keyList = <<
+				"Earth","Air","Fire","Ether","Done"
+			>>;
+			key = "";
+
+			while key != "Done" {
+				key = ask(keyList);
+
+				if key = "Earth" {
+					keyList = <<
+						"Death Speak","Mask of Death","Rock Flesh",
+						"Summon Undead","Open Ground","Create Golem",
+						"Withstand Death","Grant Peace","Call Quake",
+						"Meteor Shower","Done"
+					>>;
+					key = "";
+
+					while key != "Done" {
+						key = ask(keyList);
+
+						if key = "Death Speak" {
+							spawn deathSpeak(item) -> return;
+							return;
+						}
+						else if key = "Mask of Death" {
+							spawn feignDeath() -> return;
+							return;
+						}
+						else if key = "Rock Flesh" {
+							rockFlesh();
+							wait(30);
+						}
+						else if key = "Summon Undead" {
+							summonUndead(destP);
+							wait(30);
+						}
+						else if key = "Open Ground" {
+							openGround();
+							wait(30);
+						}
+						else if key = "Create Golem" {
+							createGolem(item);
+							wait(30);
+						}
+						else if key = "Withstand Death" {
+							withstandDeath();
+							wait(30);
+						}
+						else if key = "Grant Peace" {
+                            grantPeace();
+							wait(30);
+						}
+						else if key = "Call Quake" {
+							spawn callQuake(10) -> return;
+							wait(30);
+						}
+						else if key = "Meteor Shower" {
+							spawn meteorShower() -> return;
+							return;
+						}
+						else if key = "Done" {
+							return;
+						}
+					}
+				}
+
+				if key = "Water" {
+				}
+
+				if key = "Air" {
+					keyList = <<
+						"Divination","Healing Touch","Aerial Servant",
+						"Restortation","Fade From Sight","Air Walk",
+						"Hear Truth","Intervention","Reveal","Done"
+					>>;
+					key = "";
+
+					while key != "Done" {
+						key = ask(keyList);
+
+						if key = "Divination" {
+							divination();
+						}
+						else if key = "Healing Touch" {
+							healingTouch(Avatar:Referent);
+						}
+						else if key = "Aerial Servant" {
+							aerialServant();
+						}
+						else if key = "Restortation" {
+							restoration(Avatar:Referent);
+						}
+						else if key = "Fade From Sight" {
+							spawn fadeFromSight() -> return;
+							wait(130);
+						}
+						else if key = "Air Walk" {
+							spawn airWalk() -> return;
+							wait(130);
+						}
+						else if key = "Hear Truth" {
+							spawn hearTruth() -> return;
+							wait(130);
+						}
+						else if key = "Intervention" {
+							spawn intervention() -> return;
+							wait(130);
+						}
+						else if key = "Reveal" {
+							reveal();
+						}
+						else if key = "Done" {
+							return;
+						}
+					}
+				}
+
+				if key = "Fire" {
+					keyList = <<"Offense","Defense and Other","Done">>;
+					key = "";
+
+					while key != "Done" {
+						key = ask(keyList);
+
+						if key = "Offense" {
+							tempList = <<
+								"Flame Bolt","Create Fire","Explosion",
+								"Summon Daemon","Banish Daemon",
+								"Conflagration","Nevermind"
+							>>;
+							key = "";
+
+							while key != "Nevermind" {
+								key = ask(tempList);
+	
+								if key = "Flame Bolt" {
+									flameBolt(ref);
+									wait(30);
+								}
+								else if key = "Create Fire" {
+									createFire(ref);
+									wait(30);
+								}
+								else if key = "Summon Daemon" {
+									summonDaemon(ref);
+									wait(30);
+								}
+								else if key = "Banish Daemon" {
+									banishDaemon(ref);
+									wait(30);
+								}
+								else if key = "Explosion" {
+									explosion(ref);
+									wait(30);
+								}
+								else if key = "Conflagration" {
+									conflagration();
+									wait(30);
+								}
+							}
+						}
+						else if key = "Defense and Other" {
+							tempList = <<
+								"Endure Heat","Fire Shield","Armor Of Flames",
+								"Ignite","Extinguish","Flash","Nevermind"
+							>>;
+							key = "";
+
+							while key != "Nevermind" {
+								key = ask(tempList);
+	
+								if key = "Ignite" {
+									ignite(ref);
+									wait(30);
+								}
+								else if key = "Extinguish" {
+									extinguish(ref);
+									wait(30);
+								}
+								else if key = "Flash" {
+									flash(destP);
+									wait(30);
+								}
+								else if key = "Fire Shield" {
+									spawn fireShield() -> return;
+									return;
+								}
+								else if key = "Endure Heat" {
+									spawn endureHeat() -> return;
+									return;
+								}
+								else if key = "Armor Of Flames" {
+									spawn armorOfFlames() -> return;
+									return;
+								}
+							}
+						}
+						else if key = "Done" {
+							return;
+						}
+					}
+				}
+
+				if key = "Ether" {
+					keyList = <<
+						"Confusion Blast","Summon Creature","Death Blast",
+						"Call Destruction","Etherial Travel","Devastation",
+						"Done"
+					>>;
+					key = "";
+
+					while key != "Done" {
+						key = ask(keyList);
+
+						if key = "Confusion Blast" {
+							confusionBlast(item);
+						}
+						else if key = "Summon Creature" {
+							summonCreature(destP);
+						}
+						else if key = "Death Blast" {
+							deathBlast(ref);
+						}
+						else if key = "Call Destruction" {
+							callDestruction();
+						}
+						else if key = "Etherial Travel" {
+							etherialTravel();
+						}
+						else if key = "Devastation" {
+							devastation();
+						}
+						else if key = "Done" {
+							return;
+						}
+					}
+				}
+			}
+		}
+
+		if key = "Give" {
+			bark("Enter type number. \&");
+			typeNum = getSliderInput(2,185,1);
+
+			bark("Enter frame number. \&");
+			fram = getSliderInput(0,1024,1);
+
+			bark("Default quality and quantity? \&");
+
+			if askYesNo() {
+				qual = 0;
+				quan = 1;
+			}
+			else {
+				bark("Enter quality. \&");
+				qual = getSliderInput(0,1000,1);
+
+				bark("Enter quantity. \&");
+				quan = getSliderInput(1,666,1);
+			}
+			
+			bark("Select container to give item(s) to. \&");
+
+			item.referent = target();
+
+			if (item) and (item.getFamily() = CONTAINER_FAMILY) {
+				if give(item.referent,typeNum,fram,qual,quan) {
+					bark("Item(s) given. \&");
+				}
+				else {
+					bark("Can't give item(s). \&");
+				}
+			}
+			else {
+				bark("Not a container. \&");
+			}
+		}
+
+		if key = "Contents" {
+			bark("Avatar: \&");
+			foreach recursive item within container Avatar:Referent {
+				typeNum = item.getType();
+				sentence = numToStr(typeNum) + " \&";
+				bark(sentence);
+
+				if typeNum = 529 {
+					cont.referent = item.referent;
+					item.referent = Avatar.getEquip(EQ_BACKPACK);
+
+					if not item.referent = cont.referent {
+						bark("Backpack not equipped! \&");
+					}
+				}
+			}
+
+			if cont.getType() = TypeBackPack {
+				bark("Backpack: \&");
+				foreach recursive item within container cont.referent {
+					typeNum = item.getType();
+					sentence = numToStr(typeNum) + " \&";
+					bark(sentence);
+				}
+			}
+		}
+
+		if key = "Take" {
+			bark("Enter type number. \&");
+			typeNum = getSliderInput(2,638,1);
+
+			bark("Enter frame number. \&");
+			fram = getSliderInput(0,1024,1);
+
+			bark("Default quality and quantity? \&");
+
+			if askYesNo() {
+				qual = 0;
+				quan = 1;
+			}
+			else {
+				bark("Enter quality. \&");
+				qual = getSliderInput(0,1000,1);
+
+				bark("Enter quantity. \&");
+				quan = getSliderInput(1,666,1);
+			}
+
+			bark("Select container to take item(s) from. \&");
+
+			item.referent = target();
+
+			if (item) and (item.getFamily() = CONTAINER_FAMILY) {
+				if take(item.referent,typeNum,fram,qual,quan):Boolean {
+					bark("Item(s) taken. \&");
+				}
+				else {
+					bark("Can't take item(s). \&");
+				}
+			}
+			else {
+				bark("Not a container. \&");
+			}
+		}
+
+		if key = "Information" {
+			item.referent = target();
+		
+			if item {
+				map = Avatar.getMap();
+		
+				stats : String = "Map number: ";
+				stats += numToStr(map);
+				stats += "~X: ";
+				stats += numToStr(item.getX());
+				stats += ",~Y: ";
+				stats += numToStr(item.getY());
+				stats += ",~Z: ";
+				stats += numToStr(item.getZ());
+				stats += ",*Type num: ";
+				stats += numToStr(item.getType());
+		
+				if item.getFamily() = UNKEGG_FAMILY {
+					stats += ",~Egg type: ";
+					stats += numToStr(item.getUnkEggType());
+				}
+		
+				if item.getFamily() = QUAL_FAMILY {
+					stats += ",~Qual: ";
+					stats += numToStr(item.getQuality());
+				}
+				
+				if item.getFamily() = QUAN_FAMILY {
+					stats += ",~Quan: ";
+					stats += numToStr(item.getQuantity());
+				}
+		
+				stats += ",~Frame: ";
+				stats += numToStr(item.getFrame());
+				stats += " \&";
+				
+				bark(stats);
+			}
+			else {
+				bark("Not a valid item. \&");
+			}
+		}
+
+		if key = "Time" {
+			period : Number = getPeriod();
+
+			if period = 0 {
+				bark("Bloodwatch \&");
+			}
+			else if period = 1 {
+				bark("Firstebb \&");
+			}
+			else if period = 2 {
+				bark("Daytide \&");
+			}
+			else if period = 3 {
+				bark("Threemoons \&");
+			}
+			else if period = 4 {
+				bark("Lastebb \&");
+			}
+			else if period = 5 {
+				bark("Eventide \&");
+			}
+
+			SetTimeInGameHours(TimeInGameHours() + 4);
+			return;
+		}
+
+		if key = "Key" {
+			if keyOfTheAcolyte {
+				keyOfTheAcolyte = false;
+				baneJoined = false;
+				vardionJoined = false;
+
+				spawn bark("You no longer have the key. \&") -> return;
+			}
+			else {
+				keyOfTheAcolyte = true;
+				baneJoined = true;
+				vardionJoined = true;
+
+				spawn bark("You now have the key. \&") -> return;
+			}
+
+			return;
+		}
+
+		if key = "Staff" {
+			if MalchirTest = ReturnedStaff {
+				bark("You haven't returned the staff. \&");
+				MalchirTest = false;
+			}
+			else {
+				MalchirTest = ReturnedStaff;
+				bark("You have returned the staff. \&");
+			}
+
+			return;
+		}
+
+		if key = "Call Guards" {
+			item.referent = target();
+
+			if item.isNpc() {
+				caster.referent = item.referent;
+
+				bark("Did I kill the person? \&");
+
+				count = askYesNo();
+				if count {
+					spawn caster.realDoAnim(AS_FALL_DOWN,caster.getDir())->
+						[[PT_DEFAULT,NULL_REF]] {
+							caster.setDead();
+						} -> return;
+				}
+				else {
+					bark("Did I steal something? \&");
+
+					count = askYesNo();
+					if count {
+						cont.create(TypePathMarker,0);
+						cont.pop(Avatar.getX(),Avatar.getY(),Avatar.getZ());
+					}
+					else {
+						cont.referent = NULL_REF;
+					} 
+				}
+				
+				spawn caster.bark("Help! Guards! \&")-> return;
+				wait(45);
+	
+				if not caster.callTheGuards(cont.referent) {
+					wait(100);
+					bark("No one can hear your screams. \&");
+				}
+
+				return;
+			}
+		}
+
+		if key = "Blow up!" {
+			blowUpParts();
+			return;
+		}
+
+		if key = "Kill me" {
+			item.referent = target();
+
+			if item.referent {
+				if item.isNpc() {
+					caster.referent = item.referent;
+					//caster.setTarget(Avatar:Referent);
+					caster.receiveHit(Avatar.referent,0,caster.getHp(),DMG_FULL);
+				}
+				else {
+					bark("Not an Npc. \&");
+				}
+			}
+			else {
+				bark("Not an valid item. \&");
+			}
+			
+			return;
+		}
+
+		if key = "Jump ahead." {
+			if jumpedAhead = 0 {
+				afterEarth ();
+			}
+			else if jumpedAhead = 1 {
+				bark ("Been there. Done that.");
+			}
+
+			keyList = <<"Demo","Spell Book","Information","Enemy Caster",
+				"Time","Key","Staff","Call Guards","Blow up!","Kill me", 
+				"EndGame","Jump ahead.","Done">>;
+
+		}
+
+	}
+}
+
+process Avatar::afterEarth() {
+	[[PT_DEFAULT, referent]];
+
+	key : String;
+	keyList : String List = <<"gorf","qwlep","zmeket","drewmor","nwats","ginaf",
+			"yzurov","igran","bledyup","bokchoi","Nevermind!">>; 
+
+	while key !="Nevermind!" {
+		key = ask( keyList);
+
+		if key = "ginaf" {
+			jumpedAhead = 1;
+
+			lithosMet = 1;
+			toranDead = 1;
+			benticCacked = 1;
+			devonInRule = 1;
+			lothianDead = 1;
+			lothInterred = 1;
+			mythranMet = 1;
+			mythranScrolls = 1;
+			vividosMet = 1;
+			tarnaMet = 1;
+			metNec1 = 1;
+			metNec2 = 1;
+			metNec3 = 1;
+			metNec4 = 1;
+			metNec5 = 1;
+			metNec6 = 1;
+
+			sawCentralTenebraeTeleporter = 1;
+			sawPlateauTeleporter = 1;
+			sawMountainKingTeleporter = 1;
+
+			setStr(21);
+			setInt(21);
+			setDex(21);
+			setHp(42);
+			setMana(42);
+
+			myMan : WorldPoint;
+			myMan.x = Avatar.getX();
+			myMan.y = Avatar.getY();
+			myMan.z = Avatar.getZ();
+
+			createNear(myMan,TypeRecallItem,0,0,1);
+			createNear(myMan,TypeKeyOfTheNecromancer,0,0,1);
+			createNear(myMan,TypeKeyOfTheNecromancer,3,0,1);
+
+			createNear(myMan,TypeEarthReagent,6,0,1);
+			createNear(myMan,TypeEarthReagent,15,0,1);
+			createNear(myMan,TypeEarthReagent,10,0,1);
+			createNear(myMan,TypeEarthReagent,0,0,1);
+			createNear(myMan,TypeEarthReagent,16,0,1);
+
+			createNear(myMan,TypeSword,0,0,1);
+			createNear(myMan,TypeShields,0,0,1);
+			createNear(myMan,TypeArmour,2,0,1);
+			createNear(myMan,TypeObsidianCoin,0,0,200);
+		}
+
+		if (key = "gorf") or (key = "qwlep") or (key = "zmeket") or (key = "drewmor")
+			or (key = "nwats") or (key = "yzurov") or (key = "igran") or
+			(key = "bledyup") or (key = "bokchoi") {
+			bark ("Bzzzzt! Thank you for playing!");
+		 	return;	
+		}
+		
+		if key = "Nevermind!" {
+			return;
+		} 
+	}
+}
+
+
+process Avatar::cachein() {
+
+	// always turn this off!
+	setAirWalkEnabled(false);
+
+
+	if not getUp {
+
+		setAvatarInStasis(true);
+		
+		x,y : Coord;
+		z : Alti;
+		
+		x = 0;
+		y = 0;
+		z = 0;
+		
+		wait(30);
+		
+		while (x != getX()) or (y != getY()) or (z != getZ()) {
+		   x = getX();
+		   y = getY();
+		   z = getZ();
+		
+		   wait(5);
+		}
+		
+		realDoAnim(AS_GET_UP,south);
+		wait(30);
+		realDoAnim(AS_STAND,south);
+		
+		getUp = true;
+
+		if AvatarCanCheat() {
+			setAvatarInStasis(false);
+		}
+	}
+}
+
+process Avatar::justMoved() {
+	if (avatarEndure) or (avatarArmor) {
+		p : WorldPoint;
+		item,spell : Item;
+		dist : Number = 960;
+	
+		p.x = getX();
+		p.y = getY();
+		p.z = getZ();
+
+		spell.referent = NULL_REF;
+
+		if avatarEndure {
+			foreach item where
+				(type = TypeFireGlobe) and
+				(quality = 1)
+				within 30 cells of Avatar:Referent {
+
+				if getDistance(item.referent,Avatar:Referent) <= dist {
+					dist = getDistance(item.referent,Avatar:Referent);
+
+					if spell.referent {
+						spell.destroy();
+					}
+
+					spell.referent = item.referent;
+				}
+				else {
+					item.destroy();
+				}
+			}
+
+			if spell.referent {
+				p.x += 24;
+				p.y += 24;
+			}
+			else {
+				avatarEndure = false;
+				return;
+			}
+		}
+		if avatarArmor {
+			foreach item where
+				(type = TypeFireField) and
+				(quality = 1)
+				within 30 cells of Avatar:Referent {
+
+				if getDistance(item.referent,Avatar:Referent) <= dist {
+					dist = getDistance(item.referent,Avatar:Referent);
+
+					if spell.referent {
+						spell.destroy();
+					}
+
+					spell.referent = item.referent;
+				}
+				else {
+					item.destroy();
+				}
+			}
+
+			if not spell.referent {
+				avatarArmor = false;
+				return;
+			}
+		}
+
+		spell.push();
+		spell.pop(p.x,p.y,p.z);
+	}
+}
+
+// Schedules are called whenever the avatar switches maps, or every
+// 15 minutes if the avatar stays on the same map.  This is a way to
+// set global flags based on the avatar's map, such as the flag that
+// disables storms underground.
+
+process Avatar::schedule(currentTime:Long)
+{
+	if (Avatar.getMap() != MapDocks) and (Avatar.getMap() != MapLBBlackness)
+	and (lbSpoke = false)
+	{
+		[[PT_DEFAULT, NULL_REF]];
+
+		lbSpoke = true;
+
+		myMap : MapNum;
+		x,y : Coord;
+		z : Alti;
+
+		wait (240);
+			
+		x = Avatar.getX();
+		y = Avatar.getY();
+		z = Avatar.getZ();
+		myMap = Avatar.getMap();
+
+		setAvatarInStasis(true);
+		Avatar.teleport (15967,19711,0,MapLBBlackness);
+		
+		wait (60);
+		
+		lb:Item;						
+		lb.create (TypeLordBritish,9);
+		lb.pop (Avatar.getX() + 40, Avatar.getY() - 120, Avatar.getZ() +40);
+		lb.use();
+
+		wait (120);
+		setAvatarInStasis(false);
+
+        Avatar.teleport(x,y,z,myMap);
+		
+		return;
+	}
+
+	map:Number = Avatar.getMap();
+
+	if (map = MapThePlateau) or (map = MapObsidianFortress)
+		or (map = MapRoadTreasure) or (map = MapHallOfTheMountainKing)
+		or (map = MapEndGame) or (map = MapPlaneOfFire) or (map = MapPlaneOfWater)
+		or (map = MapPlaneOfAir) or (map = MapPlaneOfEarth47)
+		or (map = MapUpperCatacombsII) or (map = MapUpperCatacombsIII)
+		or (map = MapLowerCatacombsI) or (map = MapShrine)
+		or (map = MapLowerCatacombsII) or (map = MapAncientNecs)
+		or (map = MapGhostRoom) or (map = MapCARTHAXbreakingground)
+		or (map = MapArgentrockIsle) or (map = MapLBBlackness)
+	{
+		if (stormsActive)
+		{
+			stormsActive = false;
+			if rainStormActive or fireStormActive
+			{
+				FadeToPalette(0,0);
+			}
+		}
+	}
+	else
+	{
+		if stormsActive=false
+		{
+			stormsActive = true;
+			if rainStormActive
+			{
+				FadeToPalette(3,0);
+			}
+			if fireStormActive
+			{
+				FadeToPalette(4,0);
+			}
+		}
+	}
+}
+
+
+//  -1 == hurt bad
+//  -2 == killed
+//  -3 == load game
+//  -4 == save game
+
+process Avatar::guardianBark(x:Number)
+{
+
+   if x = -1  //hurt bad
+   {
+      x = rndRange(1:Word,4:Word);
+      switch x
+      {
+         case 1 { x = 3;  }
+         case 2 { x = 13; }
+         case 3 { x = 18; }
+         case 4 { x = 22; }
+      }
+   }
+   else if x = -2  //killed
+   {
+      x = rndRange(1:Word,8:Word);
+      switch x
+      {
+         case 1 { x = 2;  }
+         case 2 { x = 7;  }
+         case 3 { x = 11; }
+         case 4 { x = 12; }
+         case 5 { x = 15; }
+         case 6 { x = 20; }
+         case 7 { x = 22; }
+         case 8 { x = 23; }
+      }
+   }
+   else if x = -3 //load game
+   {
+      x = rndRange(1,5);
+      switch x
+      {
+         case 1 { x = 2; }
+         case 2 { x = 6; }
+         case 3 { x = 7; }
+         case 4 { x = 8; }
+         case 5 { x = 13; }
+      }
+   }
+   else if x = -4 //save game
+   {
+      x = rndRange(1,9);
+      switch x
+      {
+         case 1 { x = 2; }
+         case 2 { x = 3; }
+         case 3 { x = 4; }
+         case 4 { x = 5; }
+         case 5 { x = 9; }
+         case 6 { x = 14; }
+         case 7 { x = 17; }
+         case 8 { x = 10; }
+         case 9 { x = 11; }
+      }
+   }
+
+   guardian : Item;
+   guardian.referent = 666;
+
+   switch x
+   {
+      case 1 {
+         guardian.bark ("I -really- do appreciate your plight,
+            Avatar.
+				\f Te voir dans cet estat est une v‚ritable jouissance, Avatar!
+				\g Mein Beileid, Avatar. Deine Notlage betrifft mich zutiefst.");
+      }
+      case 2 {
+         guardian.bark ("Ah, Avatar, the thrill of conquest is so...
+            invigorating.
+				\f Ah, Avatar, le frisson de la conqueste a quelque chose...
+				d'excitant.
+				\g Ach, Avatar, eine neue Welt zu bezwingen ist immer wieder ein
+				 so aufregendes Gefhl.");
+      }
+      case 3 {
+         guardian.bark ("Enjoying your stay on Pagan, Avatar?
+		 			\f Alors, Avatar, te plais-tu … Pagan?
+					\g Gef„llt dir dein Aufenthalt auf Pagan, Avatar?");
+      }
+      case 4 {
+         guardian.bark ("Hark! Is that the sweet song of lamentation
+            I hear?
+			\f Escoute donc! N'est-ce point le doux chant des lamentations
+			que j'entends?
+			\g H”r nur! Ist das nicht der sáe Klang von Trauer und Wehklagen, 
+			den ich da h”re?");
+      }
+      case 5 {
+         guardian.bark ("I do so enjoy the cries of torment.
+		 				\f Les pleurs de la tourmente sont un r‚gal pour moy.
+						\g Qualvolle Schreie bereiten mir wirklich ausgesprochenes 
+						Vergngen.");
+      }
+      case 6 {
+         guardian.bark ("Yes, Avatar, seek a way home.
+		 		\f Oui, Avatar, cherche donc le chemin pour rentrer chez toy.
+				\g Ja, Avatar, such nur den Weg nach Hause.");
+      }
+      case 7 {
+         guardian.bark ("There is no escape from -this- prison!
+		 		\f Mais cette prison n'a point d'issue, Avatar!
+				\g Aus diesem Gef„ngnis kannst du nicht entkommen!");
+      }
+      case 8 {
+         guardian.bark ("Hurry, Avatar. After all, you have only
+            -all- -of- -eternity- to complete your tasks.
+			\f Haste-toy, Avatar! AprŠs tout, tu ne disposes que de
+			l'‚ternit‚ pour venir … bout de tes questes.
+			\g Beeile dich, Avatar. Du hast schlieálich nur noch den Rest 
+			der Ewigkeit, um deine Aufgaben zu beenden.");
+      }
+      case 9 {
+         guardian.bark ("Nystul sends his best, Avatar...
+		 			\f Nystul t'envoie ses amiti‚s, Avatar...
+					\g Nystul l„át gráen, Avatar...");
+      }
+      case 10 {
+         guardian.bark ("You should hear the pleas for help, Avatar.
+		 	\f Tu devrois entendre ces supplications, Avatar.
+			\g Du solltest die Hilfeschreie h”ren, Avatar.");
+      }
+      case 11 {
+         guardian.bark ("At this very moment, Britannia burns.
+		 			\f En cet instant pr‚cis, Britannia brusle.
+					\g Gerade in diesem Augenblick brennt Britannia.");
+      }
+      case 12 {
+         guardian.bark ("One world lies in ruin, nothing more than a
+            charred shell. The other will soon follow.
+			\f Un des mondes n'est d‚j… plus que ruines et cendres.
+			D'icy peu, l'aultre connoistra le mesme sort!
+			\g Eine Welt ist schon zerst”rt. Nicht mehr als eine ausgebrannte 
+			Hlle. Die n„chste Welt wird bald folgen.");
+      }
+      case 13 {
+         guardian.bark ("Perhaps I should destroy you now.
+		 			\f Et si je te destruisois maintenant?
+					\g Vielleicht sollte ich dich jetzt ausl”schen.");
+      }
+      case 14 {
+         guardian.bark ("Care you no more for your own world, Avatar?
+		 			\f Tu sembles peu inquiet, Avatar.
+						Le sort de ton propre monde te seroit-il indiff‚rent?
+						\g Ist dir deine eigene Welt denn nicht mehr wichtig, 
+						Avatar?");
+      }
+      case 15 {
+         guardian.bark ("Will your precious Earth fall so easily?
+		 		\f Ta pr‚cieuse Terre va-t-elle donc s'effondrer aussy facilement?
+				\g Werde ich mit deiner geliebten Erde ebenso leichtes Spiel haben?");
+      }
+      case 16 {
+         guardian.bark ("Soon I shall be able to call Britannia mine. It seems,
+			Avatar, that you are missed here. Why, I believe I hear Lord British 
+			crying out for you now...
+			\f Sous peu, Britannia sera mienne. Oh, Avatar, on diroit
+			que Lord British a besoin de toy. J'entends ses pleurs...
+			\g Schon bald wird Britannia mein sein. Es scheint, du wirst hier 
+			sehr vermiát, Avatar. T„usche ich mich oder h”re ich, wie Lord British 
+			dich in diesem Augenblick um Hilfe ruft...");
+      }
+      case 17 {
+         guardian.bark ("Your treasured Britannia succumbs easily. Soon -all-
+			the land will be mine.
+			\f Comme ta chŠre Britannia capitule ais‚ment. Bientost
+			TOUT le pays m'appartiendra.
+			\g Dein geliebtes Britannia ist leicht zu erobern. Bald wird das ganze
+			 Land mir geh”ren.");
+      }
+      case 18 {
+         guardian.bark ("Ouch! -That- must have hurt, Avatar!
+		 			\f A‹e! Cecy a d– faire mal, Avatar!
+					\g Au! Das muá aber weh getan haben, Avatar!");
+      }
+      case 19 {
+         guardian.bark ("Do not go near -that-, Avatar.
+		 			\f Tu t'approches trop, Avatar.
+					\g Halte dich davon fern, Avatar.");
+      }
+      case 20 {
+         guardian.bark ("ha hahahaha \f ha hahahaha \g Ha Hahahaha ");
+      }
+      case 21 {
+         guardian.bark ("he he he he \f he he he he \g H„h„h„h„h„");
+      }
+      case 22 {
+         guardian.bark ("Feel my wrath!
+		 			\f Que mon courroux s'abatte sur toy!
+					\g Fhle meinen Zorn!");
+      }
+      case 23 {
+         guardian.bark ("Let the darkness come for you, Avatar.
+		 			\f Laisse donc l'obscurit‚ venir sur toy, Avatar!
+					\g Laá dich von der Dunkelheit holen, Avatar!");
+      }
+   }
+}
+
+

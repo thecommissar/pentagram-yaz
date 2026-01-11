@@ -1,0 +1,762 @@
+//ULTIMA 8 FLAGS.UNK
+
+routine flagsRoutine() {
+	a:Word;
+	a = 1;
+}
+
+// LOST VALE FLAGS
+// ---------------
+
+globalflag avatarPoisoned;
+globalflag lbSpoke:2; //Lord British has appeared and spoken...
+globalflag climbedCliffs;
+globalflag ezToTemple;
+globalflag shieldFixed;
+globalflag firstPoisoned;
+globalflag zealanMark;
+globalflag toldAboutAddiction;
+globalflag hasBag;
+globalflag godsFree;
+globalflag attemptedCliffs;
+globalflag toldCliffs;
+globalflag haveMark;
+globalflag templeOpen;
+globalflag ActivateAirPuzzle:1;
+globalflag limitTornado:3;
+globalflag sentToTyorvi;
+globalflag gunnarSpokeStone;
+globalflag plantScene;
+globalflag endOfPlantScene;
+globalflag candlesCorrect;
+globalflag monolithSucks;
+globalflag candleOne;
+globalflag candleTwo;
+globalflag candleThree;
+globalflag candleFour;
+globalflag candleFive;
+globalflag candleSix;
+globalflag toldOfDreams;
+globalflag tyorviDreams;
+globalflag givenTea;
+globalflag hasTea;
+globalflag givenRoot;
+globalflag justGotRoot;
+globalflag hasRoot;
+
+// EZREKAL CONVERSATION FLAGS
+//===========================
+
+globalflag toldValeThree;
+globalflag toldValeTwo;
+globalflag toldValeOne;
+globalflag spokeOfAwaken;
+globalflag testFromAtli;
+globalflag testFromThordis;
+globalflag mentionShield;
+globalflag ezrekalJob;
+globalflag ezrekalName;
+globalflag ezrekalMet;
+globalflag yelledAtAvatar;
+globalflag spokeOfCataclysm;
+globalflag askedAboutAncients;
+globalflag spokeOfOpenTemple;
+globalflag toldOfShield;
+globalflag spokeOfClouds;
+
+// TYORVI CONVERSATION FLAGS
+//==========================
+
+globalflag tyorviDrunk;
+globalflag tyorviMet;
+globalflag tyorviName;
+globalflag tyorviJob;
+globalflag tyorviPissed;
+globalflag spokeOfVale;
+globalflag spokeDrunk;
+globalflag spokeDrunkOne;
+globalflag spokeDrunkTwo;
+globalflag spokePoison;
+globalflag spokeFuneral;
+globalflag spokeOnce;
+globalflag toldOfPoison;
+globalflag agreeToClimb;
+
+
+// RAGNAR CONVERSATION FLAGS
+// =========================
+
+globalflag ragnarMet;
+globalflag sentToRagnar;
+globalflag ragnarToldStone;
+globalflag ragnarPissed;
+globalflag ragnarName;
+
+// THORDIS CONVERSATION FLAGS
+// ==========================
+
+globalflag thordisMet;
+globalflag thordisToldTest;
+globalflag hoskuldSpokeStone;
+globalflag thordisName;
+globalflag thordisJob;
+globalflag inShadeScene;
+globalflag thordisSchedule:2;
+globalflag toldMyTribe;
+globalflag toldOthers;
+
+
+// ATLI CONVERSATION FLAGS
+//=======================
+
+globalflag atliMet;
+globalflag atliName;
+globalflag atliJob;
+globalflag atliToldTest;
+globalflag cloudCity;
+
+
+// HRODNY CONVERSATION FLAGS
+// ==========================
+
+globalflag hrodnyMet;
+globalflag hrodneyName;
+globalflag hrodneyJob;
+globalflag hrodnySchedule:2;
+globalflag spokeVale;
+globalflag toldPoison;
+globalflag hrodnyName;
+globalflag hrodnyJob;
+globalflag hrodneyMet;
+
+// INGYALD CONVERSATION FLAGS
+// ==========================
+
+globalflag ingyaldMet;
+globalflag ingyaldName;
+globalflag ingyaldJob;
+globalflag ingyaldSchedule:2;
+globalflag spokeVail;
+
+
+//NON PLOT FLAGS
+//=======================
+globalflag neverSinks;
+globalflag somebodyTalking;
+globalflag getUp;
+globalflag justTeleported;
+globalflag postEarthQuake;
+globalflag guardsCalled;
+globalflag lastPotPeriod : 16;
+globalflag gettingDrunk:3;
+
+
+//SPELL FLAGS
+//-----------
+globalflag hearTruthActive;
+globalflag avatarEndure;
+globalflag avatarArmor;
+globalflag deathSpeakCast;
+
+
+//GLOBAL PLOT FLAGS
+//-----------------
+globalflag lithosHis;
+globalflag lithosMet;
+globalflag pyrosHis;
+globalflag pyrosMet;
+globalflag stratosHis;
+globalflag hydrosHis;
+globalflag hydrosMet;
+globalflag titansHis;
+
+globalflag nowCaretaker;
+globalflag nowApprentice;
+globalflag nowScion;
+globalflag hydrosFree:2;
+globalflag pyrosFree;
+globalflag hasTongue;
+globalflag hasBreath;
+globalflag hasTear;
+globalflag hasHeart;
+globalflag needBreath;
+globalflag takenBreath;
+globalflag needTear;
+globalflag needHeart;
+globalflag deadWalk;
+globalflag blackLoreSeen;
+globalflag mythranSaidBlackLore;
+globalflag readMagBook;
+globalflag talkedToDeadDudes;
+globalflag sawCentralTenebraeTeleporter;
+globalflag sawPlateauTeleporter;
+globalflag sawUpperCatacombsTeleporter;
+globalflag sawMountainKingTeleporter;
+globalflag sawArgentrockIsleTeleporter;
+globalflag sawCarthaxLakeTeleporter;
+globalflag sawDaemonsCragTeleporter;
+
+//Ancient Ones Plot Flags
+//-------------------
+globalflag ancientOnesMet;
+globalflag getPowerAO;
+globalflag metKhumash;
+globalflag gotObTip;
+
+//Shrine Puzzle Flags
+//-------------------
+globalflag hanoiBusy;
+globalflag hanoiStairDown:3;
+globalflag hanoiStairBlocked;
+
+//Tenebrea Plot Flags
+//-------------------
+globalflag toldAboutPower;
+globalflag devonsPower;
+globalflag devonInRule;
+globalflag devonAtDock;
+globalflag devonJailed;
+globalflag toranDead;
+globalflag helpDevon;
+globalflag refusedDevon;
+globalflag talkedAboutToran;
+globalflag benticCacked;
+globalflag metDevonInJail;
+globalflag barmaidForNow;
+globalflag avatarTooCheap;
+globalflag secondexecution;
+
+globalflag guardEWMet;
+globalflag guardEWPissed;
+globalflag guardEWThanked;
+globalflag interrogEW;
+globalflag askedAboutEWRoad;
+
+// used in clrwater.unk and water.unk
+globalflag DevonHitWater;
+
+
+//Argentrock Plot Flags
+//----------------------
+globalflag completedTest;
+globalflag passedTests;
+globalflag atWindyPoint;
+globalflag spokenXavier;
+globalflag stratosName;
+globalflag stratosMet;
+globalflag stratosTakenBreath;
+globalflag fociReturned;
+globalflag hasXavierFoci;
+globalflag spokeAboutTorwinS;
+globalflag spokeAboutTorwinX;
+globalflag spokeAboutTorwin;
+globalflag torwinGottaJump;
+globalflag levitateAvatar;
+globalflag passedWisdomTest;
+globalflag attemptedWisdomTest;
+globalflag readyForTests;
+globalflag attemptedCenteredTest;
+globalflag passedCenteredTest;
+globalflag spokeOfTests;
+globalflag breakWind;
+globalflag refusedSpell;
+globalflag hasOwnFoci;
+globalflag attemptedThirdTest;
+globalflag passedThirdTest;
+globalflag solvedMystery;
+globalflag goJump;
+globalflag permissionToAirWalk;
+globalflag haveFoci;
+globalflag hasHearTruth;
+globalflag fasFoci;
+globalflag toldThurgists;
+globalflag spokenAboutBreath;
+globalflag focusMissing;
+globalflag hasRing;
+globalflag rewardMe;
+globalflag avatarTookRock;
+
+//Daemon's Crag Plot Flags
+//------------------------
+globalflag betrayedDisciple;
+globalflag acolyteKilled:2;
+globalflag goToInnerSanctum;
+globalflag gotTheSymbols;
+globalflag tonguing;
+
+
+globalflag sponsorTest;
+globalflag spellsCast:2;
+globalflag spell1;
+globalflag spell2;
+globalflag spell3;
+globalflag keyOfTheAcolyte;
+globalflag masterTest;
+globalflag inDaemonScene;
+globalflag afterDaemonScene;
+globalflag avatarMasterSorcerer;
+globalflag gotSabrione;
+globalflag gotMorduin;
+
+// used in Pyros.unk
+globalflag screwUps:2;
+globalflag blastFirst;
+globalflag thisIsIt;
+globalflag doChannel;
+
+globalflag cardasMet;
+globalflag cardasName;
+globalflag cardasJob;
+globalflag cardasAvaName;
+
+globalflag daemosMet;
+globalflag daemosName;
+globalflag daemosJob;
+globalflag daemosAvaName;
+
+globalflag kothiusMet;
+globalflag kothiusName;
+globalflag kothiusJob;
+globalflag kothiusAvaName;
+
+globalflag mentarMet;
+globalflag mentarName;
+globalflag mentarJob;
+globalflag mentarAvaName;
+
+globalflag tallonMet;
+globalflag tallonName;
+globalflag tallonJob;
+globalflag tallonAvaName;
+
+globalflag emricholMet;
+globalflag emricholName;
+globalflag emricholJob;
+globalflag emricholAvaName;
+
+
+
+
+//Graveyard Plot Flags
+//--------------------
+globalflag lothianDead;
+globalflag mythranNec;
+globalflag vividosMet;
+globalflag vividosSchedule:2;
+globalflag ceremonySoon;
+globalflag haveDagger;
+globalflag vivTold;
+globalflag toldReagents;
+globalflag haveReagents;
+globalflag haveReagentsDone;
+globalflag haveSkullKey;
+globalflag metNec1;
+globalflag metNec2;
+globalflag metNec3;
+globalflag metNec4;
+globalflag metNec5;
+globalflag metNec6;
+globalflag gotKey;
+globalflag gotTheKey;
+globalflag lothInterred;
+globalflag toldSticks;
+globalflag metGwillim;
+globalflag toldDagger;
+globalflag isApprentice;
+globalflag toldDaggerDone;
+globalflag lithosMetDone;
+globalflag magicWallDone;
+globalflag vividosPissed;
+globalflag askToDo;
+globalflag askToDoDone;
+
+// used in grave_ns.unk
+globalflag readGravestone;
+
+
+//HYDROS
+//------------------------
+globalflag waterDone;
+globalflag metHydros;
+globalflag hydrosPissed;
+globalflag hydrosBegged;
+globalflag leaving : 1;
+
+
+// STORMS
+//------------------------
+globalflag rainStorm;
+globalflag rainStormActive;
+globalflag fireStorm;
+globalflag fireStormActive;
+globalflag shroomPaletteEffectsActive;
+globalflag stormsActive;
+
+// GLOBAL FLAGS FOR NPCS
+//----------------------
+
+globalflag arcadionMet;
+globalflag arcadionName;
+globalflag arcadionJob;
+globalflag arcadionAvaName;
+globalflag arcadionMad:2;
+globalflag arcadionMetBefore:3;
+
+
+globalflag gainedPurity;
+
+globalflag corinthPissed;
+globalflag corinthRealPissed;
+globalflag corinthMet;
+globalflag corinthToldGhost;
+globalflag corinthSchedule:2;
+
+
+globalflag devonName;
+globalflag devonJob:2;
+globalflag devonSaidBentic;
+globalflag devonMentionedTear;
+globalflag devonMet;
+
+globalflag gwillimPissed;
+globalflag gwillimSchedule:3;
+
+
+globalflag kilandraMet;
+globalflag kilandraName;
+globalflag kilandraJob;
+globalflag kilandraPissed;
+globalflag askedFirstTime;
+globalflag askedSecondTime;
+globalflag toldAboutKey;
+globalflag gwilliamToldDoor;
+globalflag keyFromGhost;
+
+globalflag korickMet;
+globalflag korickPissed;
+globalflag korickRealPissed;
+globalflag korickSchedule:3;
+
+globalflag mordeaMet;
+globalflag mordeaName;
+globalflag mordeaJob;
+globalflag mordeaAvaName;
+globalflag mordeaPissed;
+globalflag mordeaDead;
+globalflag mordeaSitting;
+globalflag mordeaTalking;
+globalflag mordeaSchedule:3;
+
+globalflag mythranMet;
+globalflag mythranName;
+globalflag mythranJob;
+globalflag mythranMad:2;
+globalflag mythranAvaName;
+globalflag mythSticks;
+globalflag mythDoneLeave;
+globalflag mythGuard;
+globalflag paganLore;
+globalflag mythMagic;
+globalflag mythranScrolls;
+globalflag mythReagents;
+globalflag wantsScrolls;
+globalflag wantsSpells;
+globalflag wantsReagents;
+globalflag gotBlast;
+globalflag gotShower;
+globalflag gotSummon;
+globalflag gotDestruction;
+globalflag gotDevastation;
+globalflag lockSpellSpeech;
+globalflag usedRecall;
+
+globalflag orlokMet;
+globalflag orlokName;
+globalflag orlokJob;
+globalflag orlokMad:2;
+globalflag orlokAvaName;
+globalflag orlokPoison;
+globalflag orlokDrink;
+globalflag orlokTales;
+globalflag orlokTab:5;
+globalflag orlokLeading;
+globalflag toldGhostStory;
+globalflag toldOfTreasure;
+globalflag benticStoryTold;
+globalflag drinkStr;
+globalflag nameVar;
+globalflag haveAnother;
+globalflag cost:4;
+
+globalflag shaanaMet;
+globalflag shaanaName;
+globalflag shaanaJob;
+globalflag shaanaMad:2;
+globalflag shaanaAvaName;
+globalflag sawShaana;
+globalflag shaanaSchedule:2;
+
+globalflag tarnaMet;
+globalflag tarnaName;
+globalflag tarnaJob;
+globalflag tarnaAvaName;
+globalflag tarnaTenebraed;
+
+globalflag malchirMet:2;
+globalflag malchirName;
+globalflag malchirJob;
+globalflag malchirMad:2;
+globalflag malchirAvaName;
+globalflag MalchirTest:3;
+
+globalflag vardionMet;
+globalflag vardionName;
+globalflag vardionJob;
+globalflag vardionMad:2;
+globalflag vardionAvaName;
+globalflag vardionHome:3;
+globalflag vardionGroveled;
+
+globalflag vardionEnclave;
+globalflag vardionOffer:3;
+globalflag vardionRefused;
+globalflag vardionJoined;
+globalflag vardionDolt;
+globalflag vardionFool;
+globalflag vardionStupid;
+globalflag vardionFalse:2;
+
+globalflag baneMet;
+globalflag baneName;
+globalflag baneJob;
+globalflag baneMad:2;
+globalflag baneAvaName;
+globalflag baneOffer;
+globalflag baneHasAsked;
+globalflag baneJoined;
+globalflag baneFool;
+globalflag baneIdiot;
+globalflag baneMoron;
+globalflag baneFalse:2;
+globalflag baneGroveled;
+
+globalflag berenMet:2;
+globalflag berenName;
+globalflag berenJob;
+globalflag berenMad:2;
+globalflag berenAvaName;
+globalflag berenGroveled;
+globalflag tickedOff:2;
+globalflag berenSchedule:3;
+
+globalflag gorgrondMet:2;
+globalflag gorgrondName;
+globalflag gorgrondJob;
+globalflag gorgrondMad:2;
+globalflag gorgrondAvaName;
+globalflag gorgrondDung;
+globalflag ticked:2;
+globalflag gorgrondGroveled;
+globalflag friendBane;
+globalflag askedFriend;
+
+globalflag xavierMet;
+globalflag xavierName;
+globalflag xavierJob;
+globalflag xavierAskedToHeal;
+globalflag xavierJustHealed;
+globalflag spokeAboutTests;
+globalflag xavierSitting;
+globalflag xavierSchedule:2;
+globalflag xavierPissed;
+globalflag askedAboutArgent;
+
+globalflag cyrrusMet;
+globalflag cyrrusName;
+globalflag cyrrusJob;
+globalflag cyrrusSitting;
+globalflag cyrrusJustHealed;
+globalflag cyrrusSchedule:2;
+
+globalflag torwinMet;
+globalflag torwinName;
+globalflag torwinJob;
+globalflag torwinPissed;
+globalflag torwinJumped;
+globalflag torwinSitting;
+globalflag torwinSchedule:2;
+
+globalflag stellosMet;
+globalflag stellosName;
+globalflag stellosJob;
+globalflag stellosSchedule:2;
+globalflag stellosJustHealed;
+globalflag stellosSitting;
+globalflag spokenAboutFoci;
+globalflag spokeAboutRing;
+globalflag silverMineKeyGiven;
+globalflag madeToraxForTest;
+
+globalflag salkindMet;
+globalflag salkindName;
+globalflag salkindJob;
+globalflag salkindPissed;
+globalflag salkindTalking;
+globalflag salkindAnswerMordea;
+globalflag SalkindSchedule:2;
+
+globalflag benticMet;
+globalflag benticName;
+globalflag benticJob;
+globalflag benticSaidMythran;
+globalflag mentionedPagan;
+globalflag haveAvaName;
+globalflag benticGivenBook;
+
+globalflag darionMet;
+globalflag darionName;
+globalflag darionJob;
+globalflag darionSchedule:4;
+globalflag spokeAboutJenna;
+globalflag darionHavName;
+globalflag darionGhostStory;
+globalflag askedAboutSell;
+globalflag hasAvaName;
+globalflag AvatarTookHit;
+globalflag DarionTookHit;
+globalflag DarionTraining;
+
+globalflag jennaMet;
+globalflag jennaName;
+globalflag jennaJob;
+globalflag jennaPissed;
+globalflag havAvaName;
+globalflag jennaGhostStory;
+globalflag sendJennaToLunch;
+
+globalflag rhianMet;
+globalflag rhianName;
+globalflag rhianJob;
+globalflag rhianSchedule:2;
+globalflag rhianMoveCheck:2;
+globalflag askedAboutTears;
+globalflag askedAboutSon;
+globalflag knowsName;
+globalflag rhianSitting;
+globalflag rhianKneeling;
+globalflag rhiangrieving;
+globalflag toldOfTorwinDeath;
+globalflag whatGem;
+globalflag whatClothes;
+globalflag stolenOnce;
+globalflag askedClothes;
+globalflag askedGems;
+
+globalflag araminaMet;
+globalflag araminaName;
+globalflag araminaJob;
+globalflag araminaTalking;
+globalflag araminaSchedule:2;
+
+globalflag guard1met;
+globalflag guard1job;
+globalflag guard1pissed;
+globalflag guard1town;
+globalflag guard1directions;
+
+globalflag guard2Met;
+globalflag guard2GaveDirections;
+globalflag guard2Pissed;
+
+globalflag guard3Met;
+globalflag guard3Pissed;
+
+globalflag guard4Met;
+globalflag guard4Pissed;
+globalflag guard4Thanked;
+
+globalflag guard5Met;
+globalflag guard5Pissed;
+globalflag guard5Thanked;
+
+globalflag guard6Met;
+globalflag guard6Pissed;
+globalflag guard6Thanked;
+
+globalflag guard7Met;
+globalflag guard7Pissed;
+globalflag guard7Thanked;
+
+globalflag guard8Met;
+globalflag guard8Pissed;
+globalflag guard8Thanked;
+
+globalflag guard9Met;
+globalflag guard9Pissed;
+globalflag guard9Thanked;
+
+
+
+
+
+// NON SPECIFIC NPC FLAGS
+//-----------------------
+globalflag whatDrink:3;
+globalflag whatFood:4;
+globalflag whatWeapon;
+
+
+
+// flag to specify the avatar is dying in lava. used in clrlava.unk
+globalflag butthead;
+
+// the avatar has relieved himself. used in treetrnk.unk
+globalflag pissed;
+
+// keep Avatar from dying twice, used in light.unk
+globalflag alreadyHitLightBeam;
+
+// keep Avatar from dying twice, used in ligtzap.unk
+globalflag alreadyHitLightningZapper;
+
+// Flags to make puzzels work
+//--------------------------
+
+// used in lever.unk
+globalflag leverTest0;
+globalflag leverTest1;
+globalflag leverTest2;
+globalflag leverTest3;
+globalflag leverTest4;
+globalflag leverTest5;
+globalflag leverTest6;
+globalflag leverTestDone;
+
+// used in endplate.unk
+globalflag etherstone;
+globalflag firestone;
+globalflag waterstone;
+globalflag airstone;
+globalflag earthstone;
+globalflag yojustchill;
+
+
+
+//ScheduleChange Flag
+//--------------------------
+globalflag scheduleChange:4;
+
+//  HISTORICAL FLAGS
+//------------------
+globalflag zealanHis;
+globalflag makePlatformAppear;
+
+// Elemental Column Destroyed Flags
+//---------------------------------
+globalflag WaterColumnDestroyed:1;
+globalflag FireColumnDestroyed:1;
+globalflag EarthColumnDestroyed:1;
+globalflag AirColumnDestroyed:1;
+
+
+

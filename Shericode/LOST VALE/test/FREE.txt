@@ -1,0 +1,1938 @@
+uses "free";
+
+routine random(x:Number):Number {
+	return urandom(x);
+}
+
+routine randRange(a:Number,b:Number):Number {
+	c, ran : Number;
+
+	if a > b {
+		c = b;
+		b = a;
+		a = c;
+	}
+
+	c = b - a + 1;
+	ran = urandom(c);
+	ran += a;
+
+	return ran;
+}
+
+
+process askYesNo():Number {
+	[[PT_BARK, Avatar:Referent]];
+
+	key : String;
+	keyList : String List;
+
+	keyList = <<"Yes. \f Oui. \g Ja.",
+				"No. \f Non. \g Nein.">>;
+	key = Avatar.ask(keyList);
+
+	if key = "Yes. \f Oui. \g Ja." {
+		return true;
+	}
+	else if key = "No. \f Non. \g Nein." {
+		return false;
+	}
+	else {
+		return -1;
+	}
+}
+
+process askYesNo(duration:Number):Number {
+	[[PT_BARK, Avatar:Referent]];
+
+	count : Number = 0;
+
+	while count != duration {
+		key : String;
+		keyList : String List;
+	
+		keyList = <<"Yes. \f Oui. \g Ja.",
+					"No. \f Non. \g Nein.">>;
+		key = Avatar.ask(keyList);
+	
+		if key = "Yes. \f Oui. \g Ja." {
+			return true;
+		}
+		else if key = "No. \f Non. \g Nein." {
+			return false;
+		}
+		else {
+			count++;
+		}
+	}
+
+	return -1;
+}
+
+
+
+routine Timer::start(dur:Tick) {
+	durationTick = dur;
+   startTick = getCurrentTimerTick();
+}
+
+routine Timer::isDone():Boolean {
+   if getCurrentTimerTick() >= startTick+durationTick {
+		return true;
+	}
+	return false;
+}
+
+process wait(time:Number) {
+	[[PT_DEFAULT, NULL_REF]];
+
+	// time is measured in 60ths of a second
+	startup {
+		timer : Timer;
+		timer.start (time:Tick);
+		if timer.isDone() {
+			return;
+		}
+	}
+	process {
+		if timer.isDone() {
+			return;
+		}
+	}
+}
+
+routine abs (x:Number) : Number {
+	if x > 0 {
+		return x;
+	}
+	return -1 * x;
+}
+
+constant X_AXIS = 0;
+constant Y_AXIS = 1;
+
+process scrollTo(destX:Coord,destY:Coord,destZ:Alti,vel:Number)
+{
+   [[PT_DEFAULT, Avatar:Referent]];
+   Camera::scrollTo( destX, destY, destZ, 6 : Number );
+}
+
+
+process scrollBack(vel:Number) {
+	[[PT_DEFAULT, Avatar:Referent]];
+
+	x : Coord = Avatar.getX();
+	y : Coord = Avatar.getY();
+	z : Alti = Avatar.getZ();
+
+	scrollTo(x,y,(z+20),vel);
+	Camera::setCenterOn(1);
+}
+
+routine getDistance(p1:WorldPoint, p2:WorldPoint):Number {
+	x : Number = p1.x - p2.x;
+	y : Number = p1.y - p2.y;
+	z : Number = p1.z - p2.z;
+
+	x = abs(x);
+	y = abs(y);
+	z = abs(z);
+
+	if (x > y) and (x > z) {
+		return x;
+	}
+
+	if (y > x) and (y > z) {
+		return y;
+	}
+
+	if (z > x) and (z > y) {
+		return z;
+	}
+
+	return x;
+}
+
+routine getDistance(r1:Referent, r2:Referent):Number {
+	item1, item2 : Item;
+	item1.referent=r1;
+	item2.referent=r2;
+	avatarMap : MapNum = Avatar.getMap ();
+
+	if item1.isNpc () {
+		npc1:Npc;
+		npc1.referent=item1.referent;
+		if npc1.getMap () != avatarMap {
+			return differentMap;
+		}
+	}
+
+	if item2.isNpc () {
+		npc2:Npc;
+		npc2.referent=item2.referent;
+		if npc2.getMap () != avatarMap {
+			return differentMap;
+		}
+	}
+
+	x : Number = item1.getX () - item2.getX ();
+	y : Number = item1.getY () - item2.getY ();
+	z : Number = item1.getZ () - item2.getZ ();
+
+	x = abs(x);
+	y = abs(y);
+	z = abs(z);
+
+	if (x > y) and (x > z) {
+		return x;
+	}
+
+	if (y > x) and (y > z) {
+		return y;
+	}
+
+	if (z > x) and (z > y) {
+		return z;
+	}
+
+	return x;
+}
+
+routine getCellDist(ref1:Referent,ref2:Referent):Number {
+	dist : Number = getDistance(ref1,ref2);
+	dist /= 32;
+
+	return dist;
+}
+
+routine findNearest (range:Number, t:Type, f:Frame):Referent {
+	item, closestItem : Item;
+	closest : Number = 32000;
+
+	closestItem.referent = 0;
+	foreach item where
+		(type=t) and (frame=f)
+		within range cells of Avatar
+	{
+		dist:Number = getDistance (Avatar:Referent, item.referent);
+		if dist < closest {
+			closest = dist;
+			closestItem = item;
+		}
+	}
+
+	return closestItem;
+}
+
+routine give(r:Referent,t:Type,f:Frame,qual:Quality,quan:Quantity):Boolean {
+	item,lastItem,backpack : Item;
+	itemList : Item List;
+
+	item.referent = r;
+	if item.getFamily() != CONTAINER_FAMILY {
+		return false;
+	}
+
+	if r = Avatar:Referent {
+		backpack.referent = Avatar.getEquip(EQ_BACKPACK);
+
+		if not backpack {
+			backpack.create(529,0);
+			backpack.popToEnd(Avatar:Referent);
+			Avatar.setEquip(EQ_BACKPACK,backpack.referent);
+		}
+
+		r = backpack.referent;
+	}
+
+	if not item.legal_create(t,f,r,1) {
+		return false;
+	}
+	else {
+		itemList = <<item>>;
+
+		if (item.getFamily() = QUAN_FAMILY) or (item.getFamily() = REAGENT_FAMILY) {
+			while quan > 666 {
+				item.setQuantity(666);
+				quanFrame(item);
+
+				quan -= 666;
+
+				if item.legal_create(t,f,r,1) {
+					itemList += <<item>>;
+				}
+				else {
+					foreach item in itemList {
+						item.destroy();
+					}
+
+					return false;
+				}
+			}
+
+			if quan {
+				item.setQuantity(quan);
+
+				if not item.getFamily() = REAGENT_FAMILY {
+					combine(item);
+				}
+			}
+		}
+		else {
+			quan--;
+			while quan {
+				if item.legal_create(t,f,r,1) {
+					itemList += <<item>>;
+
+					quan--;
+				}
+				else {
+					foreach item in itemList {
+						item.destroy();
+					}
+
+					return false;
+				}
+			}
+		}
+
+		if item.getFamily() = QUAL_FAMILY {
+			foreach item in itemList {
+				item.setQuality(qual);
+			}
+		}
+
+		foreach item in itemList {
+			item.orStatus(OWNED);
+		}
+	}
+
+	return true;
+}
+
+routine take(r:Referent,t:Type,f:Frame,qual:Quality,quan:Quantity):Boolean {
+	item : Item;
+	itemList,deadList : Item List;
+	element : Number = 1;
+	remainder : Quantity;
+	myQual : Quality;
+
+	item.referent = r;
+	if item.getFamily() != CONTAINER_FAMILY {
+		return false;
+	}
+
+	if t = -1 {
+		foreach recursive item within container r {
+			myQual = item.getQuality();
+	
+			if (item.getFamily() = QUAN_FAMILY) or (item.getFamily() = REAGENT_FAMILY) {
+				itemList += <<item>>;
+			}
+			else if item.getFamily() != QUAL_FAMILY {
+				if f = -1 {
+					if qual = -1 {
+						itemList += <<item>>;
+					}
+					else if myQual = qual {
+						itemList += <<item>>;
+					}
+				}
+				else {
+					if qual = -1 {
+						itemList += <<item>>;
+					}
+					else if myQual = qual {
+						itemList += <<item>>;
+					}
+				}
+			}
+			else if f = -1 {
+				itemList += <<item>>;
+			}
+			else if item.getFrame() = f {
+				itemList += <<item>>;
+			}
+		}
+	}
+	else {
+		foreach recursive item where type = t within container r {
+			myQual = item.getQuality();
+
+			if (item.getFamily() = QUAN_FAMILY) or (item.getFamily() = REAGENT_FAMILY) {
+				itemList += <<item>>;
+			}
+			else if item.getFamily() != QUAL_FAMILY {
+				if f = -1 {
+					if qual = -1 {
+						itemList += <<item>>;
+					}
+					else if myQual = qual {
+						itemList += <<item>>;
+					}
+				}
+				else {
+					if qual = -1 {
+						itemList += <<item>>;
+					}
+					else if myQual = qual {
+						itemList += <<item>>;
+					}
+				}
+			}
+			else if f = -1 {
+				itemList += <<item>>;
+			}
+			else if item.getFrame() = f {
+				itemList += <<item>>;
+			}
+		}
+	}
+
+	item = itemList[element];
+
+	if item {
+		if (item.getFamily() = QUAN_FAMILY) or (item.getFamily() = REAGENT_FAMILY) {
+			while (quan) and (item) {
+				if quan <= item.getQuantity() {
+					if quan = item.getQuantity() {
+						deadList += <<item>>;
+					}
+					else {
+						remainder = item.getQuantity();
+						remainder -= quan;
+
+						item.setQuantity(remainder);
+						combine(item);
+					}
+
+					quan -= quan;
+				}
+				else {
+					quan -=	item.getQuantity();
+					deadList += <<item>>;
+
+					element++;
+					item = itemList[element];
+				}
+			}
+		}
+		else {
+			while (quan) and (item) {
+				quan--;
+				deadList += <<item>>;
+
+				element++;
+				item = itemList[element];
+			}
+		}
+	}
+
+	if quan {
+		return false;
+	}
+	else {
+		if deadList[1] {
+			foreach item in deadList {
+				item.destroy();
+			}
+		}
+
+		return true;
+	}
+}
+
+routine legal_setType(r:Referent,t:Type,f:Frame,x:Coord,y:Coord,z:Coord):Boolean {
+	ref,item : Item;
+	ref.referent = r;
+	
+	if getFamilyOfType(t) = ref.getFamily() {
+		ref.push();
+		ref.touch();
+	
+		if item.legal_create(t,f,x,y,z) {
+			item.destroy();
+			
+			ref.setType(t);
+			ref.setFrame(f);
+			ref.pop(x,y,z:Alti);
+			ref.touch();
+	
+			return true;
+		}
+		else {
+			ref.pop();
+			return false;
+		}
+	}
+	else{
+		return false;
+	}
+}
+
+routine createNear(p:WorldPoint,t:Type,f:Frame,qual:Quality,quan:Quantity):Referent {
+	item : Item;
+	deadList : Item List;
+	howMany : Quantity = 0;
+
+	if (getFamilyOfType(t) = QUAN_FAMILY) or (getFamilyOfType(t) = REAGENT_FAMILY) {
+		while quan > 666 {
+			howMany++;
+			quan -= 666;
+		}
+	}
+	else {
+		howMany = quan;
+		quan = 0;
+	}
+
+	while howMany {
+		item.referent = findGoodSpot(p,t,f,qual);
+		item.toggleStatus(OWNED);
+		item.fall();
+
+		if not item {
+			foreach item in deadList {
+				item.destroy();
+			}
+
+			return NULL_REF;
+		}
+		else {
+			if (getFamilyOfType(t) = QUAN_FAMILY) or (getFamilyOfType(t) = REAGENT_FAMILY) {
+				item.setQuantity(666);
+				quanFrame(item);
+			}
+
+			deadList += <<item>>;
+
+			howMany--;
+		}
+	}
+
+	if quan	{
+		item.referent = findGoodSpot(p,t,f,qual);
+		item.toggleStatus(OWNED);
+		item.fall();
+
+		if not item {
+			foreach item in deadList {
+				item.destroy();
+			}
+
+			return NULL_REF;
+		}
+
+		item.setQuantity(quan);
+		quanFrame(item);
+	}
+
+	return item.referent;
+}
+
+// TEST (Note: Remember to change createNear, createMany and findGoodSpot
+// 			   from a routine to a process in free.def and free.unk when
+//			   testing with wait().
+
+routine findGoodSpot(p:WorldPoint,t:Type,f:Frame,qual:Quality):Referent {
+	item : Item;
+
+	x : Coord = p.x;
+	y : Coord = p.y;
+	z : Alti = p.z;
+
+	done : Boolean = false;
+
+	dir,stage,limit,count : Number;
+
+	dir = 1;
+	stage = 1;
+	limit = 8;
+	count = limit / 4;
+
+	// TEST
+	// egg : Item;
+	// dur : Number = 2;
+
+	while (done = false) and (limit <= 120) {
+		while (dir <= limit) and (done = false) {
+			if dir = 1 {						// Initial move
+				if limit = 8 {
+					y -= 16;
+				}
+				else {
+					x += 16;
+				}
+
+				x += 16;
+				y -= 16;
+			}
+			else if (stage = 1) and	(count != 0) {	// First leg
+				y += 16;
+				count--;
+			}
+			else if (stage = 2) and	(count != 0) {	// Second leg
+				x -= 16;
+				count--;
+			}
+			else if (stage = 3) and	(count != 0) {	// Third leg
+				y -= 16;
+				count--;
+			}
+			else if (stage = 4) and	(count != 0) {	// Fourth leg
+				x += 16;
+				count--;
+			}
+
+			if dir <= limit	{
+				// TEST
+				// egg.legal_create(TypePathMarker,0:Frame,x,y,z:Coord);
+				// wait(dur);
+				// egg.destroy();
+
+				if item.legal_create(t,f,x,y,z:Coord) {
+					done = true;
+				}
+				else {
+					if not count {
+						count = limit / 4;
+						stage++;
+					}
+				}
+			}
+			dir++;
+		}
+
+		limit += 8;
+		dir = 1;
+		stage = 1;
+		count = limit / 4;
+	}
+
+	if done {
+		if item.getFamily() = QUAL_FAMILY {
+			item.setQuality(qual);
+
+		}
+
+		return item.referent;
+	}
+
+	return false;
+}
+
+routine combine(i:Item) {
+	item,ref,cont : Item;
+	itemList : Item List;
+	element : Number = 1;
+	tempQuan,quan : Quantity;
+
+	ref = i;
+	quan = ref.getQuantity();
+	cont.referent = ref.getContainer();
+
+	if (ref.getFamily() = QUAN_FAMILY) or (ref.getFamily() = REAGENT_FAMILY) {
+		if cont {
+			foreach item where
+				type = ref.getType()
+				within container cont {
+
+				if (item != i) and ((ref.getFamily() = QUAN_FAMILY) or (ref.getFrame() = item.getFrame())) {
+					itemList += <<item>>;
+				}
+			}
+
+			while (quan) and (itemList[element]) {
+				item = itemList[element];
+				tempQuan = item.getQuantity() + ref.getQuantity();
+
+				if (tempQuan != 0) and (tempQuan <= 666) {
+					item.setQuantity(tempQuan);
+					quanFrame(item);
+
+					ref.destroy();
+					quan -= quan;
+				}
+
+				element++;
+			}
+		}
+
+		if quan {
+			quanFrame(i);
+		}
+	}
+}
+
+routine quanFrame(i:Item) {
+	f : Frame;
+	q : Quantity = i.getQuantity();
+
+	if i.getFamily() = QUAN_FAMILY {	// reagents don't set frame
+		if q = 0 {
+			f = 0;
+		}
+		else if q <= 8 {
+			f = q - 1;
+		}
+		else {
+			f = 7;
+		}
+
+		popFrame(i,f);
+	}
+}
+
+routine popFrame(i:Item,f:Frame) {
+	i.push();
+	i.setFrame(f);
+	i.pop();
+}
+
+//process healAvatar(a:Number,b:Number) {		// Heal from a to b pts.
+//	[[PT_DEFAULT, Avatar:Referent]];
+//
+//	Avatar.bark("Lord have mercy, I am healed!!!");
+//}
+
+routine getHour():Number {
+	hour : Number = TimeInGameHours() modulo 24;
+	return hour;
+}
+
+routine getPeriod():Number {
+	hour : Number = getHour() / 4;
+	return hour;
+}
+
+routine setHour(newHour:Number) {
+	hour : Number = TimeInGameHours() modulo 24;
+
+	if newHour > hour {
+		SetTimeInGameHours(hour + newHour + TimeInGameHours());
+	}
+	else {
+		SetTimeInGameHours((23 - hour) + newHour + TimeInGameHours());
+	}
+}
+
+routine setPeriod(newPeriod:Number) {
+	period : Number = getHour() / 4;
+
+	if newPeriod > period {
+		SetTimeInGameHours(((period + newPeriod) * 4) + TimeInGameHours());
+	}
+	else {
+		SetTimeInGameHours((((5 - period) + newPeriod) * 4) + TimeInGameHours());
+	}
+}
+
+routine countNumList(list:Number List):Number {
+	member,count : Number;
+	count = 0;
+
+	foreach member in list {
+		count++;
+	}
+
+	return count;
+}
+
+routine countStrList(list:String List):Number {
+	member : String;
+	count : Number = 0;
+
+	foreach member in list {
+		count++;
+	}
+
+	return count;
+}
+
+process safePlaySFX(soundNum:Number,priority:Number) {
+	[[PT_FX, NULL_REF]];
+
+	playSFX(soundNum,priority);
+
+	while isSFXPlaying(soundNum) {
+		wait(1);
+	}
+}
+
+process safePlaySFX(soundNum:Number,priority:Number,volume:Number) {
+	[[PT_FX, NULL_REF]];
+
+	playSFX(soundNum,priority);
+	setVolumeSFX(soundNum,volume);
+
+	while isSFXPlaying(soundNum) {
+		wait(1);
+	}
+}
+
+routine killProcess(r:Referent, ptype:Word) {
+	Kernel::resetRef(r,ptype);
+}
+
+routine inView(x:Coord,y:Coord):Boolean {
+	if (Avatar.getX() >= (x - 512)) and (Avatar.getX() <= (x + 512)) and
+		(Avatar.getY() >= (y - 512)) and (Avatar.getY() <= (y + 512)) {
+
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+process changeRef(oldref:Referent, ptype:Word, newref:Referent) {
+	[[PT_DEFAULT,NULL_REF]];
+
+	startup {
+		x,dx,y,dy : Coord;
+
+		Camera::setCenterOn(0);
+	}
+
+	process {
+		x = Camera::getX();
+		y = Camera::getY();
+
+		while inView(x,y) {
+			wait(1);
+		}
+
+		dx = x - Avatar.getX();
+		dy = y - Avatar.getY();
+
+		Camera::move_to(Avatar.getX() - dx,Avatar.getY() - dy,Avatar.getZ(),Avatar.getMap());
+	}
+}
+
+/*
+process targetXY():Number List {
+	x,y : Number;
+	coords : Number List;
+	whatTheFuckIsADWord : DWord = targetCoords();
+
+	x = whatTheFuckIsADWord / 0x10000;
+	y = whatTheFuckIsADWord : Number;
+
+	coords = x;
+	coords += y;
+
+	return coords;
+}
+*/
+
+routine getCharges(focus:Item,spell:Number,mana:Number):Number {
+	charge : Number = 0;
+
+	// Ignite
+	if spell = 1 {
+		// SPECIAL SYMBOL
+		if focus.getFrame() = 20 {
+			charge = 1;
+		}
+		// SYMBOL
+		else if ((focus.getFrame() >= 12) and (focus.getFrame() <= 14)) or
+			(focus.getFrame() = 19) {
+
+			charge = randRange(5,10);
+			charge += (Avatar.getMana() / 5);
+		}
+		// WAND
+		else if ((focus.getFrame() >= 0) and (focus.getFrame() <= 2)) or
+			(focus.getFrame() = 15) {
+
+			charge = randRange(5,10);
+			charge += (Avatar.getMana() / 6);
+		}
+		// ROD
+		else if ((focus.getFrame() >= 3) and (focus.getFrame() <= 5)) or
+			(focus.getFrame() = 16) {
+
+			charge = randRange(6,12);
+			charge += (Avatar.getMana() / 5);
+		}
+		// STAFF
+		else if ((focus.getFrame() >= 6) and (focus.getFrame() <= 8)) or
+			(focus.getFrame() = 17) {
+
+			charge = randRange(10,20);
+			charge += (Avatar.getMana() / 4);
+		}
+	}
+	// Extinguish
+	else if spell = 2 {
+		// SPECIAL SYMBOL
+		if focus.getFrame() = 20 {
+			charge = 1;
+		}
+		// SYMBOL
+		if ((focus.getFrame() >= 12) and (focus.getFrame() <= 14)) or
+			(focus.getFrame() = 19) {
+
+			charge = randRange(5,10);
+			charge += (Avatar.getMana() / 5);
+		}
+		// WAND
+		else if ((focus.getFrame() >= 0) and (focus.getFrame() <= 2)) or
+			(focus.getFrame() = 15) {
+
+			charge = randRange(5,10);
+			charge += (Avatar.getMana() / 6);
+		}
+		// ROD
+		else if ((focus.getFrame() >= 3) and (focus.getFrame() <= 5)) or
+			(focus.getFrame() = 16) {
+
+			charge = randRange(6,12);
+			charge += (Avatar.getMana() / 5);
+		}
+		// STAFF
+		else if ((focus.getFrame() >= 6) and (focus.getFrame() <= 8)) or
+			(focus.getFrame() = 17) {
+
+			charge = randRange(10,20);
+			charge += (Avatar.getMana() / 4);
+		}
+	}
+	// Flash
+	else if spell = 3 {
+		// SPECIAL SYMBOL
+		if focus.getFrame() = 20 {
+			charge = 1;
+		}
+		// SYMBOL
+		if ((focus.getFrame() >= 12) and (focus.getFrame() <= 14)) or
+			(focus.getFrame() = 19) {
+
+			charge = 1;
+		}
+		// WAND
+		else if ((focus.getFrame() >= 0) and (focus.getFrame() <= 2)) or
+			(focus.getFrame() = 15) {
+
+			charge = randRange(5,10);
+			charge += (Avatar.getMana() / 6);
+		}
+		// ROD
+		else if ((focus.getFrame() >= 3) and (focus.getFrame() <= 5)) or
+			(focus.getFrame() = 16) {
+
+			charge = randRange(6,12);
+			charge += (Avatar.getMana() / 5);
+		}
+		// STAFF
+		else if ((focus.getFrame() >= 6) and (focus.getFrame() <= 8)) or
+			(focus.getFrame() = 17) {
+
+			charge = randRange(10,20);
+			charge += (Avatar.getMana() / 4);
+		}
+	}
+	// Flame Bolt
+	else if spell = 4 {
+		// SPECIAL SYMBOL
+		if focus.getFrame() = 20 {
+			charge = 1;
+		}
+		// SYMBOL
+		if ((focus.getFrame() >= 12) and (focus.getFrame() <= 14)) or
+			(focus.getFrame() = 19) {
+
+			charge = 1;
+		}
+		// WAND
+		else if ((focus.getFrame() >= 0) and (focus.getFrame() <= 2)) or
+			(focus.getFrame() = 15) {
+
+			charge = randRange(4,9);
+			charge += (Avatar.getMana() / 7);
+		}
+		// ROD
+		else if ((focus.getFrame() >= 3) and (focus.getFrame() <= 5)) or
+			(focus.getFrame() = 16) {
+
+			charge = randRange(6,12);
+			charge += (Avatar.getMana() / 5);
+		}
+		// STAFF
+		else if ((focus.getFrame() >= 6) and (focus.getFrame() <= 8)) or
+			(focus.getFrame() = 17) {
+
+			charge = randRange(10,20);
+			charge += (Avatar.getMana() / 4);
+		}
+	}
+	// Endure Heat
+	else if spell = 5 {
+		// SPECIAL SYMBOL
+		if focus.getFrame() = 20 {
+			charge = 1;
+		}
+		// SYMBOL
+		if ((focus.getFrame() >= 12) and (focus.getFrame() <= 14)) or
+			(focus.getFrame() = 19) {
+
+			charge = 1;
+		}
+		// ROD
+		else if ((focus.getFrame() >= 3) and (focus.getFrame() <= 5)) or
+			(focus.getFrame() = 16) {
+
+			charge = randRange(5,10);
+			charge += (Avatar.getMana() / 5);
+		}
+		// STAFF
+		else if ((focus.getFrame() >= 6) and (focus.getFrame() <= 8)) or
+			(focus.getFrame() = 17) {
+
+			charge = randRange(7,14);
+			charge += (Avatar.getMana() / 5);
+		}
+	}
+	// Fire Shield
+	else if spell = 6 {
+		// SPECIAL SYMBOL
+		if focus.getFrame() = 20 {
+			charge = 1;
+		}
+		// SYMBOL
+		if ((focus.getFrame() >= 12) and (focus.getFrame() <= 14)) or
+			(focus.getFrame() = 19) {
+
+			charge = 1;
+		}
+		// ROD
+		else if ((focus.getFrame() >= 3) and (focus.getFrame() <= 5)) or
+			(focus.getFrame() = 16) {
+
+			charge = randRange(4,8);
+			charge += (Avatar.getMana() / 7);
+		}
+		// STAFF
+		else if ((focus.getFrame() >= 6) and (focus.getFrame() <= 8)) or
+			(focus.getFrame() = 17) {
+
+			charge = randRange(5,10);
+			charge += (Avatar.getMana() / 5);
+		}
+	}
+	// Armor of Flames
+	else if spell = 7 {
+		// SPECIAL SYMBOL
+		if focus.getFrame() = 20 {
+			charge = 1;
+		}
+		// SYMBOL
+		if ((focus.getFrame() >= 12) and (focus.getFrame() <= 14)) or
+			(focus.getFrame() = 19) {
+
+			charge = 1;
+		}
+		// ROD
+		else if ((focus.getFrame() >= 3) and (focus.getFrame() <= 5)) or
+			(focus.getFrame() = 16) {
+
+			charge = randRange(3,6);
+			charge += (Avatar.getMana() / 10);
+		}
+		// STAFF
+		else if ((focus.getFrame() >= 6) and (focus.getFrame() <= 8)) or
+			(focus.getFrame() = 17) {
+
+			charge = randRange(4,8);
+			charge += (Avatar.getMana() / 7);
+		}
+	}
+	// Create Fire
+	else if spell = 8 {
+		// SPECIAL SYMBOL
+		if focus.getFrame() = 20 {
+			charge = 1;
+		}
+		// SYMBOL
+		if ((focus.getFrame() >= 12) and (focus.getFrame() <= 14)) or
+			(focus.getFrame() = 19) {
+
+			charge = 1;
+		}
+		// STAFF
+		else if ((focus.getFrame() >= 6) and (focus.getFrame() <= 8)) or
+			(focus.getFrame() = 17) {
+
+			charge = randRange(4,8);
+			charge += (Avatar.getMana() / 7);
+		}
+	}
+	// Explosion
+	else if spell = 9 {
+		// SPECIAL SYMBOL
+		if focus.getFrame() = 20 {
+			charge = 1;
+		}
+		// SYMBOL
+		if ((focus.getFrame() >= 12) and (focus.getFrame() <= 14)) or
+			(focus.getFrame() = 19) {
+
+			charge = 1;
+		}
+		// STAFF
+		else if ((focus.getFrame() >= 6) and (focus.getFrame() <= 8)) or
+			(focus.getFrame() = 17) {
+
+			charge = randRange(3,6);
+			charge += (Avatar.getMana() / 10);
+		}
+	}
+	// Summon Daemon
+	else if spell = 10 {
+		// SPECIAL SYMBOL
+		if focus.getFrame() = 20 {
+			charge = 1;
+		}
+		// SYMBOL
+		if ((focus.getFrame() >= 12) and (focus.getFrame() <= 14)) or
+			(focus.getFrame() = 19) {
+
+			charge = 1;
+		}
+		// TALISMAN
+		else if ((focus.getFrame() >= 9) and (focus.getFrame() <= 11)) or
+			(focus.getFrame() = 18) {
+
+			charge = randRange(3,6);
+			charge += (Avatar.getMana() / 10);
+		}
+	}
+	// Banish Daemon
+	else if spell = 11 {
+		// SPECIAL SYMBOL
+		if focus.getFrame() = 20 {
+			charge = 1;
+		}
+		// SYMBOL
+		if ((focus.getFrame() >= 12) and (focus.getFrame() <= 14)) or
+			(focus.getFrame() = 19) {
+
+			charge = 1;
+		}
+		// TALISMAN
+		else if ((focus.getFrame() >= 9) and (focus.getFrame() <= 11)) or
+			(focus.getFrame() = 18) {
+
+			charge = randRange(3,6);
+			charge += (Avatar.getMana() / 10);
+		}
+	}
+	// Conflagration
+	else if spell = 12 {
+		// SPECIAL SYMBOL
+		if focus.getFrame() = 20 {
+			charge = 1;
+		}
+		// SYMBOL
+		if ((focus.getFrame() >= 12) and (focus.getFrame() <= 14)) or
+			(focus.getFrame() = 19) {
+
+			charge = 1;
+		}
+		// TALISMAN
+		else if ((focus.getFrame() >= 9) and (focus.getFrame() <= 11)) or
+			(focus.getFrame() = 18) {
+
+			charge = 1;
+
+			if Avatar.getMana() >= 25 {
+				charge++;
+			}
+		}
+	}
+
+	return charge;
+}
+
+routine activeFrame(focus:Item):Frame {
+	// SYMBOL
+	if ((focus.getFrame() >= 12) and (focus.getFrame() <= 14)) or
+		(focus.getFrame() = 19) {
+
+		return 12;
+	}
+	// WAND
+	else if ((focus.getFrame() >= 0) and (focus.getFrame() <= 2)) or
+		(focus.getFrame() = 15) {
+
+		return 0;
+	}
+	// ROD
+	else if ((focus.getFrame() >= 3) and (focus.getFrame() <= 5)) or
+		(focus.getFrame() = 16) {
+
+		return 3;
+	}
+	// STAFF
+	else if ((focus.getFrame() >= 6) and (focus.getFrame() <= 8)) or
+		(focus.getFrame() = 17) {
+
+		return 6;
+	}
+	// TALISMAN
+	else if ((focus.getFrame() >= 9) and (focus.getFrame() <= 11)) or
+		(focus.getFrame() = 18) {
+
+		return 9;
+	}
+}
+
+routine listTop(list:String List,line:String):String List {
+	temp : String List = list;
+	list = <<line>>;
+	list += temp;
+
+	return list;
+}
+
+routine listTop(list:String List,lines:String List):String List {
+	temp : String List = list;
+	list = lines;
+	list += temp;
+
+	return list;
+}
+
+routine listEnd(list:String List,line:String):String List {
+	list -= <<line>>;
+	list += <<line>>;
+
+	return list;
+}
+
+routine listEnd(list:String List,lines:String List):String List {
+	line : String;
+
+	foreach line in lines {
+		list -= <<line>>;
+	}
+
+	list += lines;
+
+	return list;
+}
+
+routine unkCloseAllGumps():Boolean {
+	closedGump : Boolean = false;
+	item : Item;
+
+	foreach recursive item where family = CONTAINER_FAMILY within 30 cells of
+		Avatar:Referent {
+
+		if item.getStatus() & CONTAINER_GUMP_OPEN {
+			if item.isNpc() {
+				item.closeGump();
+			}
+			else {
+				spawn item.use()-> return;
+			}
+
+			closedGump = true;
+		}
+	}
+
+	if Avatar.getStatus() & CONTAINER_GUMP_OPEN {
+		Avatar.closeGump();
+		closedGump = true;
+	}
+
+	return closedGump;
+}
+
+process tonyStinksSoBadIhadToLeaveTheRoom(sphincterBoyTony:Npc,x:Coord,y:Coord,z:Alti) {
+	[[PT_DEFAULT,NULL_REF]];
+
+	p : WorldPoint;
+
+	Malchir.realDoAnim(AS_ENTER_CAST,Malchir.getDir());
+	Malchir.realDoAnim(AS_CAST3,Malchir.getDir());
+
+	p.x = sphincterBoyTony.getX() + 96;
+	p.y = sphincterBoyTony.getY() + 96;
+	p.z = sphincterBoyTony.getZ() + 8;
+
+	killProcess(sphincterBoyTony.referent,PT_ANIM);
+	spawn flameBlast(p)-> return;
+	wait(25);
+	
+	sphincterBoyTony.toggleStatus(INVISIBLE);
+	sphincterBoyTony.toggleStatus(OWNED);
+	wait(35);
+	
+	sphincterBoyTony.teleport(x,y,z,MapDaemonsCrag);
+	sphincterBoyTony.toggleStatus(INVISIBLE);
+	sphincterBoyTony.toggleStatus(OWNED);
+
+	spawn sphincterBoyTony.schedule(TimeInGameHours():Long)-> return;
+
+	Malchir.realDoAnim(AS_CAST3,Malchir.getDir());
+	Malchir.realDoAnim(AS_EXIT_CAST,Malchir.getDir());
+
+// GIVE THE TONGUE OF FLAME AND BOOK THAT DESCRIBES IT.
+// ----------------------------------------------------
+
+	if not hasTongue {
+		Avatar.setHp(Avatar.getStr() * 2);
+
+		hasTongue = true;
+		tongue : Item;
+	
+		tongue.create(TypeBlackrockFragments,4);
+		tongue.pop(Malchir:Referent);
+	
+		tongue.create(TypeMagArms,0);
+		tongue.pop(Malchir:Referent);
+		
+		tongue.create(TypeScroll,0);
+		tongue.pop(Malchir:Referent);
+		tongue.setQuality(15);
+		
+		tongue.create(TypeGrimoire,1);
+		tongue.pop(Malchir:Referent);
+		tongue.setQuality(8);
+	}
+}
+
+
+process makeAvatarTiny()
+{
+	[[PT_DEFAULT,NULL_REF]];
+
+	Avatar.bark("I'm feeling funny.");
+	Avatar.bark("Something strange is happening to me.");
+
+	setAvatarInStasis(true);
+
+	while Avatar.isBusy()
+	{
+		wait(1);
+	}
+
+	playSFX(MIXSPELL,100);
+	Avatar.turnToFace(southeast,RANDOM,7);
+	
+	LightningBolt();
+	wait(10);
+	playSFX(LTNING1A,100);
+	
+	setAvatarInStasis(true);
+	Camera::setCenterOn(0);
+
+	Avatar.setType(TypeTinytar);
+	Avatar.setFrame(60);
+
+	while Avatar.getFrame() < 69
+	{
+		Avatar.setFrame(Avatar.getFrame() + 1);
+		
+		if Avatar.getFrame() < 69
+		{
+			Camera::move_to(Camera::getX(),Camera::getY(),Camera::getZ() - 1, Avatar.getMap());
+			wait(5);
+			
+			Camera::move_to(Camera::getX(),Camera::getY(),Camera::getZ() - 1, Avatar.getMap());
+			wait(5);
+		}
+	}
+
+	Avatar.realDoAnim(AS_STAND,southeast);
+	Camera::setCenterOn(Avatar:Referent);
+
+	setAvatarInStasis(false);
+
+}
+
+process makeAvatarBig()
+{
+	[[PT_DEFAULT,NULL_REF]];
+
+	Avatar.bark("Uh oh...");
+
+	setAvatarInStasis(true);
+
+	while Avatar.isBusy()
+	{
+		wait(1);
+	}
+
+	Camera::setCenterOn(0);
+
+	playSFX(MIXSPELL,100);
+	Avatar.turnToFace(southeast,RANDOM,7);
+
+	teleX,teleY,teleZ:Number;
+	teleX=Avatar.getX();
+	teleY=Avatar.getY();
+	teleZ=Avatar.getZ();
+
+	spawn LightningBolt()-> return;
+	Avatar.teleport(0,0,0,Avatar.getMap());
+	if not canExistAt(TypeAvatar,teleX,teleY,teleZ,1,0,0)
+	{
+      Avatar.receiveHit(1:Referent, 4:Dir, Avatar.getHp(),DMG_FULL);
+		wait(10);
+		playSFX(LTNING1A,100);
+		return;
+	}
+
+	Avatar.teleport(teleX,teleY,teleZ,Avatar.getMap());
+	wait(10);
+	playSFX(LTNING1A,100);
+
+	Avatar.setFrame(69);
+
+
+	while Avatar.getFrame() > 60
+	{
+		Avatar.setFrame(Avatar.getFrame() - 1);
+		Avatar.touch();
+		
+		if Avatar.getFrame() > 60
+		{
+			Camera::move_to(Camera::getX(),Camera::getY(),Camera::getZ() + 1, Avatar.getMap());
+			wait(5);
+	
+			Camera::move_to(Camera::getX(),Camera::getY(),Camera::getZ() + 1, Avatar.getMap());
+			wait(5);
+		}
+	}
+
+	Avatar.setType(TypeAvatar);
+	Avatar.setFrame(3);
+	Avatar.realDoAnim(AS_STAND,southeast);
+
+	Camera::setCenterOn(Avatar:Referent);
+
+	setAvatarInStasis(false);
+
+}
+
+process first() {
+	[[PT_DEFAULT, NULL_REF]];
+
+	agent:Npc;
+	monster : Npc;
+	fire:Item;
+
+	setAvatarInStasis(true);
+	fire.create(TypeFireblast,0);
+	fire.pop(Avatar.getX() + 20,Avatar.getY() + 20,Avatar.getZ());
+	
+	agent.create (TypeSorcerer,0);
+	agent.pop (fire.getX(), fire.getY(), fire.getZ());
+	fire.destroy();
+	spawn agent.turnToFace(Avatar.getDirToItem(agent.referent),false,10) -> return;
+
+	answer,sentence:String;
+	noBye, bye2, timedOut:Boolean;
+
+	agent.enterConvo();
+
+	askList:String List;
+
+	agent.bark ("Wait!");
+
+	askList+=<<"Who are you?">>;
+
+	while answer!="Goodbye. \f Adieu. \g Lebt wohl." {
+		if (noBye = 0) and (bye2 = 0) {
+			askList-=<<"Goodbye. \f Adieu. \g Lebt wohl.">>;
+			askList+=<<"Goodbye. \f Adieu. \g Lebt wohl.">>;
+		}
+		answer=Avatar.ask(askList);
+
+		switch answer {
+			case "Who are you?" {
+				agent.bark ("None other than someone who cares for the 
+					balance and stability of this world.");
+				askList+=<<"What balance?","What do you mean?">>;
+				askList-=<<"Who are you?">>;
+			}
+
+			case "What balance?","What do you mean?" {
+				agent.bark ("Why, your action itself upsets the balance. By 
+					taking the talisman you begin the process of destruction
+					that could lead to the end of all life on Pagan! I must
+					depart before I am caught, but heed my words!");
+				askList-=<<"What balance?","What do you mean?">>;
+				answer="Goodbye.";
+			}
+		}
+	}
+
+	agent.exitConvo();
+
+	fire.create(TypeFireblast,0);
+	fire.pop(agent.getX(),agent.getY(),agent.getZ());
+	
+	agent.destroy();
+	fire.destroy();
+	setAvatarInStasis(false);
+
+
+/*	agent.bark ("So, you have come to disrupt the balance here! Well, know
+		then that I cannot allow you to do so!");
+
+	monster.create (TypeGhoul, 0);
+	monster.pop (Avatar.getX(),Avatar.getY(),Avatar.getZ());
+	monster.setEnemyAlignment(EA_GOOD);
+	monster.setInCombat();
+	monster.setTarget(Avatar:Referent);
+
+	agent.bark ("And now I go to let my friend take care of you!");
+	createSprite(TypeFireblast,0,9,9,1,1,agent.getX()+14,agent.getY()+14,agent.getZ()+8);
+	agent.destroy();
+
+	destroy();
+*/
+	doneOne = 1;
+//	destroy();
+	return;
+}
+
+process second() {
+	[[PT_DEFAULT, NULL_REF]];
+
+	agent:Npc;
+	monster : Npc;
+	fire:Item;
+
+	setAvatarInStasis(true);
+	fire.create(TypeFireblast,0);
+	fire.pop(Avatar.getX() + 20,Avatar.getY() + 20,Avatar.getZ());
+	
+	agent.create (TypeSorcerer,0);
+	agent.pop (fire.getX(), fire.getY(), fire.getZ());
+	fire.destroy();
+	spawn agent.turnToFace(Avatar.getDirToItem(agent.referent),false,10) -> return;
+
+	answer,sentence:String;
+	noBye, bye2, timedOut:Boolean;
+
+	agent.enterConvo();
+
+	askList:String List;
+
+	agent.bark ("You fool! Did you not hear me before? The scales are sliding.");
+
+	askList+=<<"Scales?">>;
+
+	while answer!="Goodbye. \f Adieu. \g Lebt wohl." {
+		if (noBye = 0) and (bye2 = 0) {
+			askList-=<<"Goodbye. \f Adieu. \g Lebt wohl.">>;
+			askList+=<<"Goodbye. \f Adieu. \g Lebt wohl.">>;
+		}
+		answer=Avatar.ask(askList);
+
+		switch answer {
+			case "Scales?" {
+				agent.bark ("Aye! The balance is shifting.");
+				askList+=<<"Explain this shifting balance!">>;
+				askList-=<<"Scales?">>;
+			}
+
+			case "Explain this shifting balance!" {
+				agent.bark ("You do not know of the delicate balance between
+					the Titans and yet still you tamper iconiclastically with 
+					their symbols? Do you not understand the function of these
+					talismans?");
+				askList-=<<"Explain this shifting balace!">>;
+				askList+=<<"They will release the seal.","No, I don't understand.">>;
+			}
+
+			case "No, I don't understand." {
+			 	agent.bark ("Then cease your attempts to change that which
+					must be, and return what you have changed to what was!");
+				askList-=<<"No, I don't understand.">>;
+				answer="Goodbye.";
+			}
+
+			case "They will release the seal." {
+				agent.bark ("Then, if you -do- understand, why are you 
+					attempting to take them. The balance between the Titans
+					is tenuous. Do not weaken what little of the bonds is 
+					still in place. ~It is time for me to go. Someone is 
+					trying to locate me. Quickly, return the talismans to
+					their proper home and disaster may be averted.");
+				answer="Goodbye.";
+			}
+		}
+	}
+
+	agent.exitConvo();
+	
+	fire.create(TypeFireblast,0);
+	fire.pop(agent.getX(),agent.getY(),agent.getZ());
+	
+	setAvatarInStasis(false);
+	agent.destroy();
+	fire.destroy();
+
+
+/*	agent.create (TypeSorcerer,0);
+	agent.pop (Avatar.getX(), Avatar.getY(), Avatar.getZ());
+	spawn agent.turnToFace(Avatar.getDirToItem(agent.referent),false,10) -> return;
+
+	agent.bark ("Did you not learn from your first error? then let me teach 
+		you a lesson!");
+
+	fire,lightning:Item;
+	counter:Number;
+	offSet:Number = (250 - Avatar.getZ()) * 4;
+
+	agent.bark ("Kal Vas Grav Corp!");
+
+	spawn safePlaySFX(LTNING1A,100) -> return;
+	LightningBolt();
+	lightning.create(TypeLightning,0);
+	lightning.pop(Avatar.getX() + offSet,Avatar.getY() + offSet,250);
+	playSFX(EXPLODE3,200);
+
+	for counter = 0 to 4 {
+		lightning.setFrame(counter);
+		wait(4);
+	}
+
+	spawn safePlaySFX(LTNING1A,100) -> return;
+	lightning.destroy();
+
+	fire.create(TypeFireblast,0);
+	fire.pop(Avatar.getX() + offSet,Avatar.getY() + offSet,249);
+	Avatar.setHp (Avatar.getHp() - 10);
+//  Avatar.receiveHit(referent, Avatar.getDir(), Avatar.getHp(),DMG_FULL);
+	
+	spawn Avatar.realDoAnim(AS_FALL_DOWN,3) -> return;
+
+	for counter = 0 to 9 {
+		fire.setFrame(counter);
+		wait(10);
+		}
+
+	fire.destroy();
+	spawn safePlaySFX(LTNING1A,100) -> return;
+	LightningBolt();
+	
+	agent.bark ("Learn from that, fool!");
+	createSprite(TypeFireblast,0,9,9,1,1,agent.getX()+14,agent.getY()+14,agent.getZ()+8);
+	agent.destroy();
+*/
+	doneTwo = 1;
+//	destroy();
+	return;
+}
+
+process third() {
+	[[PT_DEFAULT, NULL_REF]];
+
+	agent:Npc;
+	monster : Npc;
+	fire:Item;
+
+	setAvatarInStasis(true);
+	fire.create(TypeFireblast,0);
+	fire.pop(Avatar.getX() + 20,Avatar.getY() + 20,Avatar.getZ());
+	
+	agent.create (TypeSorcerer,0);
+	agent.pop (fire.getX(), fire.getY(), fire.getZ());
+	fire.destroy();
+	spawn agent.turnToFace(Avatar.getDirToItem(agent.referent),false,10) -> return;
+
+	answer,sentence:String;
+	noBye, bye2, timedOut:Boolean;
+
+	agent.enterConvo();
+
+	askList:String List;
+
+	agent.bark ("You continue despite my warnings? Woe to us all. I beg you to 
+		stop before we are all consumed in the cataclysm!");
+
+	askList+=<<"What cataclysm?">>;
+
+	while answer!="Goodbye. \f Adieu. \g Lebt wohl." {
+		if (noBye = 0) and (bye2 = 0) {
+			askList-=<<"Goodbye. \f Adieu. \g Lebt wohl.">>;
+			askList+=<<"Goodbye. \f Adieu. \g Lebt wohl.">>;
+		}
+		answer=Avatar.ask(askList);
+
+		switch answer {
+			case "What cataclysm?" {
+				agent.bark ("Think what would happen if all four of the talismans
+					were removed and the columns destroyed. Know you what lies 
+					beyond?");
+				askList+=<<"The Lost Vale.","No.">>;
+				askList-=<<"What cataclysm?">>;
+			}
+
+			case "The Lost Vale." {
+				agent.bark ("Oh. You do know.  Well then, you should know
+					exactly what the concern is! With the columns removed,
+					access will be possible to the sealed valley. And, perhaps 
+					more importantly, -from- the valley. There is no limit to the
+					amount of danger and destruction that could lead to! ~With
+					three of the talismans already taken from their resting places,
+					this could be your last chance. Please, do not undo the past
+					ages of peace. You are the only hope we have. Farewell.");
+				answer="Goodbye.";
+				askList-=<<"The Lost Vale.">>;
+			}
+
+			case "No." {
+			 	agent.bark ("Disease, plague, famine, destruction. What lies beyond
+					the four columns is nothing other than pure evil. To release
+					whatever malevolent forces reside within would be injustice, 
+					and insanity.
+					~With three of the talismans already taken from their resting 
+					places,	this could be your last chance. Please, do not undo the past
+					ages of peace. You are the only hope we have. Farewell.");
+				answer="Goodbye.";
+			}
+		}
+	}
+
+	agent.exitConvo();
+	
+	fire.create(TypeFireblast,0);
+	fire.pop(agent.getX(),agent.getY(),agent.getZ());
+	
+	setAvatarInStasis(false);
+	agent.destroy();
+	fire.destroy();
+
+/*	agent.create (TypeSorcerer,0);
+	agent.pop (Avatar.getX(), Avatar.getY(), Avatar.getZ());
+	spawn agent.turnToFace(Avatar.getDirToItem(agent.referent),false,10) -> return;
+
+	agent.bark ("Your antics are quite tiresome. You will cease your actions.");
+
+	monster.create (TypeSkeleton, 0);
+	monster.pop (Avatar.getX(),Avatar.getY(),Avatar.getZ());
+	monster.setEnemyAlignment(EA_GOOD);
+	monster.setInCombat();
+	monster.setTarget(Avatar:Referent);
+
+	agent.bark ("Enjoy the company of my friend!");
+	createSprite(TypeFireblast,0,9,9,1,1,agent.getX()+14,agent.getY()+14,agent.getZ()+8);
+	agent.destroy();
+*/
+	doneThree = 1;
+//	destory();
+	return;
+}
+
+process fourth() {
+	[[PT_DEFAULT, NULL_REF]];
+
+	agent:Npc;
+	fire:Item;
+
+	setAvatarInStasis(true);
+	fire.create(TypeFireblast,0);
+	fire.pop(Avatar.getX() + 20,Avatar.getY() + 20,Avatar.getZ());
+	
+	agent.create (TypeSorcerer,0);
+	agent.pop (fire.getX(), fire.getY(), fire.getZ());
+	fire.destroy();
+	spawn agent.turnToFace(Avatar.getDirToItem(agent.referent),false,10) -> return;
+
+	answer,sentence:String;
+	noBye, bye2, timedOut:Boolean;
+
+	agent.enterConvo();
+
+	askList:String List;
+
+	agent.bark ("I cannot believe you have continued this far! Are you, perhaps
+		looking to bring an end to Pagan? Did I not make it clear... Oh, no!
+		They have found me! I must go. Flee for your own safety!");
+
+	agent.exitConvo();
+	
+	fire.create(TypeFireblast,0);
+	fire.pop(agent.getX(),agent.getY(),agent.getZ());
+	
+	setAvatarInStasis(false);
+	agent.destroy();
+	fire.destroy();
+
+	monster, monst2 : Npc;
+	flame1, flame2:Item;
+
+	flame1.create(TypeFireblast,0);
+	flame1.pop(Avatar.getX() - 40,Avatar.getY() - 40,Avatar.getZ());
+	flame2.create(TypeFireblast,0);
+	flame2.pop(Avatar.getX() - 40,Avatar.getY() + 40,Avatar.getZ());
+	
+	monster.create (TypeDemon, 0);
+	monst2.create (TypeDemon, 0);
+	monster.pop (flame1.getX(),flame1.getY(),flame1.getZ());
+	monst2.pop (flame2.getX(),flame2.getY(),flame2.getZ());
+	
+	flame1.destroy();
+	flame2.destroy();
+	
+	monster.setEnemyAlignment(EA_GOOD);
+	monst2.setEnemyAlignment(EA_GOOD);
+	
+	monster.setInCombat();
+	monst2.setInCombat();
+	
+	monster.setTarget(Avatar:Referent);
+	monst2.setTarget(Avatar:Referent);
+
+	doneFour = 1;
+// 	destroy();
+	return;
+}
+
+process final() {
+	[[PT_DEFAULT, NULL_REF]];
+
+	agent:Npc;
+	monster : Npc;
+	fire, flame:Item;
+
+	setAvatarInStasis(true);
+	fire.create(TypeFireblast,0);
+	fire.pop(Avatar.getX() + 20,Avatar.getY() + 20,Avatar.getZ());
+	
+	agent.create (TypeSorcerer,0);
+	agent.pop (fire.getX(), fire.getY(), fire.getZ());
+	fire.destroy();
+	agent.enterConvo();
+	spawn agent.turnToFace(Avatar.getDirToItem(agent.referent),false,10) -> return;
+
+	agent.bark ("You imbecile! You fool! You would not listen to my words of
+		warning, so now you must die. No one has entered the Lost Vale since
+		it was first sealed by the mighty Lithos and Sratos ages ago. And,
+		I think, no one shall enter it now.");
+
+	lightning:Item;
+	counter:Number;
+	offSet:Number = (250 - Avatar.getZ()) * 4;
+
+	wait(30);
+	agent.bark ("Kal Vas Grav Corp!");
+
+	spawn safePlaySFX(LTNING1A,100) -> return;
+	LightningBolt();
+	lightning.create(TypeLightning,0);
+	lightning.pop(Avatar.getX() + offSet,Avatar.getY() + offSet,250);
+	playSFX(EXPLODE3,200);
+
+	for counter = 0 to 4 {
+		lightning.setFrame(counter);
+		wait(4);
+	}
+
+	spawn safePlaySFX(LTNING1A,100) -> return;
+	lightning.destroy();
+
+	flame.create(TypeFireblast,0);
+	flame.pop(Avatar.getX() + offSet,Avatar.getY() + offSet,249);
+	Avatar.setHp (Avatar.getHp() - 10);
+//  Avatar.receiveHit(referent, Avatar.getDir(), Avatar.getHp(),DMG_FULL);
+	
+	spawn Avatar.realDoAnim(AS_FALL_DOWN,3) -> return;
+
+	for counter = 0 to 9 {
+		fire.setFrame(counter);
+		wait(10);
+		}
+
+	fire.destroy();
+	spawn safePlaySFX(LTNING1A,100) -> return;
+	LightningBolt();
+
+	agent.exitConvo();
+	
+	setAvatarInStasis(false);
+	agent.setEnemyAlignment(EA_GOOD);
+	agent.setInCombat();
+	agent.setTarget(Avatar:Referent);
+
+	doneFour = 1;
+//	destroy();
+	return;
+}
+
+process makeAgent() {
+	[[PT_DEFAULT, NULL_REF]];
+	item:Item;
+	box:Item;
+	boxQuality:Quality = box.getQuality();
+	
+	foreach recursive item within container Avatar {
+      if item.getType() = TypeTokens {
+			tokens++;
+		}
+	}
+
+	if valeDoor = 1 {
+		tokens = 5;
+	}
+	
+	if tokens = 0 {
+		return;
+	}
+	
+	if tokens = 1 {
+		if not doneOne {
+			spawn first()->return;
+			return;
+		}
+		else {
+			return;
+		}
+	}
+	
+	if tokens = 2 {
+		if not doneTwo {
+			spawn second()->return;
+			return;
+		}
+		else {
+			return;
+		}
+	}  
+	if tokens = 3 {
+		if not doneThree {
+			spawn third()->return;
+			return;
+		}
+		else {
+			return;
+		}
+	}  
+	if tokens = 4 {
+		if not doneFour {
+			spawn fourth()->return;
+			return;
+		}
+		else {
+			return;
+		}
+	}  
+
+	if tokens = 5 {
+		if not doneFinal {
+			spawn final()->return;
+			return;
+		}
+		else {
+			return;
+		}
+	}  
+}
+

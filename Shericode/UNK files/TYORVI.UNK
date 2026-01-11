@@ -1,0 +1,1829 @@
+
+// @@@ READY TO TRANSLATE GERMAN 7-20
+// @@@ CHANGES F & G
+
+uses "flags";
+uses "free";
+uses "npc";
+
+npcclass Tyorvi inherits Npc
+{
+
+	process look();
+	process use();
+	process schedule(currentTime:Long);
+	process enterFastArea();
+	process leaveFastArea();
+
+	process cast(ref:Referent);
+}
+
+
+process Tyorvi::look()
+{
+	if Tyorvi.isDead()
+	{
+		bark("Tyorvi's mortal remains
+			\f La despouille de Tyorvi
+			\g Tyorvis sterblichen šberreste");
+		return;
+	}
+
+	if tyorviName and tyorviJob
+	{
+		bark("Tyorvi, the Elder's brother
+			\f Tyorvi, le frŠre aisn‚
+			\g Tyorvi, der Bruder des Žlteren");
+		return;
+	}
+
+	else if tyorviName
+	{
+		bark("Tyorvi \fTyorvi \g Tyorvi");
+		return;
+	}
+
+	else if tyorviJob
+	{
+		bark("Elder's brother \f FrŠre aisn‚ \g");
+		return;
+	}
+
+	else
+	{
+		bark("man \f Homme \g");
+		return;
+	}
+}
+
+
+ process Tyorvi::schedule(currentTime:Long)
+{
+
+	point : WorldPoint;
+	map : MapNum = 10;
+
+
+	//Home
+
+	if (getPeriod() = daytide) or (getPeriod() = eventide)
+	or (getPeriod() = bloodwatch)
+	{
+		point.x = 11519;
+		point.y = 14079;
+		point.z = 64;
+	}
+
+
+	//At stash
+
+	if (getPeriod() = threemoons) or (getPeriod() = firstebb)
+	or (getPeriod() = lastebb)
+
+	{
+		point.x = 13695;
+		point.y = 15743;
+		point.z = 64;
+	}
+
+
+	safeTeleport(point,map);
+}
+
+process Tyorvi::enterFastArea()
+{
+	if isDead()
+	{
+		return;
+	}
+
+	cSetActivity(ACT_LOITER);
+}
+
+
+process Tyorvi::leaveFastArea()
+{
+	killProcess(referent,PT_ACTIVITY);
+	resetRef(referent,PT_PATHFIND);
+	resetRef(referent,PT_ANIM);
+	resetRef(referent,PT_BARK);
+
+	if isDead()
+	{
+		teleport(urandom(10000),urandom(10000),0,0);
+	}
+}
+
+
+process Tyorvi::cast(ref:Referent)
+{
+	count:Number;
+	count = 10;
+	while (not getTarget()) and (count)
+	{
+		wait(1);
+		count--;
+	}
+
+	ref=getTarget();
+	if ref = Avatar:Referent
+	{
+		spawn callTheShades() -> return;
+
+		if not isDead()
+		{
+			killProcess(referent,PT_ACTIVITY);
+			killProcess(referent,PT_BARK);
+			bark("Help! Help! \f A l'aide! A l'aide! \g");
+		}
+	}
+}
+
+
+process Tyorvi::use()
+{
+	ran:Number;
+   
+	if tyorviMet = true
+	{
+
+		ran = urandom(3);
+		if ran = 1
+		{
+			if tyorviName
+			{
+			Avatar.bark("Tyorvi? \f Tyorvi? \g");
+			}
+			else
+			{
+				Avatar.bark("Hello again. \f Re-salut. \g");
+			}
+		}
+
+		if ran=2
+		{
+			if tyorviName
+			{
+				Avatar.bark("Hail, Tyorvi. \f Salutations, Tyorvi. \g");
+			}
+			else
+			{
+				Avatar.bark("Pardon me, friend. \f Pardonne-moi, l'amy. \g");
+			}
+		}
+	}
+	else
+	{
+		ran = urandom(4);
+
+		if ran = 1
+		{
+			Avatar.bark("Hail! \f Salutations! \g");
+		}
+
+		if ran = 2
+		{
+			Avatar.bark("Hello, good fellow. \f Salut, mon brave. \g");
+		}
+
+		if ran = 3
+		{
+			Avatar.bark("A moment, sir. \f Un instant, Sire. \g");
+		}
+	}
+
+
+
+	askList:String List;
+	answer:String;
+	myMan:WorldPoint;
+	enterConvo();
+
+	if tyorviMet
+	{
+		if tyorviDrunk and attemptedCliffs
+		{
+			if climbedCliffs
+			{
+				askList+=<<"You weren't at the cliffs. \f Tu n'estois point sur la falaise. \g">>;
+			}
+			else
+			{
+				askList+=<<"Are you going to the cliffs? \f Te rends-tu … la falaise? \g">>;
+			}
+		}
+		else
+		{
+			if tyorviPissed
+			{
+// @@@ CHANGE F G
+				askList=<<"Calm down, Tyorvi.">>;
+			}
+			else
+			{
+				ran = urandom(100);
+
+				if (ran < 75)  or (givenTea = true)      //he's not drunk
+				{
+					if avatarPoisoned                  // if he's poisoned
+					{
+						if haveMark                    // if poisoned and has mark
+						{
+							if toldCliffs              //if poisoned, has mark
+											           //and heard of cliffs
+							{
+								askList^=<<"Tell me more of the Cliffs. \f Dis- m'en plus sur la falaise. \g">>;
+							}
+							else // poisoned, marked, not told of cliffs
+							{
+								if ezrekalMet      //send back to EZ
+								{
+									askList+=<<"I have spoken to Ezrekal. \f J'ai parl‚ … Ezrekal. \g">>;
+								}
+								else  // send to EZ
+								{
+									askList+=<<"I have the Mark. \f J'ai le Mark. \g">>;
+								}
+							}
+						}
+						else  // if poisoned, no mark send to Thordis for mark
+						{
+							askList+=<<"I have taken your test. \f J'ai pass‚ ton espreuve. \g">>;
+						}
+					}
+					else // if pc not poisoned
+					{
+						if haveMark  // not poisoned and no mark
+						             //then he has been healed
+						{
+							if templeOpen
+							{
+								if godsFree //
+								{
+									askList+=<<"I have freed the Ancient Ones! \f J'ai lib‚r‚ les Anciens! \g">>;
+								}
+								else // temple open, gods not free
+								{
+									askList+=<<"I have opened the Temple. \f J'ai ouvert le Temple. \g",
+									"I have found your Ancient Ones. \f J'ai trouv‚ tes Anciens. \g">>;
+								}
+							}
+							else // healed but not opened temple
+							{
+								askList+=<<"I have been healed! \f J'ai ‚t‚ gu‚ri! \g", "The
+								Shield of the Ancients is repaired! \f L'Escu des Anciens est respar‚! \g">>;
+							}
+						}
+						else // not poisoned, not marked, NPC not friendly
+							// send to Thordis for test
+						{
+						//	if not spokeOfVail
+						//	{
+						//		askList+=<<"What place is this? \f Quel endroit est-ce cela? \f", "I'd like to speak
+						//		to you. \f J'aimerois te parler. \g">>;
+						//	}
+						//	else
+						//	{
+								askList^=<<"I'd like to speak to you. \f J'aimerois te parler. \g">>;
+						//	}
+						}
+					}
+				}
+				else // he's drunk and tells rambling stories!
+				{
+					if spokeDrunk
+					{
+						if (spokeDrunkOne = false) and (thordisMet=true)
+						{
+							if thordisMet
+							{
+								askList+=<<"I've met Thordis. \f J'ai rencontr‚ Thordis. \g">>;
+							}
+							askList^=<<"Are you feeling alright? \f Tu te sens bien? \g">>;
+						}
+						if (spokeDrunkOne = true) and (spokeDrunkTwo = false)
+						{
+							if ingyaldMet
+							{
+								askList+=<<"I've met Ingyald. \f J'ai rencontr‚ Ingyald. \g">>;
+							}
+							askList^=<<"You don't look very good. \f Tu n'as point l'air en forme. \g">>;
+						}
+						if (spokeDrunkOne = true) and (spokeDrunkTwo = true)
+						{
+							askList^=<<"Have you been drinking again? \f Tu as recommenc‚ … boire? \g">>;
+						}
+					}
+					else // tell first drunk story and set spokeDrunkOne
+					{
+						askList+=<<"Are you OK, Tyorvi? \f €a va, Tyorvi? \g">>;
+					}
+				}
+
+			}
+		}
+	}
+	else //he's drunk the first time you meet him, regardless
+	{
+		//he's drunk, mean, belligerent, gives his name, that's all.
+		askList=<<"What is your name? \f Quel est ton nom? \g", "What do you do? \f Que fais-tu? \g">>;
+	}
+
+	if sentToTyorvi
+	{
+		askList+=<<"Do you have the Key to the Clouds? \f As-tu la Roche Magique? \g">>;
+	}
+
+	if hasTea
+	{
+		askList+=<<"I have something for you from Ezrekal.">>;
+	}
+
+
+
+	while answer!="bye \f Adieu. \g"
+	{
+		askList-=<<"bye \f Adieu. \g">>;
+		askList+=<<"bye \f Adieu. \g">>;
+		answer=ask(askList);
+		switch answer
+		{
+
+			case "What is your name? \f Quel est ton nom? \g"
+			{
+				tyorviMet = true;
+				tyorviName = true;
+				bark("What? Talking to me are you? Tyorvi I am and...
+				well. Well, well, well, what here we have? Now shomething,
+				you are. Kinda funny he dresshes, not he does? Sure he does.
+				Funny he talksh too. What are you, boy? A Pagan? Why bet I
+				would thash's what you are. A Pagan. So, Mishter Pagan, true
+				is it your kind Torax better than women likesh? Ha, ha, ha, ha
+				You know shomething, Pagan, take you out right now, where
+				you stand, I oughta, shure I should, and...and I
+				will...jusht as shoon as another drink I have. Another
+				drink, What I need that is.
+				
+				\f Qu'ouis-je? C'est y … moy qu'tu causes? Tyorvi je suis et...
+				hips. Bon, bon, bon, qu'avons-nous icy? Monstre-toi un peu.
+				Vindiou, sacr‚ desguisement qu'celui-ci. Et quelle droslesque
+				fa‡on de causer. Qu'es-tu donc, mon gars? Un Pagan? Oh! €a, y a
+				point d'doute. Un Pagan. Alors, M'ssire Pagan, c'est y donc vray
+				qu'vos Torax sont plus beaux qu'vos dames? Ha, ha, ha, ha.
+				Tu sais quoi, Pagan, j'devrois t'occire sur le champ, … cet
+				endroit mesme, si seulement j'pouvois, hips...et j'le ferois,
+				hips...dŠs qu'j'me s'rois enfil‚ un aultre verre. Un aultre
+				verre, voil… c'qui m'faut.
+			   
+				\g What? Talking to me are you? Tyorvi I am and...
+				well. Well, well, well, what here we have? Now shomething,
+				you are. Kinda funny he dresshes, not he does? Sure he does.
+				Funny he talksh too. What are you, boy? A Pagan? Why bet I
+				would thash's what you are. A Pagan. So, Mishter Pagan, true
+				is it your kind Torax better than women likesh? Ha, ha, ha, ha
+				You know shomething, Pagan, take you out right now, where
+				you stand, I oughta, shure I should, and...and I
+				will...jusht as shoon as another drink I have. Another
+				drink, What I need that is.");
+				exitConvo();
+				return;
+			}
+
+			case "What do you do? \f Que fais-tu? \g"
+			{
+				tyorviMet = true;
+				tyorviName = true;
+				tyorviJob = true;
+				bark("What, Me? Tyorvi, I am. Thordis' brother and advishor...what?
+				by all the..., here what do we have? Now, something
+				arn't you? Take a look at the way dressed he is.
+				And talksh funny he does. Why, if not any better I knew
+				a Pagan I'd say he was. In fact, a filthy Pagan I bet
+				you are. So, Mishter Pagan, true ish it that breed with Torax
+				Pagans do? Yeah, that type you look, ha, ha, ha!
+				
+				\f Qui, Moy? Tyorvi, je suis. FrŠre de Thordis et conseiller...quoi?
+				mais, tout le..., qu'est-ce donc qu'‡a? C'est y ben que'que
+				chose? Vise donc la desgaine. D'o— qu'i sort, luy? Si j'me trompe
+				point, j'dirois qu'c'est un Pagan. J'dirois mesme plus, un Pagan
+				crasseux. Alors, M'ssire Pagan, c'est y vray qu'on croise les
+				Pagans avec les Torax? J'dis ‡a, parce que t'y r'ssemblerois ben un
+				peu, ha, ha, ha!
+
+				\g What, Me? Tyorvi, I am. Thordis' brother and advishor...what?
+				by all the..., here what do we have? Now, something
+				arn't you? Take a look at the way dressed he is.
+				And talksh funny he does. Why, if not any better I knew
+				a Pagan I'd say he was. In fact, a filthy Pagan I bet
+				you are. So, Mishter Pagan, true ish it that breed with Torax
+				Pagans do? Yeah, that type you look, ha, ha, ha!");
+				exitConvo();
+				return;
+			}
+
+
+			case "What place is this? \f Quel est donc ce lieu? \g", "I'd like to speak to you. \f J'aimerois te parler. \g"
+			{
+				spokeOfVale = true;
+				if spokeOnce
+				{
+					bark("Listen, Pagan, like to kill you where
+					you stand, I would. But ordered any strangers
+					be sent to her, Thordi has and Ancients' forbid
+					the great Thordis anyone disobey. So, out of here, get.
+					Go and Thordis see.
+					
+					\f Escoute, Pagan, j'pourrois t'occire sur place,
+					si je voulois. Mais, Thordis exige que tous les estrangers …
+					elle soient conduits, et les Anciens exigent qu'… la grande
+					Thordis tout le monde ob‚isse. Alors, hors d'icy. Et chez
+					Thordis rends-toy.
+					
+				    \g");
+					askList-=<<"What place is this? \f Quel est cet endroit? \g", "I'd like to
+					speak to you. \f J'aimerois te parler. \g">>;
+					askList+=<<"Where is Thordis? \f O— est Thordis? \g",
+					"Who is Thordis? \f Qui est Thordis? \g">>;
+				}
+				else
+				{
+					bark("What? Why, by the Ancients', a Pagan it is!
+					\f Quoi? Par les Anciens, pourquoi un Pagan!
+					\g");
+					askList-=<<"What place is this? \f Quel est donc cet endroit? \g", "I'd like to speak
+					to you. \f J'aimerois te parler. \g">>;
+					askList+=<<"Where? \f O—? \g", "I'm not a Pagan! \f Je ne suis point Pagan! \g">>;
+					spokeOnce = true;
+				}
+			}
+
+			case "Where? \f O—? \g"
+			{
+				bark("OUT! A Pagan you are! \f TOY! Pagan, tu es! \g ");
+				askList-=<<"Where? \f O—? \g">>;
+			}
+
+			case "I'm not a Pagan! \f Je ne suis point Pagan! \g"
+			{
+				bark("A Zealan you are not. So a Pagan you must be.
+				By all rights kill you now I should. Only because of
+				Thordis' orders it is that I do not.
+				
+				\f Si tu n'es point Zealan, Pagan tu dois estre.
+				Sur l'heur, je devrois t'occire. Seulement sur l'ordre de
+				Thordis, je ne le fais point.
+				
+				\g");
+				askList-=<<"I'm not a Pagan! \f Je ne suis point Pagan. \g", "Where? \f O—? \g">>;
+				askList+=<<"Who is Thordis? \f Qui est Thordis? \g",
+				"What orders? \f Quel ordre? \g">>;
+			}
+
+
+			case "Who is Thordis? \f Qui est Thordis? \g"
+			{
+				bark("Thordis? The Elder of Clan Hoskuld she is. Also my
+				sister she is. Now, her now you better find, before
+				my patience I lose.
+				
+				\f Thordis? Du Clan Hoskuld, elle est l'Aisn‚e. Et aussy
+				ma soeur. Maintenant, tu ferois mieux de la trouver, avant
+				que j'm'impatiente.
+				
+				\g");
+				askList-=<<"Who is Thordis? \f Qui est Thordis? \g">>;
+			}
+
+			case "What orders? \f Quel ordre? \g"
+			{
+				bark("By her order, forbidden to speak with anyone
+				not of this clan, we are. To be sent to her immediatly
+				anyone not of this clan is. To anyone from Clan
+				Gunnar this normally refers, but would refer to a Pagan
+				as well it would. So, out of here get, before her
+				orders I disobey!
+				
+				\f Sur son ordre, il nous est interdit de parler … quiconque
+				n'estant point de notre Clan. Et de lui envoyer sur l'heur.
+				A quiconque du Clan Gunnar, d'ordinaire cela s'adresse, mais
+				… un Pagan aussy cela s'adresse. Alors, hors d'icy, avant que son
+				ordre je ne d‚sob‚isse.
+				
+				\g");
+				askList-=<<"What orders? \f Quel ordre? \g">>;
+				askList+=<<"Where is Thordis? \f O— est Thordis? \g", "Who are Clan Gunnar?
+				\f Qui sont les Gunnar? \g">>;
+			}
+
+			case "Who are Clan Gunnar? \f Qui sont les Gunnar? \g"
+			{
+				bark("On the other side of the Vale they live. Theives
+				and murderers they are. Go there you should. Like a
+				murdering Pagan, I'm sure they would!
+				
+				\f De l'aultre cost‚ de la Vall‚e, ils habitent. Voleurs et
+				meurtriers, ils sont. Rends-toy o— tu dois. En bon Pagan
+				meurtrier, ils t'aimeront.
+				
+				\g");
+				askList-=<<"Who are Clan Gunnar? \f Qui sont les Gunnar? \g">>;
+			}
+
+			case "Where is Thordis? \f O— est Thordis? \g"
+			{
+				if (getPeriod() = daytide)
+// @@@ CHANGE  G 
+				{
+					bark("Out in the fields she should be.
+					
+						\f Elle doit estre aux champs.
+					
+						\g");
+				}
+				else
+				{
+// @@@ CHANGE  G
+					bark("At home now she should be.
+			 			\f Elle doit estre chez elle maintenant.
+						\g");
+				}
+				bark("Now, out of here get! \f Maintenant, d‚guerpis! \g");
+				exitConvo();
+				return;
+			}
+
+			case "I have taken your test. \f J'ai pass‚ ton espreuve. \g"
+			{
+				bark("Well, just dandy that is. Told Thordis
+				have you? Obviously not, have the mark you do not. Look
+				have the time for you I do not, so Thordis go find
+				and your mark get. Go on, leave before in front of me
+				dead you drop.
+				
+				\f Oh! Tu m'en vois ravi. En as-tu inform‚ Thordis?
+				Apparemment non, puisque tu n'as point le Mark. Escoute, je n'ai 
+				point de temps … t'accorder, alors va donc chercher Thordis
+				et ton Mark. Allez, ouste, avant que tu ne tombes devant moi,
+				occi de ma propre main.
+				
+				\g");
+				askList-=<<"I have taken your test.
+				\f J'ai pass‚ ton espreuve.
+				\g">>;
+				askList+=<<"Where is Thordis? \f O— est Thordis? \g",
+				"Drop dead? \f Est-il mort? \g">>;
+			}
+
+			case "Drop dead? \f Est-il mort? \g"
+			{
+				bark("Yeah, dead. Been poisoned you have. See it in
+				your eyes I can. No cure for it there is, you know.
+				A walking dead man you are. Just like the rest of us you
+				are. So get outta here and your mark go get.
+				
+				\f Oui, mort. Empoisonn‚, tu fus. Dans tes yeux, je le 
+				vois. Il n'existe point de remŠde pour cela. Un mort-vivant,
+				tu es, tout comme nous tous sommes. Alors, d‚guerpis de l…
+				et ton Mark va chercher.
+				
+				\g");
+				toldOfPoison = true;
+				askList-=<<"Drop dead? \f Mort?  \g">>;
+				askList+=<<"No cure? \f Point de remŠde? \g",
+				"Why are we all walking dead? \f Pourquoi sommes-nous tous 
+				des morts-vivants? \g">>;
+			}
+
+			case "Why are we all walking dead? \f Pourquoi sommes-nous
+			tous des morts-vivants? \g", "Walking dead? \f Des morts-vivants?
+			\g"
+			{
+				bark("Going sooner or later aren't we all... or found some
+				secret immortality potion have you? Well, find out soon
+				enough we will, when ahold of you that poison takes.
+				
+				\f Tost ou tard, tous, nous le serons... … moins que tu 
+				n'aies trouv‚  une potion immortelle secrŠte? Bientost,
+				nous saurons pendant combien de temps ce poison agit.
+				
+				\g");
+				askList-=<<"Why are we all walking dead?
+				\f Pourquoi sommes-nous tous des morts-vivants?
+				\g",
+				"Walking dead? \f Des morts-vivants? \g">>;
+			}
+
+			case "No cure? \f Point de remŠde? \g"
+			{
+				bark("No no cure there is. Not since left us the Ancients did.
+				Once cure anything the High Priestess could...but not
+				any more. So, my friend, your last hours enjoy. You know,
+				really one of the lucky ones you are. Your end is
+				coming you know. Not so fortunate the rest of us are.
+				
+				\f Fichtre non, point de remŠde il n'y a. Point depuis que
+				les Anciens nous ont laiss‚s. Il fust un temps o— la Grande
+				Prestresse pouvoit nous soigner... mais plus de nos jours.
+				Sais-tu que tu es un des rares veinards qui soit. Bientost,
+				ton heur viendra. Nous aultres ne sommes point aussy
+				chanceux.
+				
+				\g");
+				askList-=<<"No cure? \f Point de remŠde?">>;
+				askList+=<<"Why are you not fortunate?
+				
+				\f Pourquoi point aussy chanceux? ">>;
+			}
+
+			case "Why are you not fortunate? \f Pourquoi point aussy chanceux?"
+			{
+				bark("If know when your time is you do not, through life
+				you stumble, why you are here you wonder, until
+				snatched away from your life is. Listen, time for this
+				I don't have. Get outta here.
+				
+				\f Si tu ne sais point quand ton heur viendra, toute ta vie
+				tu tr‚bucheras. Tu te demanderas pourquoi tu es l…,
+				jusqu'… ce que ta vie ost‚e te soit. Escoute, je n'ai 
+				point de temps pour cela. Oste toi de ma vue.
+				
+				\g");
+				exitConvo();
+				return;
+			}
+
+			case "I have the Mark. \f J'ai le Mark. \g"
+			{
+				bark("So I see. Wonderful. Just thrilled for you I am. Now
+				someplace else, go die.
+				
+				\f Je vois. Fantastique. Bien content pour toi, je suis.
+				Va donc mourir ailleurs.
+				
+				\g");
+				askList-=<<"I have the Mark. \f J'ai le Mark.">>;
+				askList+=<<"Die someplace else? \f Mourir ailleurs? \g">>;
+			}
+
+			case "Die someplace else? \f Mourir ailleurs?"
+			{
+				if toldOfPoison
+				{
+					bark("Yeah, told you I did. no cure for that
+					poison there is. Going to die you are. Just like that.
+					
+					\f Ouais, je te l'ai dit. Point de remŠde … ce poison,
+					il n'y a. Succomber, tu vas. Tout d'un coup.
+					
+					\g");
+				}
+				else
+				{
+					bark("Tell you did not anyone? Poisonous those
+					spores on your body are. Going to die you are. No
+					cure there is. To the walking dead, welcome.
+					
+					\f Personne ne t'a dit? V‚n‚neuses sont ces spores sur ton 
+					corps. Succomber, tu vas. Point de remŠde, il n'y a.
+					Bienvenue chez les morts-vivants.
+					
+					\g");
+				}
+				askList-=<<"Die someplace else? \f Mourir ailleurs?">>;
+				askList+=<<"No cure? \f Point de remŠde?", 
+				"Walking dead? \f morts-vivants? \g">>;
+			}
+
+			case "I have spoken to Ezrekal. \f J'ai parl‚ … Ezrekal."
+			{
+				bark("So, still alive you are. Hmmm, Stronger than I
+				thought you were, you are. What tell you did she?
+				
+				\f Oh! Oh! Encor vivant, tu es. Hmmm, plus coriace que je ne
+				pensois, tu es. Que t'a-t-elle dit?
+				
+				\g");
+				askList-=<<"I have spoken to Ezrekal. \f J'ai parl‚ … Ezrekal.">>;
+				if toldCliffs
+				{
+					askList+=<<"She told me of the cliffs. 
+					\f Elle m'a parl‚ de la falaise. \g">>;
+				}
+				if spokePoison
+				{
+					askList+=<<"She told me of the poison. \f Elle m'a parl‚ du poison.">>;
+				}
+				if spokeFuneral
+				{
+					askList+=<<"She told me of my funeral.
+					
+					\f Elle m'a parl‚ de mes fun‚railles.
+					
+					\g">>;
+				}
+				else
+				{
+					askList+=<<"She had little to say. \f Elle avait peu … dire. \g">>;
+				}
+			}
+
+			case "She told me of the poison. \f Elle m'a parl‚ du poison."
+			{
+				bark("Then you know no cure there is, right? Well,
+				move along, why don't you? Someplace else die, all right?
+				Want to figure out what to do with your body I do not.
+				
+				\f Alors, tu sais qu'il n'y a point de remŠde? Pourquoi ne t'en vas tu
+				point pour mourir ailleurs? Je ne veux point me torturer l'esprit avec
+				ta despouille.
+				
+				\g");
+				askList-=<<"She told me of the poison. \f Elle m'a parl‚ du poison.">>;
+			}
+
+			case "She told me of my funeral. \f Elle m'a parl‚ de mes fun‚railles."
+			{
+				bark("Yeah, make sure to mark my calendar I will.
+				
+				\f Bien, bien, je vais mettre cela sur mon calendrier.
+				
+				\g");
+				askList-=<<"She told me of my funeral. \f Elle m'a parl‚ de mes fun‚railles.">>;
+			}
+
+			case "She told me of the cliffs. \f Elle m'a parl‚ de la falaise."
+			{
+				bark("Did she? Well, attempt them will you?
+				
+				\f Vraiment? Tu y assisteras, n'est-ce point?
+				
+				\g");
+				if climbedCliffs
+				{
+					askList+=<<"I already have. \f C'est d‚j… chose faite. \g">>;
+				}
+				else
+				{
+					askList=<<"Yes. \f Oui. \g", "No. \f Non. \g">>;
+				}
+			}
+
+			case "No \f Non."
+			{
+				bark("A wise man you are. A coward, but a wise man.
+				Claimed my best friend those cliffs did and claimed me they
+				should have. But I see claim you they will not. Instead,
+				the poison will. Well, move on. Want you dying here I do not.
+				
+				\f Sage homme que tu es. Lƒche certes, mais sage.
+				Cette falaise a ost‚ la vie … mon meilleur amy, au lieu
+				d'oster la mienne. Mais, je vois qu'elle n'ostera point la
+				tienne. De ta vie, le poison se chargera. Allez, disparais
+				de ma vue. Que tu meurs icy, je ne le d‚sires point.
+				
+				\g");
+				exitConvo();
+				return;
+			}
+
+			case "Yes. \f Oui.", "I am going there. \f Je m'y rends. \g"
+			{
+				bark("A foolish man you are. Kind of like that I do. So
+				try them you will. Perhaps accompany you I will. At
+				least in vain our deaths will not be.
+				
+				\f Fol que tu es. J'aime bien cela. Alors, tu vas les
+				essayer. Peut-estre t'accompagnerais-je? Au moins, 
+				nos morts ne seront point vaines.
+				
+				\g");
+				askList-=<<"Yes \f Oui.", "No. \f Non. \g", 
+				"I already have. \f J'y suis d‚j… all‚. \g">>;
+				askList+=<<"Yes, accompany me. \f Oui, viens avec moy. \g",
+				"No, don't accompany me. \f Non, ne viens point avec moy. \g",
+				"Our deaths won't be in vain?
+				
+				 \f Nos morts ne seront point vaines? \g">>;
+			}
+
+			case "Our deaths won't be in vain?
+			     \f Nos morts ne seront point vaines? \g"
+			{
+				bark("In vain no one's death should be. No one's. Claimed
+				my best friend those cliffs did when claimed me they
+				should have...now, give them one more chance I can. 
+				
+				\f Oncque mort ne devroit estre vaine. Oncque. De mon
+				meilleur amy, cette falaise a ost‚ la vie, au lieu
+				d'oster la mienne...sur l'heur, monstrons leur une aultre
+				fois que je peux.
+				
+				\g ");
+				askList-=<<"Our deaths won't be in vain? \f Nos morts ne seront point vaines?">>;
+			}
+
+			case "Yes, accompany me. \f Oui, viens avec moy."
+			{
+				bark("Gather my climbing gear I will and meet you there
+				I will.
+				
+				\f Mon mat‚riel d'escalade, je vais rassembler de ce pas, et 
+				te rejoindre l…-bas.
+				
+				\g");
+				tyorviDrunk = true;
+				agreeToClimb = true;
+				exitConvo();
+				return;
+			}
+
+			case "No, don't accompany me. \f Non, ne viens point avec moy."
+			{
+				bark("Why not? \f Pourquoi point? \g");
+				askList=<<"I do not wish it. \f Je ne le veux point. \g", 
+				"It is too dangerous. \f C'est mult dangereux. \g",
+				"I do not trust you. \f Je ne te fais point confiance. \g">>;
+			}
+
+			case "I do not trust you. \f Je ne te fais point confiance."
+			{
+				bark("Trust me you do not? Taken the test you may have
+				and bear the Mark of the Zealans you may, but look,
+				act and sound like a Pagan you still do! And you a murderer
+				that makes. No time for anyone like you, I have!
+				
+				\f Point confiance, tu ne me fais? Tu as beau avoir pass‚ le
+				test et ramen‚ le Mark des Zealans, mais point de doute, 
+				tu ressembles, agis et parles toujours comme un Pagan!
+				Et, cela fait de toy un meurtrier! Va donc, je n'ai point
+				de temps … t'accorder!
+				
+				\g");
+				tyorviPissed = true;
+				exitConvo();
+				return;
+			}
+
+			case "I do not wish it. \f Je ne le veux point."
+			{
+				bark("Ah, of course not, Pagan. All the glory
+				for yourself you want. Well, all the death
+				to yourself as well you may have.
+				
+				\f Ah! Voil…, bien s–r. Toute la gloire pour toy seul
+				tu veux. Soit, mais tous les morts pour toy tu pourrois
+				avoir.
+				
+				\g");
+				exitConvo();
+				return;
+			}
+
+			case "It is too dangerous. \f C'est moult dangereux."
+			{
+				bark("Too dangerous? Ha! How well that I know. Claimed
+				my best friend it did and claimed me as well it should have.
+				But no, to live on, I had. Do you know hear his screams I
+				still do? I do...in my dreams at night. Give anything not
+				to dream at night I would.
+				
+				\f Moult dangereux? Ah! Je connois bien cela. De mon meilleur
+				amy, elle a pris la vie, et de moy aussy elle auroit d–
+				la prendre. Mais non, continuer … vivre je dois. Sais-tu que
+				j'entends encor ses cris? Et surtout la nuit, pendant mon 
+				sommeil. Je donnerois n'importe quoy pour ne point resver
+				de cela la nuit.
+				
+				\g");
+				askList-=<<"It is too dangerous. \f C'est mult dangereux.", 
+				"I do not wish it. \f Je ne le veux point.",
+				"I do not trust you. \f Je ne te fais point confiance.">>;
+				askList+=<<"Dreams? \f Des resves? \g", 
+				"Claimed your best friend?
+				\f Pris la vie de ton meilleur amy?
+				\g">>;
+			}
+
+			case "Dreams? \f Des resves? \g"
+			{
+				bark("Dreams. Just nightmares, that's all. Look
+				want to talk about 'em I do not. Not with you,
+				not with anybody.
+				
+				\f Des resves. Des cauchemars, oui. Mais vois-tu, je ne 
+				d‚sires point en parler. Ni avec toy, ni avec personne.
+				
+				\g");
+				exitConvo();
+				return;
+			}
+
+			case "Claimed your best friend? 
+			\f Pris la vie de ton meilleur amy? \g",
+			 "Killed your best friend?
+			 \f Tu‚ ton meilleur amy?
+			 \g"
+			{
+				bark("Yeah, well, easy come, easy go. Look, want to
+				talk about it I do not. Not with you, not with anybody.
+				
+				\f Ouais, ‡a va, ‡a vient. Mais vois-tu, je ne d‚sire
+				point en parler. Ni avec toy, ni avec personne.
+				
+				\g");
+				exitConvo();
+				return;
+			}
+
+			case "Tell me more of the cliffs. \f Dis- m'en plus sur la falaise."
+			{
+				bark("The Cliffs? Why want to know would you?
+				
+				\f La falaise? Que veux-tu donc savoir?
+				
+				\g");
+				askList=<<"I am going there. \f J'y vais. \g", "No reason, really. \f sans raison, vraiment. \g">>;
+			}
+
+			case "No reason, really. \f J'y vais. \g"
+			{
+				bark("Just curious, are you? Well, you let me warn,
+				away from them stay. Kill you they will, like my best
+				friend they killed.
+				
+				\f Simple curiosit‚, n'est-ce point? Et bien, laisse-moy donc
+				te mettre en  garde, n'y vas point. Ils te tueront, comme
+				ils ont tu‚ mon meilleur amy.
+				
+				\g");
+				askList-=<<"No reason, really. \f J'y vais. \g", "I am going there.">>;
+				askList+=<<"Killed your best friend? \f Tu‚ ton meilleur amy? \g">>;
+			}
+
+			case "Tyorvi? \f Tyorvi? \g"
+			{
+				ran = urandom(4);
+				if ran = 1
+				{
+					bark("Back, are you? Well, just turn yourself
+					around and leave you can. No interest in wasting time
+					with you I have.
+					
+					\f Encore toy? Et bien retourne t'en d'o— tu viens.
+					Je ne veux point perdre mon temps avec toy.
+					
+					\g");
+				}
+				if ran = 2
+				{
+					bark("Told you to leave, I did. Wish to speak to you I
+					do not.
+					
+					\f Ne t'ai-je point dit de t'en aller? Je ne veux
+					point te parler.
+					
+					\g");
+				}
+				if ran = 3
+				{
+					bark("No interest in speaking to you I have. Leave!
+					
+					\f Fiche donc le camp! Tu ne m'int‚resses point!
+					
+					\g");
+				}
+				exitConvo();
+				return;
+			}
+
+
+			case "Are you feeling alright? \f Tu te sens bien? \g"
+			{
+				bark("Feeling alright? Corsh feeling alright I am. -hic-
+				Only....hmmmmm, only -hic-..well, only a little to drink
+				I have had. Drink enough I can not, though. Drink
+				enough to shtop the dreams I can not. Every night they
+				come. Every night, except when I drink. Shee, if I drink,
+				...if the dreams do come...remember 'em I can not.
+				I wish never remember 'em I could. Alwaysh the same thing
+				it is. The cliff....my pal.....oh, -sob- oh, I can't,
+				I can't, too horrible it is.
+				
+				\f Si ‡a va? Bien s–r que ‡a va. -hips- Seulement.....hmmmm,
+				seulement -hips-..ben, j'ai juste picol‚ un peu. Point
+				assez … mon goust, d'ailleurs. Point assez pour arrester
+				ces maudits cauchemars. Ils reviennent toutes les nuits.
+				Toutes les nuits, sauf quand je picole. Tu vois, si 
+				j'picole, ...si ces satan‚s cauchemars reviennent... j'peux
+				point m'en souvenir. Toujours la mesme chose... La falaise...
+				mon amy.....oh, -snif- oh, j'peux point, j'peux point,
+				c'est horrible.
+				
+				\g");
+				exitConvo();
+				return;
+			}
+
+			case "I've met Thordis. \f J'ai rencontr‚ Thordis. \g"
+			{
+				bark("Oh you have? Told you about my problem,
+				did she? Tell you I drink too much, did she? Well, what
+				know does she? -hic- Nothing, nothing she knowsh. On her
+				fat butt she sits -hic- and to be shome great
+				wise woman she pretends...something tell you let me
+				...she's not! Just a Zealan she is, to stay alive she is, in
+				this  Ancients-forsaken dust hole home we call -hic-
+				Just like the rest of us she is,  -hic- just like the rest.
+				
+				\f Oh, vraiment? Elle t'a parl‚ de mon problŠme, hein?
+				Que j'buvois trop, hein? Et ben, qu'est-ce qu'elle en sait?
+				-hips- Rien, elle sait rien. Elle croit qu'elle d‚tient moult
+				sagesse... mais, elle n'a que son gros popotin...j'vais
+				t'dire quelque chose...elle n'est point sage! C'est juste
+				une Zealan, elle ne vit que dans ce bon sang d'trou 
+				poussi‚reux des Anciens -hips- Elle n'est point diff‚rente
+				de nous, -hips- … la mesme enseigne que tout l'monde.
+				
+				\g");
+				exitConvo();
+				return;
+			}
+
+			case "You don't look very good. \f €a n'a point l'air d'aller. \g"
+			{
+				bark("Look good? Look good? -hic- How -hic-
+				look good could I? Slept in -hic- two weeksh I have not. So
+				I could shleep -hic- this stuff I drank,
+				but recently, keep the dreamsh away alcohol can not.
+				-hic-. Every night, the same it is. Dropped
+				my ax I have and reaching for it he does...then...
+				loose from the wall the pin pulls, and oh Ancients, falling
+				he is, falling he is and reach him I can not! Screaming
+				he is and screaming and screaming, Stop it won't! Ancients,
+				just let the screaming stop! -sob- Reach him I
+				can not! -sob-
+				
+				\f D'aller? D'aller? -hips- Comment -hips- ‡a pourroit
+				aller? De deux huitaines, j'ai point ferm‚ l'oeil. Pour
+				pouvoir dormir, j'ai ingurgit‚ c'machin -hips-, mais
+				maintenant, mesme la bibine n'y fait rien. Toutes les
+				nuits c'est la mesme chose -hips-. J'fais tomber ma hache
+				...et puis...il va la chercher...alors, le piolet se
+				descroche du mur, et oh! Anciens, il tombe, il tombe
+				et je ne peux point le secourir! Il hurle, hurle et hurle
+				encor. €a ne s'arrestera donc point! Anciens, faŒtes donc
+				arrester ces hurlements! -snif- J'peux point l'secourir!
+			   	-snif-
+				
+				\g");
+				toldOfDreams = true;
+				exitConvo();
+				return;
+			}
+
+
+			case "I've met Ingyald. \f J'ai rencontr‚ le brasseur. \g"
+			{
+				bark("All right he is...for a Hoshkuld. -hic- Provides
+				me with thish fine brew, he doesh. -hic- Fine shtuff it
+				is, brewsh it just for me he does. More potent than his ushual
+				shtuff it is. -hic- Half a bottle would be enough to
+				set the entire village on it's buttocks, he says. Ha, ha, ha!
+				Be a sight wouldn't that? ha ha ha ha ha!
+				
+				\f D'accord, d'accord. C'est un Hoshkuld. -hips- Mais,
+				il m'fournit cette pr‚cieuse mixture. -hips- Sacr‚ment
+				goulaillante c'te mixture, ah! ‡a oui, vindiou. Moulte
+				meilleure que c'qui donne d'ordinaire. -hips- Une demie
+				gourdasse suffiroit pour restamer l'village entier,
+				qu'il dit. Ah, ah, ah! Faudroit point manquer ‡a, hein!
+				Ah, ah, ah, ah!
+				
+				\g");
+				askList-=<<"I've met Ingyald. \f J'ai rencontr‚ le brasseur. \g">>;
+				askList+=<<"Can you get some help? \f Quelqu'un pourroit t'aider? \g">>;
+			}
+
+			case "Can you get some help? \f Quelqu'un pourroit t'aider? \g"
+			{
+
+				bark("Help? Help for what? -hic- Help to drink my
+				shtuff? -hic- No, need any help with that I do not
+				thank you...in fact, maybe some you want? Well, have
+				go buy it from Ingyald you will. Let Thordis catch
+				you do not. Like him she does not. -hic- No,
+				she doesn't. Like to put him out of business, she
+				would. Ha ha ha. -hic- I  tink...er think...the
+				only one who doesn't stop over to visit him, she is.
+				To uoosen lup....er....loosen up, she needs!
+				
+				\f M'aider? M'aider … quoi? -hips- M'aider … m'enfiler ma
+				mixture? -hips- Ah, ‡a non! Point b'soin d'aide pour ‡a,
+				mercy...ah, j'comprends, t'en voudrois un peu, hein?
+				Et ben, va donc en acheter … Inguald tu veux! Thordis
+				mordra point … l'hame‡on. Elle l'aime point, hein? -hips-
+				Non, elle l'aime point. Elle aimeroit bien lui faire faire
+				faillite. Ah ah ah! -hips- Je penche...euh pense...qu'elle
+				est la seule … point lui rendre une p'tite visite. De
+				s'd‚vider...euh...de s'd‚rider un brin, elle a besoin!
+				
+				\g");
+				exitConvo();
+				return;
+			}
+
+			case "Have you been drinking again? \f Tu as recommenc‚ … boire? \g"
+			{
+				bark("What if I have? Shend you to look
+				in on me Thordis did? -hic- That meddling, no-good...
+				Yes, drinking again I have been! What to you is it?
+				To sleep I drink, why I dink..er...drink that is.
+				-hic- So sleep without the dreams I can.
+				alwaysh the same dream it is. Back on the cliffsh I
+				am and trying to help me my friend is. -hic-
+				Then, suddenly falling he is! Falling and screaming he is!
+				Screaming my name he is and reach him I can not.
+				falling and falling he is....then the screaming stopped...it
+				just stopped. By the time down there I got, blood
+				everywhere there was. So much blood. -hic- All that blood
+				out of you come, buddy? So much it is and more there is.
+				Stop the bleeding I can not! Oh, buddy, all coming out
+				of you it is! If could just stop it I could, just stop the blood,
+				oh Ancients, just stop the blood!
+				
+				\f Et alors? Thordis t'a envoy‚ en mission? -hips- €a ne te
+				regarde point...Et puis ouais, j'ai bu! Qu'est-ce que ‡a te
+				fait? Je picole pour dormir, voil… pourquoi j'pichole...euh
+				picole. -hips- Comme ‡a, ‡a m'empˆche de resver. C'est
+				toujours le mesme resve. J'suis d'retour … la falaise et mon
+				amy essaie de m'venir en aide. -hips- Et puis, tout … coup
+				il tombe! Il hurle mon nom et j'peux point l'atteindre. Il
+				tombe... tombe...et puis, le cri s'arreste... tout simplement
+				il s'arreste. Le temps qu'j'me rende en bas, et y a du sang
+				partout. Tellement d'sang. -hips- €a v'nait d'toy tout c'sang
+				mon amy? Y en avoit tant et tant. Oh! J'peux point arrester
+				l'sang! Toot ce sang qui coule de ton corps, mon cher amy!
+				Si seulement, je pouvois l'arrester! Oh! Anciens, arrestez
+				cette effusion, je vous en supplie!!!
+				
+				\g");
+				toldOfDreams = true;
+				exitConvo();
+				return;
+			}
+
+			case "Are you OK, Tyorvi? \f €a va, Tyorvi? \g"
+			{
+				bark("OK? -hic- Sure, OK I am! In fact, -hic- freat I greel!
+				Oops, Great I feel, I mean! When some of Ingyald's shtuff
+				I've had, actually a little sleep I get...no dreamsh
+				that is...no nightmares. -hic- Ever heard of a grown
+				man getting nightmares, did you? -hic-
+				Yeah, well, them I get. Nashty they are, too. -hic-
+				sometimes I wake up and I think...'screaming someone is.'
+				Then a little more I wake up and I think, 'oh yeah,
+				me screaming that is.' -hic- Pretty funny, think do you?
+				
+				\f Si ‡a va? -hips- Pour s–r que ‡a va! -hips- En fleine
+				porme, je suis! Euh! Je veux dire en pleine forme! Lorsque
+				je m'enfile un peu de la mixture d'Ingyald, en fait, je peux
+				sommeiller un brin. Plus de resves... euh... de cauchemars.
+				T'as jamais vu un adulte qui a des cauchemars? -hips- Et bien,
+				j'en ai. Oh! Quelle horreur! -hips- Moultes fois, je me
+				resveille en pleine nuit et je pense...'quelqu'un est en train
+				de crier'. Et plus je sors de cette torpeur et plus je pense
+				'oh! mais, c'est moy qui crie.' -hips- Int‚ressant, tu ne crois
+				point?
+				
+				\g");
+// @@@  CHANGE F G
+				askList=<<"Yes, that's funny.", "No, that's not funny.">>;
+			}
+
+// @@@ CHANGE F G
+			case "Yes, that's funny."
+			{
+				bark("Think sho do you? -hic- Laugh at me now will you? -hic-
+				Go ahead. Laugh like -hic- the others do.");
+				exitConvo();
+				return;
+			}
+
+// @@@ CHANGE F G
+			case "No, that's not funny."
+			{
+				bark("Well, think it is, I do. -hic- Ha ha ha -hic- Listen
+				to me laugh, will you? Laugh is all I can do. Laugh...or
+				cry. Now, leave me alone.");
+				exitConvo();
+				return;
+			}
+
+	
+			case "I have been healed! \f J'ai ‚t‚ gu‚ri! \g"
+			{
+				bark("So heard I have. Good for you, now at least,
+				have to worry about hauling your body away I do not.
+				Now haul it away for me you can. Say, do that why don't you?
+				Out of my sight, yourself haul.
+				
+				\f J'ai entendu dire cela. Grand bien te fasse! Maintenant,
+				au moins, je n'ai point … me pr‚occuper de tes funesrailles.
+				Alors, d‚barasse le plancher, veux-tu? Pourquoi tu ne t'en vas 
+				point? Hors de ma vue, allez, pauvre gueux.
+				
+				\g");
+				askList-=<<"I have been healed! \f J'ai ‚t‚ gu‚ri!">>;
+			}
+
+			case "The Shield of the Ancients is repaired! \f L'escu des Anciens est respar‚! \g"
+			{
+				bark("And so supposed to be really excited about
+				this I am, right? What good done has it? Any greener the
+				grass is? More food there is? More water? No. So
+				pardon me if get all twittered about it I do not.
+				
+				\f Et je suppose que cela doit me combler de joie, hein?
+				Qu'a-t'il procur‚ comme bons soins? L'herbe en est-elle plus
+				verdoyante? Avons-nous plus de victuailles? Plus d'eau? Non.
+				Alors pardonne moy si cela ne me met point en ‚moi.
+				
+				\g");
+				askList-=<<"The Shield of the Ancients is repaired! \f L'escu des Anciens est respar‚!">>;
+			}
+
+			case "I have opened the temple. \f J'ai ouvert le Temple. \g"
+			{
+				bark("Look, really getting tired of you I am. If actually
+				some changes around here I see, then happy for you I'll be.
+				In the mean time, just left alone I want to be.
+				
+				\f Escoute, tu commences vraiment … me casser les pieds. Si
+				je vois des changements, alors je serais fort content pour
+				toy. En attendant, laisse moy donc m‚diter en paix.
+				
+				\g");
+
+				exitConvo();
+				return;
+			}
+
+			case "I have found the Ancient Ones. \f J'ai trouv‚ les Anciens. \g"
+			{
+				bark("Great, now, please get out of my way would you?
+				Think finding any musty old bones is going to make
+				my life any better I do not. Got it? Now, leave me alone.
+				
+				\f F‚licitations. Miantenant, oste toy de ma vue, veux-tu?
+				Je ne crois point qu'avoir trouv‚ quelques vieux os va me rendre
+				la vie meilleure. Compris? Fiche moy la paix t'ai-je dit.
+				
+				\g");
+
+				exitConvo();
+				return;
+			}
+
+			case "I have freed the Ancient Ones. \f J'ai lib‚r‚ les Anciens. \g"
+			{
+				bark("Well, Pagan, maybe misjudged you I did.
+				a small amount of hope after all there is.
+				But only time tell will. Hmmmm, maybe go talk to Ezrekal
+				I should.
+				
+				\f Et bien, Pagan, je ne t'ai peut estre point jug‚ … ta 
+				v‚ritable valeur. Il semble qu'il y a donc un brin d'espoir.
+				Mais, seul le temps nous le fera savoir. Hmmm, peut estre bien
+				que je devrais aller causer … Ezrekal.
+				
+				\g");
+
+				exitConvo();
+				return;
+			}
+
+			case "Do you have the Key to the Clouds? \f As-tu la Roche Magique? \g"
+			{
+				if tyorviDrunk = true
+				{
+					
+// @@@ CHANGE F G
+					bark("The talish....uh, telish...-hic- the teilish....
+					the thing to get to the cliffs you mean? Why...-hic- why
+					want that would you? Climb the cliffs would you? -hic-
+					No, you should not, I think. -hic- Because if climb
+					the cliffsh you do, then have the nightmaresh you will!
+					No.. -hic- have the nightmaresh no one should. Terrible,
+					terrible they are. -hic-");
+					if toldOfDreams
+					{
+						bark("But told you of these dreamsh I have. -hic-.");
+					}
+
+  				}
+
+// @@@ CHANGE F G
+				else
+				{
+					bark("Yes, have it I do. Want it do you? Why? Try
+					to climb the cliffs will you? No, allow this I can not.
+					Come upon you the curse will. The curse of the nightmares
+					it is. Have it already I do. Wish it upon no one I would.
+					Terrible the nightmares are. Afraid to sleep I am.");
+
+					if toldOfDreams = true
+					{
+						bark("But remember telling you of these dreams I
+						do. Bother you more with them I will not.");
+					}
+				}
+
+					askList-=<<"Do you have the Key to the Clouds?">>;
+
+					if toldOfDreams = true
+					{
+						askList+=<<"How can you stop the dreams?">>;
+					}
+					else
+					{
+						askList+=<<"Tell me of these nightmares.">>;
+					}
+			}
+
+// @@@ CHANGE F G
+
+			case "How can you stop the dreams?"
+			{
+				if tyorviDrunk = true
+				{
+					bark("Shtop the dreams? -hic- Oh, I try and I try.
+					Shtop them drinking used to. Now work that does not.
+					-hic- Afraid to sleep I am. Maybe the only way to
+					stop them, death is. -hic-");
+				}
+
+				else
+				{
+					bark("Stop them by drinking, I do. But recently,
+				stop them the drinking does not. Now afraid to sleep
+				I am. Afraid to even close my eyes I am. Maybe the
+				only way to stop them, death is.");
+				}
+				askList+=<<"Surely there is another way.">>;
+				
+				if ezrekalMet = true
+				{
+					askList+=<<"Have you spoken to Ezrekal?">>;
+				}
+				else
+				{
+					askList+=<<"Is there no healer?">>;
+				}
+			}
+
+// @@@ CHANGE F G
+			case "Surely there is another way."
+			{
+				if tyorviDrunk = true
+				{
+					bark("Another way? Sure...another way
+					there is. -hic- Here stay I will and
+					drink I will until move a finger I can not. -hic-
+					There healed my mind is until sober up
+					I do. Then drink again I will.");
+				}
+				else
+				{
+					bark("Another way? Sure...another way there is.
+					Stay here I will and drink I will until move a finger
+					I can not. Then healed my mind is until sober up 
+					I do. There drink again I will. If mind you don't,
+					start on my cure I will, right now!");
+				}
+				askList-=<<"Surely there is another way.">>;
+			}
+
+// @@@ CHANGE F G
+
+			case "Is there no healer?"
+			{
+				if tyorviDrunk = true
+				{
+					bark("Sure! A healer there ish! Ezrekal her name ish.
+					in the southern part of the Vale she livesh. Fix
+					anything she can...as soon as the Ancients return!
+					Ha, ha, ha!");
+				}
+				else 
+				{
+					bark("Sure, a healer there is! Ezrekal her name is. In
+					the southern part of the Vale she lives. Fix anything
+					she can...that is...as soon as the Ancients return!
+					Ha, ha, ha!");
+				}
+				askList-=<<"Is there no healer?">>;
+ 				askList+=<<"I will speak to Ezrekal for you.", "You
+				are right, there is no hope.">>;
+			}
+
+
+// @@@ CHANGE F G
+
+			case "Have you spoken to Ezrekal?"
+			{
+				if tyorviDrunk = true
+				{
+					bark("Ezrekal? The old hag? -hic- Think
+					she can heal do you? -hic- Ha! Better to
+					believe in the fireball in the sky,
+					you would be.");
+				}
+
+				else
+				{
+					bark("Ezrekal? Why speak to her would I? All her
+					healing from the Ancient Ones would come. Speak
+					to the Ancient Ones she can not. So heal she can
+					not. No, bear this alone I must.");
+				}
+				askList+=<<"I will speak to Ezrekal for you.", "You
+				are right, there is no hope.">>;
+			}
+
+
+
+// @@@ CHANGE F G
+			case "I will speak to Ezrekal for you."
+			{
+				if tyorviDrunk = true
+				{
+					bark("Go ahead.-hic-  No good, it will do. If
+					good it would do, -hic- done it long ago I would have.
+					High priestess she ish not, healer she ish not
+					-hic- A waste of time talking to her would be.");
+				}
+				else
+				{
+					bark("Go ahead. Why want to you would, know I do not.
+					No Ancients Ones there are, so a High Priestess she
+					is not. No healing she can do so a healer she is not.
+					Just a crazy old hermit she is, No waste my time talking
+					to her I will not. If you want to, you can. But I will
+					not.");
+				}
+				tyorviDreams = true;
+
+				exitConvo();
+				return;
+			}
+
+
+// @@@ CHANGE F G
+			case "You are right, there is no hope."
+			{
+				if tyorviDrunk = true
+				{
+					bark("Yeah...-hic- no hope there ish. No
+					hope for poor Tyorvi. -sniff- Curl up and die I should.
+					Take up food and space for others I should not.
+					-hic- Useless, I am. Useless and hopeless..-sob-");
+				}
+
+				else
+				{
+					bark("Yeah, no hope there is. A dead man I am. Dead,
+					you hear?! Leave me....just leave me in peace to die.");
+				}
+			}
+
+
+// @@@ CHANGE F G
+			case "Tell me of these nightmares."
+			{
+				if tyorviDrunk = true
+				{
+					bark(" Every night they	come. Every night, except
+					when I drink. -hic- Shee, if I drink,
+					...if come the dreams do...remember 'em I can not.
+					I wish never remember 'em I could. Alwaysh the same
+					thing it is.  Dropped my ax I have
+					and reach for it he doesh. Then loose from
+					the wall his pin pulls, and oh Ancients, falling
+					he ish! -hic- Falling he ish and reach him I can not!
+					Shcreaming he ish and shcreaming and shcreaming! -hic-
+					Then stop the shcreaming does....it just
+					stopsh. Quiet it ish...so quiet. By the time down
+					there I get, blood everywhere there ish. So much
+					blood. -hic- Did all that blood	out of you come,
+					buddy? So much it ish! Stop
+					the bleeding I can not! -hic- Oh, buddy, all coming out
+					of you it ish! If just stop it I could,
+					just stop the blood, oh Ancients, just stop
+					the blood!");
+			 	}
+				else
+				{
+					bark("Every night they	come. Every night, except
+					when I drink. See, if I drink,
+					...if come the dreams do...remember 'em I can not.
+					I wish never remember 'em I could. Always the same
+					thing it is.  Dropped my ax I have
+					and reach for it he does. Then loose from
+					the wall his pin pulls, and oh Ancients, falling
+					he is! Falling he is and reach him I can not! Shcreaming
+					he is and screaming and screaming! -hic-
+					Then stop the screaming does....it just
+					stops. Quiet it is...so quiet. By the time down
+					there I get, blood everywhere there ish. So much
+					blood. Did all that blood from you come,
+					buddy? So much it is! Stop the bleeding I
+					can not! -hic- Oh, buddy, all coming out
+					of you it is! If just stop it I could,
+					just stop the blood, oh Ancients, just stop
+					the blood!");
+				}
+									
+
+					askList-=<<"Tell me of these nightmares.">>;
+					askList+=<<"How can you stop the dreams?">>;
+			}
+
+// @@@ CHANGE F G
+			case "I have something for you from Ezrekal."
+			{
+				if tyorviDrunk
+				{
+					bark("Shomething from Ezkkre...Eshak... uh...
+					the old hermit? What could it be? Old torax
+					bones to put under my pillow? Ha ha ha! -hic-
+					High Priestess she is, she says. -hic- Well,
+					no Ancients Ones see do I! Dead they are.
+					High Priestess of dead gods she ish.");
+				}
+				else
+				{
+					bark("Want nothing from that old hag do I. A parasite
+					upon our villages she is. Give her a portion of our food
+					we must, because a 'High Priestess' she is. High Priestess?!
+					Ha! High Priestess of dead gods she is.");
+				}
+
+
+					askList-=<<"I have something for you from Ezrekal.">>;
+					askList+=<<"It is an elixar.", "Dead gods?">>;
+			}
+
+// @@@ CHANGE F G
+			case "Dead gods?"
+			{
+				if tyorviDrunk = true
+				{
+					bark("Dead! -Dead-! Of course dead they are! Why
+					else would abandon their people they would? -hic- 
+					No, dead they are, I believe. Dead, Dead! -Dead-!
+					and care I do not who hears me say it.");
+				}
+
+				else
+				{
+					bark("Dead! Of course dead they are! Abandoned their
+					people they have. Left us to die a slow	horrible
+					death, they have. Climbed the cliffs I have. Nothing
+					there I saw. Only the flying evils. No, they are
+					dead, I beleive. And so are we.");
+				}
+
+				askList-=<<"Dead gods?">>;
+			}
+
+// @@@ CHANGE F G
+			case "It is an elixar."
+			{
+				if tyorviDrunk
+				{
+					bark("A what?");
+					askList-=<<"It is an elixar.">>;
+					askList+=<<"It is a potion.">>;
+				}
+
+				else
+				{
+					bark("Take nothing from that hag I will!");
+					askList-=<<"It is an elixar.">>;
+					askList+=<<"It will heal your dreams.">>;
+				}
+			}
+
+// @@@ CHANGE F G
+			case "It is a potion."
+			{
+				bark("A poshun? From Eshrk...Ezzkre...that hag? -hic-
+				Ah, interested I am not. Taste bad it will. And not work!");
+				askList-=<<"It is a potion.">>;
+				askList+=<<"It might work.", "It will heal your dreams.">>;
+			}
+
+// @@@ CHANGE F G
+			case "It might work."
+			{
+				bark("-hic- Yes, and see the ball of fire in
+				the sky I might.");
+				askList-=<<"It might work.">>;
+			}
+
+// @@@ CHANGE F G
+			case "It will heal your dreams."
+			{
+				if tyorviDrunk = true
+				{
+					bark("Heal -hic- my dreams? Nothing my dreams will heal.
+					-hic- Only more of Ingyald's brew.");
+				}
+				else
+				{
+					bark("Heal my dreams, you say? Ha, think so I do not. Only
+					if more of Ingyald's brew I drink. Much more.");
+				}
+				askList-=<<"It will heal your dreams.">>;
+				askList+=<<"Just try it, please.", "Shut up and drink it!">>;
+			}
+
+// @@@ CHANGE F G
+			case "Just try it, please."
+			{
+				if tyorviDrunk
+				{
+					bark("NO! -hic- Drink it I will not! Now, leave me alone!");
+					tyorviPissed = true;
+					exitConvo();
+					return;
+				}
+				else
+				{
+					bark("Oh, all right. Give it to me.");
+
+					item:Item;
+					foreach item where (type = TypeBottle) and (frame = 13)
+					within container Avatar
+					{
+						item.destroy();
+					}
+					wait (1000);
+					bark("Hmmm, taste too bad that did not. Hmmmm,
+					Actually feel a little better I do.");
+				}
+				askList=<<"May I have the Key to the Clouds?">>;
+			}
+			
+// @@@ CHANGE F G
+			case "Shut up and drink it!"
+			{
+				if tyorviDrunk
+				{
+					bark("All right, all right! Have to shout you do not!
+					Try it I will.");
+
+					foreach recursive item where (type = TypeBottle) and (frame=13)
+					within container Avatar
+					{
+						item.destroy();
+					}
+					wait (1000);
+					tyorviDrunk = false;
+					bark("Hmmm, taste too bad that did not. Hmmmm,
+					Actually feel a little better I do.");
+					askList=<<"May I have the Key to the Clouds?">>;
+				}
+				else
+				{
+					bark("A low born, Gunnar-loving torax whelp you are!
+					Stand for it I will not.");
+					tyorviPissed = true;
+					exitConvo();
+					return;
+				}
+			}
+
+// @@@ CHANGE F G
+			case "May I have the Key to the Clouds?"
+			{
+				bark("Well, treacherous it is, but brave you are. Deserve
+				a chance you do. Here, here the Key to the Clouds is.");
+ 		  
+				myMan.x = Avatar.getX();
+				myMan.y = Avatar.getY();
+				myMan.z = Avatar.getZ();
+				if give(Avatar:Referent,TypeCliffKey,0,0,1)
+				{
+				}
+				else if createNear(myMan,TypeCliffKey,0,0,1)
+				{
+				}
+
+				bark("Now, rest I must. Maybe dream I will not.");
+				givenTea = true;
+				exitConvo();
+				return;
+			}
+
+// @@@ CHANGE F G
+	 		case "Calm down, Tyorvi."
+			{
+				if tyorviDrunk = true
+				{
+					bark("Calm down? -hic- Sure, calm down I will. After
+					another drink I have.");
+				}
+				else
+				{
+					bark("Back are you? Wish to speak to you I do not.");
+				}
+				askList+=<<"I wish to apologize for my rudeness.", "Shove
+				off, you lush!">>;
+			}
+
+// @@@ CHANGE F G
+			case "I wish to apologize for my rudeness."
+			{
+				if tyorviDrunk
+				{
+					bark("Well, -hic- as you should! A very important
+					person around here I am. -hic- Very important!");
+				}
+				else
+				{
+					bark("Well, a much better attitude you have now. Speak
+					to you I will.");
+				}
+
+				if hasTea = true
+				{
+					askList+=<<"I have something for you from Ezrekal.">>;
+				}
+				else
+				{
+				   askList+=<<"I have spoken to Ezrekal. \f J'ai parl‚
+				   … Ezrekal. \g">>;
+				}
+			}
+
+
+ 			case ""
+			{
+				bark("Time for this I have not. Leave me alone!
+				
+				\f Je n'ai point de temps pour cela. Fiche moy la paix!
+				
+				\g");
+
+				exitConvo();
+				return;
+			}
+
+			case "bye \f Adieu. \g"
+			{
+ 				bark("Good bye. \f Adieu. \g");
+ 	 			exitConvo();
+				return;
+			}
+		}
+	}
+}
+
+
+
+
+
+/**********************
+
+GAME FLAGS USED
+(not necessarily in any
+particular order)
+
+
+askedTried
+testFromAtli
+testFromThordis
+mentionSheild
+templeOpen
+ezrekalJob
+ezrekalName
+ezrekalMet
+yelledAtAvatar
+avatarPoisoned
+spokeOfCataclysm
+haveSheild
+climbedCliffs
+askedAboutAncients
+toldOfPoison
+tyorviDrunk
+agreeToClimb
+tyorviPissed
+tyorviMet
+tyorviName
+tyorviJob
+tyroviPissed2
+hasTea
+givenTea
+***********************/
+

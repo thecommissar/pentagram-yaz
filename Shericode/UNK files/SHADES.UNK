@@ -1,0 +1,708 @@
+uses "egg";
+uses "free";
+uses "flags";
+uses "npc";
+uses "snddefs";
+
+
+eggclass EggShades inherits Egg
+{
+	process hatch();
+	process [[PT_BARK, referent]] squabble();
+	process	[[PT_DEFAULT, referent]] shadeTalk(wp:WorldPoint);
+	process getEzrekalBackToTemple();
+	process	sendAtliHome();
+	process	sendThordisHome();
+}
+
+process EggShades::hatch()
+{
+	if doneShades = true
+	{
+		return;
+	}
+
+	inShadeScene = true;
+//********LEAVE THIS IN*************
+	Atli.teleport(12799, 10719, 168, MapLostVale);
+	Thordis.teleport(13247, 10815, 168, MapLostVale);
+	Ezrekal.teleport(13055, 10975, 168, MapLostVale);
+//**********************************
+	killProcess(Atli.referent, PT_ACTIVITY);
+	killProcess(Thordis.referent, PT_ACTIVITY);
+	killProcess(Ezrekal.referent, PT_ACTIVITY);
+
+// Quick check to make sure Avatar has AOFrizbee (named by Mel, thank you).
+
+	backpack, Frizbee1, Frizbee2, item : Item;
+	found1,found2 : Boolean;
+
+	backpack.referent = Avatar.getEquip( EQ_BACKPACK );
+
+	if backpack.referent != 0
+	{
+		foreach recursive item where type = TypeAOFrizbee within container backpack.referent
+		{
+
+			if item.getFrame() = 0
+			{
+				Frizbee1.referent = item.referent;
+				found1 = true;
+			}
+			if item.getFrame() = 1
+			{
+				Frizbee2.referent = item.referent;
+				found2 = true;
+			}
+		}
+	}
+
+	if (not found1) and (not found2)
+	{
+		Ezrekal.bark("Bring the sacred shield, you must! Without it,
+				return not! You only hope, it is! Without it, do
+				nothing, I can.");
+		return;
+	}
+
+
+	if (getEggXRange() = 1) // **** ADD THIS IN LATER **** or (eldersAngry)
+	{
+		return;
+	}
+
+	unkCloseAllGumps();
+
+	setAvatarInStasis(true);
+
+	while Avatar.isBusy() // makes sure avatar finishes his steps...
+	{
+		wait(1);
+	}
+
+// make the avatar go to his place on the egg
+	Avatar.pathfind(referent, 20);
+	spawn Avatar.turnToFace(4, 0, 6) -> return;
+
+	times: Number;
+
+	while (times < 2)
+	{
+		Avatar.realDoAnim(AS_WALK, south);
+		wait(1);
+		times++;
+	}
+
+	while Avatar.isBusy() // makes sure avatar finishes his steps...
+	{
+		wait(1);
+	}
+
+	Avatar.realDoAnim(AS_STAND, south);
+
+	scrollTo(Ezrekal.getCX(), Ezrekal.getCY() - 360, Ezrekal.getCZ(), 20);
+
+// Ezrekal yells for attention
+	spawn Ezrekal.realDoAnim(AS_ENTER_CAST, north) -> return;
+	spawn Ezrekal.realDoAnim(AS_EXIT_CAST, north) -> return;
+	Ezrekal.bark("At fault who is, I care not! Over, the time for
+			dissension is!");
+
+// Atli and Thordis turn to face Ezrekal
+	spawn Atli.turnToFace(4, 0, 10) -> return;
+	spawn Thordis.turnToFace(4, 0, 10) -> return;
+
+	Ezrekal.bark("Our offering of faith, the gods await. To me, heed
+			you must! Old grievances, set aside, you must!");
+
+	squabble();
+
+	Avatar.bark("Can't you do something to stop them?");
+	Ezrekal.bark("The hero, I am not. Listen to me, they will not.
+		   	Persuade them, you must.");
+
+	askList : String List;
+	answer : String;
+
+	askList = <<"Can't you two get along!?", "Let's be reasonable!">>;
+	answer = ask(askList);
+
+	switch answer
+	{
+	  	case "Can't you two get along!?"
+	 	{
+			askList -= <<"Can't you two get along!?", "Let's be reasonable!">>;
+			killProcess(referent, PT_BARK);
+
+			Atli.turnToFace(0, LEFT, 10);
+			Atli.bark("Outsider! No respect, you have!
+					Be insulted, I will not!");
+
+			Thordis.turnToFace(0, RIGHT, 10);
+			Thordis.bark("Son of swine! Speak to me like this,
+				you shall not!");
+			wait(3);
+
+			spawn Ezrekal.realDoAnim(AS_ENTER_CAST, north) -> return;
+			spawn Ezrekal.realDoAnim(AS_EXIT_CAST, north) -> return;
+			Ezrekal.bark("Without the faith of my people, do nothing, I can!
+					With respect, to them, speak. Remember...
+					Upon this, your life depends.");
+
+			askList = <<"Please cooperate...", "You two are insufferable!">>;
+			answer = ask(askList);
+
+			switch answer
+			{
+				case "Please cooperate..."
+				{
+					askList -= <<"Please cooperate...", "You two are insufferable!">>;
+					setEggXRange(1); //Makes this a once only scene now.
+
+					Atli.bark("Now, your tone, appropriate is. If the
+						shield of the Ancient Ones, he does have, listen,
+						I will.");
+					wait(3);
+					Thordis.bark("With blood of my blood, was the shield of the
+						Ancient Ones paid for. See it, I shall!");
+				}
+
+				case "You two are insufferable!"
+				{
+					askList -= <<"Please cooperate...", "You two are insufferable!">>;
+
+					Atli.bark("Stay and be insulted, I will not! Like the
+							dog he is, die he should!");
+					spawn sendAtliHome() -> return;
+					wait(3);
+					Thordis.bark("Near me again, do not come! Or your
+							worthless life, I shall take!");
+					spawn sendThordisHome() -> return;
+					wait(3);
+					spawn Ezrekal.realDoAnim(AS_ENTER_CAST, north) -> return;
+					spawn Ezrekal.realDoAnim(AS_EXIT_CAST, north) -> return;
+					Ezrekal.bark("To be healed, you do not deserve! Rude, you
+							are! The gods on you, their backs turn! Nothing
+							more with you, I wish!");
+					spawn getEzrekalBackToTemple() -> return;
+
+					// **** ADD THIS IN LATER **** eldersAngry = true;
+					inShadeScene = false;
+					doneShades = true;
+					scrollBack(20);
+					setAvatarInStasis(false);
+					return;
+				}
+			}
+		}
+
+		case "Let's be reasonable!"
+		{
+			askList -= <<"Can't you two get along!?", "Let's be reasonable!">>;
+			killProcess(referent, PT_BARK);
+			setEggXRange(1); //Makes this a once only scene now.
+
+			spawn Atli.turnToFace(0, LEFT, 15) -> return;
+			spawn Thordis.turnToFace(0, RIGHT, 20) -> return;
+
+			Atli.bark("By an outsider, lectured to, we should not be. If
+				the shield of the Ancient Ones, he does have, listen,
+				I will.");
+			wait(3);
+			Thordis.bark("With blood of my blood, was the shield of the
+				Ancient Ones paid for. See it, I shall!");
+		}
+	}
+
+	wait(10);
+	Ezrekal.bark("Supplicant, who healed wishes to be, the shield,
+			bring forth!");
+
+	askList = <<"Yes, Priestess.", "No, it is mine now.">>;
+	answer = ask(askList);
+
+	switch answer
+	{
+		case "No, it is mine now."
+		{
+			askList -= <<"Yes, Priestess.", "No, it is mine now.">>;
+			Ezrekal.bark("Belongs to the gods, it does! But if possess it,
+					you desire, heal you, I cannot. And when die, you do,
+					matter, it will not.");
+
+			askList = <<"I'm sorry. Please heal me.","Fine!">>;
+			answer = ask(askList);
+
+			switch answer
+			{
+				case "I'm sorry. Please heal me."
+				{
+					Ezrekal.bark("Beware, outsider! Hasty words, your downfall
+						shall be.");
+					Ezrekal.bark("But merciful, I am. The shield, bring forth.
+						When restored, it is, heal you, I shall.");
+				}
+
+				case "Fine!"
+				{
+					spawn getEzrekalBackToTemple() -> return;
+
+					Atli.turnToFace(0, 0, 10);
+					spawn Atli.bark("When at death's door, you are, change your
+							mind, you shall, outsider.") -> return;
+					spawn sendAtliHome() -> return;
+
+					Thordis.turnToFace(0, 0, 10);
+					spawn Thordis.bark("The shield, yours is not! Kill you, I
+							should, and from your lifeless body, it take! But die,
+							you will, soon enough. Wait I will.") -> return;
+					spawn sendThordisHome() -> return;
+
+					// **** ADD THIS IN LATER **** greedyAvatar = true;
+					inShadeScene = false;
+					doneShades = true;
+					scrollBack(20);
+					setAvatarInStasis(false);
+					return;
+				}
+		    }
+		}
+
+		case "Yes, Priestess."
+		{
+			askList -= <<"Yes, Priestess.", "No, it is mine now.">>;
+			counter : Number;
+
+			while counter < 2
+			{
+				Avatar.realDoAnim(AS_WALK, Avatar.getDir());
+				counter++;
+			}
+
+			while Avatar.isBusy() // makes sure avatar finishes his steps...
+			{
+				wait(1);
+			}
+
+			Avatar.bark("Here are both pieces, Priestess.");
+			Avatar.realDoAnim(AS_KNEEL_DOWN, Avatar.getDir());
+
+			Frizbee1.push();
+			Frizbee2.push();
+
+			firePoint1, firePoint2, newPoint : WorldPoint;
+
+			Frizbee2.pop(Avatar.getX() - 60, Avatar.getY() + 50, Avatar.getZ());
+			Frizbee1.pop(Avatar.getX() + 60, Avatar.getY() + 50, Avatar.getZ());
+
+			Frizbee1.getPoint(firePoint1);
+			Frizbee2.getPoint(firePoint2);
+
+			Avatar.realDoAnim(AS_KNEEL_UP, Avatar.getDir());
+
+			Avatar.turnToFace(0, 0, 8);
+
+			for counter = 1 to 3
+			{
+				Avatar.realDoAnim(AS_WALK, Avatar.getDir());
+			}
+
+			while Avatar.isBusy() // makes sure avatar finishes his steps...
+			{
+				wait(1);
+			}
+
+			Avatar.turnToFace(4, 0, 8);
+		}
+	}
+
+	Ezrekal.bark("The combined faith of all our people, I must have...");
+	spawn Atli.turnToFace(4, 0, 5) -> return;
+	spawn Thordis.turnToFace(4, 0, 7) -> return;
+	Thordis.bark("What good will it do, broken it is!?");
+	Atli.bark("No hope of restoring it, we have!");
+	Ezrekal.bark("Silence!");
+	Ezrekal.bark("Of breaking tradition, each other, you accuse. This,
+			tradition is!");
+	Ezrekal.bark("Silent before me, you will be! High Priestess,
+			I am! Your respect, will I have! To tradition, give your
+			faith, if not to me.");
+	wait(1);
+
+	Ezrekal.bark("Ancient Ones, hear me!");
+	spawn Atli.turnToFace(1, 0, 5) -> return;
+	spawn Thordis.turnToFace(7, 0, 7) -> return;
+	Ezrekal.bark("Sundered, our people have been. To their own gods,
+		blind. To end our quarrels, resolved we are!");
+	Ezrekal.realDoAnim(AS_ENTER_CAST, north);
+	Ezrekal.realDoAnim(AS_EXIT_CAST, north);
+
+	invisShield, wholeShield : Item;
+
+	invisShield.create(TypeAOFrizbee, 4);
+	invisShield.pop(Frizbee1.getX() - 60, Frizbee1.getY() - 60, Frizbee1.getZ());
+	invisShield.getPoint(newPoint);
+
+	wait(10);
+	playSFX(THUNDR1A, 200);
+	LightningBolt();
+	spawn flameBlast(firePoint1) -> return;
+	Frizbee1.destroy();
+
+	wait(60);
+	LightningBolt();
+	spawn flameBlast(firePoint2) -> return;
+	Frizbee2.destroy();
+
+	wait(10);
+	Ezrekal.bark("Now, reunited, we are. To fulfill our destiny, ready
+			we are! Our hearts and souls, made whole be!");
+	Ezrekal.realDoAnim(AS_ENTER_CAST, north);
+	Ezrekal.realDoAnim(AS_EXIT_CAST, north);
+	wait(30);
+	playSFX(THUNDR1A, 200);
+	LightningBolt();
+	spawn flameBlast(newPoint) -> return;
+	wholeShield.create(TypeAOFrizbee, 2);
+	wait(15);
+	wholeShield.pop(Frizbee1.getX() - 60, Frizbee1.getY() - 30, Frizbee1.getZ());
+
+	shieldFixed = true;		// globalFlag
+
+	spawn Ezrekal.bark("Yes! Yes! Knew, done it could be, I did!") -> return;
+	Ezrekal.realDoAnim(AS_ENTER_CAST, Ezrekal.getDir());
+	Ezrekal.realDoAnim(AS_EXIT_CAST, Ezrekal.getDir());
+
+	Atli.bark("Whole, it is! Forgiven us, the gods have!");
+	Thordis.bark("Now redeemed, shall we be! Fertile once
+			more, shall our land be!");
+	wait(1);
+	Atli.bark("Grow again, our crops shall!");
+	Thordis.bark("Flow again, the water will!");
+
+	shadeTalk(newPoint);
+	killProcess(referent, PT_DEFAULT);
+	wait(120);
+
+	spawn Thordis.realDoAnim(AS_KNEEL_DOWN, 5) -> return;
+	Thordis.bark("Wise Priestess, wrong we were, to doubt you. In
+			paying you proper homage, failed we have. Unworthy am
+			I, upon you to look.");
+	wait(50);
+
+	spawn Atli.realDoAnim(AS_KNEEL_DOWN, 3) -> return;
+	Atli.bark("You we blamed, for the loss of the gods' favor. But our
+			rivalry and scorn, the cause truly was. To turn us out from
+			the vale, right you would be.");
+	wait(50);
+
+	Ezrekal.bark("At my feet, grovel you should not. Wisdom late learned,
+			wisdom still is. As much at fault, am I. Guide you, I have
+			not.");
+	Ezrekal.bark("Rise! And into their new future, lead your people.");
+	spawn Atli.realDoAnim(AS_KNEEL_UP, Atli.getDir()) -> return;
+	spawn Thordis.realDoAnim(AS_KNEEL_UP, Thordis.getDir()) ->
+		spawn Thordis.realDoAnim(AS_STAND, Thordis.getDir()) -> return;
+	wait(10);
+
+	Ezrekal.bark("Now to this outsider, tend, I must. Hero, to you,
+			thanks I owe. With the small power now mine, healed, wish you
+			to be?");
+
+	askList = <<"Please, High Priestess.", "No, thanks anyway.">>;
+	answer = ask(askList);
+
+	switch answer
+	{
+		case "Please, High Priestess."
+		{
+			spawn Avatar.realDoAnim(AS_KNEEL_DOWN, Avatar.getDir()) -> return;
+
+			Ezrekal.bark("Then healed, you shall be! Passed your test,
+					your have.");
+
+			Ezrekal.realDoAnim(AS_ENTER_CAST, north);
+			Ezrekal.realDoAnim(AS_EXIT_CAST, north);
+			wait(10);
+			playSFX(THUNDR1A, 200);
+
+			avatarPoisoned = false; // Remove poison from Avatar
+
+			spawn Avatar.realDoAnim(AS_KNEEL_UP, Avatar.getDir()) -> return;
+			Avatar.bark("I feel better... But I'm still so weak!");
+			wait(40);
+			Ezrekal.bark("Sorry, I am. The poison, rid I can. Restore
+					your lost health, only the gods can. To them could
+					you go, if open, the temple was. No other way do I
+					know. The remainder of your life, live out with us
+					you may. Care for you, we shall. To me come, when
+					thought it over, you have.");
+		}
+
+		case "No, thanks anyway."
+		{
+			Ezrekal.bark("Sorry, I am. That this way, you feel. Ask the
+					gods, you could, if open, the temple was. Fine, will
+					your funeral be. If change your mind, you do, to me
+					come.");
+		}
+	}
+
+	getEzrekalBackToTemple();
+	sendThordisHome();
+	sendAtliHome();
+
+	inShadeScene = false;
+	doneShades = true;
+	scrollBack(20);
+	setAvatarInStasis(false);
+}
+
+
+process EggShades::squabble()
+{
+	startup
+	{
+		num : Number = 1;
+
+		spawn Atli.turnToFace(3, 0, 5) -> return;
+		spawn Thordis.turnToFace(5, 0, 7) -> return;
+	}
+
+	process
+	{
+		if num = 1
+		{
+			Atli.bark("With Hoskuld's clan, all the trouble lies!");
+			Avatar.realDoAnim(AS_LOOK_LEFT, south);
+			wait(10);
+			Thordis.bark("Liar! Gunnar's clan, tradition broke!");
+			Avatar.realDoAnim(AS_LOOK_RIGHT, south);
+			wait(10);
+			Atli.bark("Hoskuld, the shield stole! Upon your head, the
+					blood of Gunnar is!");
+			Avatar.realDoAnim(AS_LOOK_LEFT, south);
+			wait(5);
+		}
+
+		if num = 2
+		{
+			Thordis.bark("Gunnar, the shield stole! Upon your clan,
+					the blame lies!");
+			Avatar.realDoAnim(AS_LOOK_RIGHT, south);
+			wait(10);
+			Atli.bark("Hoskuld, the thief was! Murdered innocent Gunnar,
+					he did!");
+			Avatar.realDoAnim(AS_LOOK_LEFT, south);
+			wait(10);
+			Thordis.bark("Gunnar, the murderer was! The stolen shield,
+					Hoskuld did seek!");
+			Avatar.realDoAnim(AS_LOOK_RIGHT, south);
+			wait(5);
+		}
+
+		if num = 3
+		{
+			Atli.bark("Control your own brother, you cannot! Yet of my
+					place, tell me you would!");
+			Avatar.realDoAnim(AS_LOOK_LEFT, south);
+			wait(10);
+			Thordis.bark("If not for Ingyald, control him, I would not
+					have to! Encourage Ingyald in this, you do!");
+			Avatar.realDoAnim(AS_LOOK_RIGHT, south);
+			wait(10);
+			Atli.bark("Live, a man must! Grudge him, you should not.");
+			Avatar.realDoAnim(AS_LOOK_LEFT, south);
+			wait(5);
+		}
+
+		if num = 4
+		{
+			Thordis.bark("Because blasphemy Hrodny speaks, disfavor us
+					the gods do!");
+			Avatar.realDoAnim(AS_LOOK_RIGHT, south);
+			wait(10);
+			Atli.bark("To the gods, one woman's opinion is what?! Beneath
+					their feet, dust she is!");
+			Avatar.realDoAnim(AS_LOOK_LEFT, south);
+			wait(10);
+			Thordis.bark("No wonder, disfavored are you! Dishonor women,
+					you do!");
+			Avatar.realDoAnim(AS_LOOK_RIGHT, south);
+		}
+
+		num++;
+
+		if num > 4
+		{
+			Avatar.realDoAnim(AS_STAND, south);
+			return;
+		}
+	}
+}
+
+
+process EggShades::shadeTalk(shadePoint : WorldPoint)
+{
+	wind1, wind2 : Item;
+	shade1, shade2 : Item;
+	item1, item2, item : Item;
+	ref1, ref2 : Referent;
+
+	wind1.create(TypeMiniAirTitan, 0);	// right air effect
+	wind2.create(TypeMiniAirTitan, 0);	// left air effect
+
+	wind1.pop(shadePoint.x + 80, shadePoint.y + 5, shadePoint.z);
+	wind2.pop(shadePoint.x - 80, shadePoint.y + 5, shadePoint.z);
+
+	counter : Number;
+
+	for counter = 0 to 9
+	{
+		wind1.setFrame(counter);	// run up right anim
+		wind2.setFrame(counter);	// run up left anim
+		wait(10);
+	}
+
+	shade1.create(TypeShades, 0);		// Hoskuld -- right shade
+	shade2.create(TypeShades, 1);		// Gunnar -- left shade
+
+	shade1.pop(shadePoint.x + 70, shadePoint.y + 10, shadePoint.z);
+	shade2.pop(shadePoint.x - 70, shadePoint.y + 10, shadePoint.z);
+	spawn safePlaySFX(MAGIC1, 200) -> return;
+
+	for counter = 25 to 34	// run down anim
+	{
+		wind1.setFrame(counter);	// run down right anim
+		wind2.setFrame(counter);	// run down left anim
+		wait(10);
+	}
+
+	wind1.destroy();
+	wind2.destroy();
+
+	shade1.bark("The shade of Hoskuld, I am.");
+	shade1.bark("Together, Gunnar and I, the realm of the gods,
+		we sought.");
+	shade1.bark("The power to restore our sacred shield, we sought,
+		our clans to reunite. By foul monsters, slain we were.");
+	shade1.bark("Long from the vale, lost have I been. Our story to
+		tell, denied have I been.");
+	wait(20);
+
+	shade2.bark("In life, Gunnar, was I named. And fast friend to
+		Hoskuld, I was.");
+	shade2.bark("But now grieved, I am. What we sought, only worsened
+		we did.");
+	shade2.bark("Felled, we were. And with us, our news did die.");
+	shade2.bark("Trapped by the Pagan Titans, have our gods been.
+		Deny us, they did not.");
+	shade2.bark("Sealed, I fear they are, within our temple. Free
+		them, you must!");
+
+	wait(30);
+	playSFX(THUNDR1A, 200);
+	LightningBolt();
+
+	wind1.create(TypeMiniAirTitan, 0);	// right air effect
+	wind2.create(TypeMiniAirTitan, 0);	// left air effect
+
+	wind1.pop(shadePoint.x + 80, shadePoint.y + 5, shadePoint.z);
+	wind2.pop(shadePoint.x - 80, shadePoint.y + 5, shadePoint.z);
+
+	for counter = 0 to 9
+	{
+		wind1.setFrame(counter);	// run up right anim
+		wind2.setFrame(counter);	// run up left anim
+		wait(10);
+	}
+
+	shade1.destroy();		// Hoskuld -- right shade
+	shade2.destroy();		// Gunnar -- left shade
+	spawn safePlaySFX(MAGIC1, 200) -> return;
+
+	for counter = 25 to 34	// run down anim
+	{
+		wind1.setFrame(counter);	// run down right anim
+		wind2.setFrame(counter);	// run down left anim
+		wait(10);
+	}
+
+	wind1.destroy();
+	wind2.destroy();
+}
+
+
+process EggShades::getEzrekalBackToTemple()
+{
+    [[PT_DEFAULT, NULL_REF]];
+	times : Number;
+
+	Ezrekal.turnToFace(west, LEFT, 10);
+	while (times < 4)
+	{
+		Ezrekal.realDoAnim(AS_WALK, west);
+		wait(1);
+		times++;
+	}
+
+	Ezrekal.turnToFace(north, RIGHT, 10);
+	while (times < 30)
+	{
+		Ezrekal.realDoAnim(AS_WALK, north);
+		wait(1);
+		times++;
+	}
+
+	Ezrekal.teleport(19327, 29439, 64, MapLostVale);
+}
+
+
+process EggShades::sendAtliHome()
+{
+	[[PT_DEFAULT, NULL_REF]];
+	times : Number;
+
+	Atli.turnToFace(east, LEFT, 10);
+	while (times < 2)
+	{
+		Atli.realDoAnim(AS_WALK, east);
+		wait(1);
+		times++;
+	}
+
+	Atli.turnToFace(north, RIGHT, 10);
+	while (times < 30)
+	{
+		Atli.realDoAnim(AS_WALK, north);
+		wait(1);
+		times++;
+	}
+
+	Atli.teleport(18943, 19711, 64, MapLostVale);
+}
+
+
+process EggShades::sendThordisHome()
+{
+	[[PT_DEFAULT, NULL_REF]];
+	times : Number;
+
+	Thordis.turnToFace(west, RIGHT, 10);
+	while (times < 4)
+	{
+		Thordis.realDoAnim(AS_WALK, west);
+		wait(1);
+		times++;
+	}
+
+	Thordis.turnToFace(north, RIGHT, 10);
+	while (times < 30)
+	{
+		Atli.realDoAnim(AS_WALK, north);
+		wait(1);
+		times++;
+	}
+
+	Thordis.teleport(11052, 12724, 64, MapLostVale);
+}

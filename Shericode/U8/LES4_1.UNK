@@ -1,0 +1,34 @@
+uses "free";
+uses "item";
+
+globalflag called:16;
+
+npcclass Avatar inherits Npc
+{
+	process look();
+	process use();
+}
+
+routine timesCalled()
+{
+	called++;
+	
+	if called = 1
+	{
+		spawn Avatar.bark("It's only one.") -> return;
+	}
+	else
+	{
+		spawn Avatar.bark("I've been called "+numToStr(called)+" times.") -> return;
+	}
+}
+
+process Avatar::use()
+{
+	timesCalled();
+}
+
+process Avatar::look()
+{
+	bark("the Avatar");
+}

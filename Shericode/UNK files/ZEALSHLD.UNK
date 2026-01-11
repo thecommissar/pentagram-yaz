@@ -1,0 +1,158 @@
+//@@@ TRANSLATE FG
+
+uses "item";
+
+typeclass TypeAOFrizbee inherits Item
+{
+	process look();
+	process equip();
+   process shieldMonitor();
+}
+
+process TypeAOFrizbee::look()
+{
+
+   if getFrame() = 2
+	{
+		bark("Ceremonial Shield of the Ancients Ones");
+	}
+    else if getFrame() = 3
+	{
+		bark("Defender");
+	}
+	else
+	{
+		bark("broken shield");
+	}
+}
+
+
+process shieldUnequipper( r : Referent )
+{
+    [[PT_DEFAULT,0]];
+
+    i : Item;
+    i.referent = r;
+    bp : Item;
+    bp.referent = Avatar.getEquip( EQ_BACKPACK );
+    i.push();
+    i.popToEnd(bp.referent);
+    Avatar.freeEquip( r );
+}
+
+
+process TypeAOFrizbee::shieldMonitor()
+{
+
+    startup
+    {
+        [[PT_DEFAULT,0]];
+        c : Number = 0;
+        i : Item;
+    }
+
+    process
+    {
+        if c = 100
+        {
+            c = 0;
+
+            noArmor : Boolean = true;
+            r :Referent;
+
+            r = Avatar.getEquip( EQ_SHIELD );
+            if r != 0
+            {
+                Avatar.freeEquip( r );
+                i.referent = r;
+                i.push();
+                i.pop( Avatar.getX(), Avatar.getY(), Avatar.getZ() );
+                i.hurl( urandom( 10 ), urandom( 10 ), urandom( 10 ), 2 );
+            }
+
+            r = Avatar.getEquip( EQ_ARM );
+            if r != 0
+            {
+                Avatar.freeEquip( r );
+                i.referent = r;
+                i.push();
+                i.pop( Avatar.getX(), Avatar.getY(), Avatar.getZ() );
+                i.hurl( urandom( 10 ), urandom( 10 ), urandom( 10 ), 2 );
+            }
+
+            r = Avatar.getEquip( EQ_HEAD );
+            if r != 0
+            {
+                Avatar.freeEquip( r );
+                i.referent = r;
+                i.push();
+                i.pop( Avatar.getX(), Avatar.getY(), Avatar.getZ() );
+                i.hurl( urandom( 10 ), urandom( 10 ), urandom( 10 ), 2 );
+            }
+
+            r = Avatar.getEquip( EQ_BODY );
+            if r != 0
+            {
+                Avatar.freeEquip( r );
+                i.referent = r;
+                i.push();
+                i.pop( Avatar.getX(), Avatar.getY(), Avatar.getZ() );
+                i.hurl( urandom( 10 ), urandom( 10 ), urandom( 10 ), 2 );
+            }
+
+            r = Avatar.getEquip( EQ_LEGS );
+            if r != 0
+            {
+                Avatar.freeEquip( r );
+                i.referent = r;
+                i.push();
+                i.pop( Avatar.getX(), Avatar.getY(), Avatar.getZ() );
+                i.hurl( urandom( 10 ), urandom( 10 ), urandom( 10 ), 2 );
+            }
+        }
+
+        c++;
+    }
+}
+
+
+process TypeAOFrizbee::equip()
+{
+	if getFrame() = 3
+	{
+		noArmor : Boolean = true;
+		r :Referent;
+
+        r = Avatar.getEquip( EQ_SHIELD );
+		if r != 0
+			{ noArmor = false; }
+
+        r = Avatar.getEquip( EQ_ARM );
+		if r != 0
+			{ noArmor = false; }
+
+        r = Avatar.getEquip( EQ_HEAD );
+		if r != 0
+			{ noArmor = false; }
+
+        r = Avatar.getEquip( EQ_BODY );
+		if r != 0
+			{ noArmor = false; }
+
+        r = Avatar.getEquip( EQ_LEGS );
+		if r != 0
+			{ noArmor = false; }
+
+		if noArmor = false
+		{
+            spawn shieldUnequipper( referent ) -> return;
+		}
+        else
+        {
+            spawn shieldMonitor() -> return;
+        }
+	}
+}
+
+
+

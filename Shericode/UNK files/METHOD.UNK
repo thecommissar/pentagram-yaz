@@ -1,0 +1,1150 @@
+uses "npc";
+uses "free";
+uses "flags";
+uses "snddefs";
+
+
+// ITEM METHODS
+//-------------
+
+routine Item::receiveHit(sender:Referent, dir : Number, damage : Number )
+{
+	receiveHit(sender,dir,damage,DMG_HAND);
+}
+
+// TOUCH THIS TWO ROUTINES UPON PAIN OF DEATH OR CASTRATION!!!!
+// ************************************************************
+unkroutine Item::getDirToCoords(destx:Coord,desty:Coord,truncate:Boolean):Dir {
+	return getDirToCoords(destx,desty);
+}
+// ************************************************************
+
+process Item::ask(keyList:String List,duration:Number):String {
+	[[PT_DEFAULT, referent]];
+
+	spanker : String List = keyList;
+	key : String = "\&";
+	count : Number = 0;
+
+	while key = "\&" {
+		key = ask(spanker);
+
+		if count = duration {
+			return key;
+		}
+		else {
+			count++;
+		}
+	}
+
+	return key;
+}
+
+
+routine Item::toggleStatus(newStatus:ItemStatus) {
+	if getStatus() & newStatus {
+		andStatus(~newStatus);
+	}
+	else {
+		orStatus(newStatus);
+	}
+}
+
+
+// Moves an Item from its present coords to a new X,Y, and Z at a velocity!
+
+constant X_AXIS = 0;
+constant Y_AXIS = 1;
+
+process Item::legal_moveItemTo(destX:Coord,destY:Coord,destZ:Alti,vel:Number):Boolean {
+	[[PT_DEFAULT, referent]];
+
+	startup {
+		currentP : WorldPoint;
+
+		x : Coord = getX();
+		y : Coord = getY();
+		z : Alti  = getZ();
+
+		w : Coord = destX - x + 1;
+		h : Coord = destY - y + 1;
+
+		counter : Number = 0;
+		minor   : Number = 1;
+		r,q,oabs,v : Number;
+		ovel : Number = vel;
+		c : Number = 0;
+
+		axis : Number = Y_AXIS;
+		if (abs(w) > abs(h)) {
+			axis = X_AXIS;
+		}
+
+		if axis = X_AXIS {
+			q = abs ((h/w)*w);
+			r = abs (h modulo w);
+
+			if w < 0 {
+				ovel = -1 * vel;
+			}
+			if h < 0 {
+				minor = -1;
+			}
+			oabs = abs(w);
+		}
+		else {
+			q = abs ((w/h)*h);
+			r = abs (w modulo h);
+
+			if h < 0 {
+				ovel = -1 * vel;
+			}
+			if w < 0 {
+				minor = -1;
+			}
+			oabs = abs(h);
+		}
+	}
+
+	process {
+        ztarg,zcur : Number;
+
+        zcur  = z     & 0x00FF;
+        ztarg = destZ & 0x00FF;
+
+        if zcur != ztarg {
+
+            dif : Number = ( abs(ztarg - zcur ) / 20) + 1;
+
+            if dif = 0 { dif = 1; }
+
+            if zcur < ztarg {
+                z += dif : Alti;
+			}
+            else  {
+                zcur -= dif;
+                z = (zcur & 0x00FF) : Alti;
+			}
+		}
+
+
+        if c >= oabs {
+            if zcur > (ztarg - 2) {
+              if zcur < (ztarg + 2)  {
+                return true;
+              }
+            }
+
+			currentP.x = x;
+			currentP.y = y;
+			currentP.z = z;
+
+            if not legal_move(currentP,0,0) {
+				return false;
+			}
+		}
+        else {
+          c += vel;
+          if axis = X_AXIS {
+			  currentP.x = x;
+			  currentP.y = y;
+			  currentP.z = z;
+	
+	          if not legal_move(currentP,0,0) {
+			  	return false;
+			  }
+
+              x += ovel;
+              for v=1 to vel {
+                  counter += r + q;
+                  if counter >= oabs {
+                      counter -= oabs;
+                      y+=minor;
+                  }
+              }
+          }
+          else {
+			  currentP.x = x;
+			  currentP.y = y;
+			  currentP.z = z;
+	
+	          if not legal_move(currentP,0,0) {
+			  	return false;
+			  }
+
+              y += ovel;
+              for v=1 to vel {
+                   counter += r + q;
+                  if counter >= oabs {
+                      counter -= oabs;
+                      x+=minor;
+                  }
+              }
+		  }
+        }
+	}
+}
+
+process Item::moveItemTo(destX:Coord,destY:Coord,destZ:Alti,vel:Number) {
+	[[PT_DEFAULT, referent]];
+
+	startup {
+		x : Coord = getX();
+		y : Coord = getY();
+		z : Alti  = getZ();
+
+		w : Coord = destX - x + 1;
+		h : Coord = destY - y + 1;
+
+		counter : Number = 0;
+		minor   : Number = 1;
+		r,q,oabs,v : Number;
+		ovel : Number = vel;
+		c : Number = 0;
+
+		axis : Number = Y_AXIS;
+		if (abs(w) > abs(h)) {
+			axis = X_AXIS;
+		}
+
+		if axis = X_AXIS {
+			q = abs ((h/w)*w);
+			r = abs (h modulo w);
+
+			if w < 0 {
+				ovel = -1 * vel;
+			}
+			if h < 0 {
+				minor = -1;
+			}
+			oabs = abs(w);
+		}
+		else {
+			q = abs ((w/h)*h);
+			r = abs (w modulo h);
+
+			if h < 0 {
+				ovel = -1 * vel;
+			}
+			if w < 0 {
+				minor = -1;
+			}
+			oabs = abs(h);
+		}
+	}
+
+	process {
+        ztarg,zcur : Number;
+
+        zcur  = z     & 0x00FF;
+        ztarg = destZ & 0x00FF;
+
+        if zcur != ztarg {
+
+            dif : Number = ( abs(ztarg - zcur ) / 20) + 1;
+
+            if dif = 0 { dif = 1; }
+
+            if zcur < ztarg {
+                z += dif : Alti;
+			}
+            else  {
+                zcur -= dif;
+                z = (zcur & 0x00FF) : Alti;
+			}
+		}
+
+
+        if c >= oabs {
+            if zcur > (ztarg - 2) {
+              if zcur < (ztarg + 2)  {
+                return;
+              }
+            }
+            move(x,y,z);
+		}
+        else {
+          c += vel;
+          if axis = X_AXIS {
+              move(x,y,z);
+              x += ovel;
+              for v=1 to vel {
+                  counter += r + q;
+                  if counter >= oabs {
+                      counter -= oabs;
+                      y+=minor;
+                  }
+              }
+          }
+          else {
+              move(x,y,z);
+              y += ovel;
+              for v=1 to vel {
+                   counter += r + q;
+                  if counter >= oabs {
+                      counter -= oabs;
+                      x+=minor;
+                  }
+              }
+		  }
+        }
+	}
+}
+
+/*
+process Item::moveItemTo(destX:Coord,destY:Coord,destZ:Alti,vel:Number) {
+	[[PT_DEFAULT, Avatar:Referent]];
+
+	startup {
+		x : Coord = getX();
+		y : Coord = getY();
+		z : Alti  = getZ();
+		w : Coord = destX - x + 1;
+		h : Coord = destY - y + 1;
+
+		X_AXIS : Number = 0;
+		Y_AXIS : Number = 1;
+
+		counter : Number = 0;
+		minor   : Number = 1;
+		r,q,oabs,v : Number;
+		ovel : Number = vel;
+		c : Number = 0;
+
+		axis : Number = Y_AXIS;
+		if (abs(w) > abs(h)) {
+			axis = X_AXIS;
+		}
+
+		if axis = X_AXIS {
+			q = abs ((h/w)*w);
+			r = abs (h modulo w);
+
+			if w < 0 {
+				ovel = -1 * vel;
+			}
+			if h < 0 {
+				minor = -1;
+			}
+			oabs = abs(w);
+		}
+		else {
+			q = abs ((w/h)*h);
+			r = abs (w modulo h);
+
+			if h < 0 {
+				ovel = -1 * vel;
+			}
+			if w < 0 {
+				minor = -1;
+			}
+			oabs = abs(h);
+		}
+	}
+	process {
+		if z != destZ {
+			dist,dif:Number;
+			dist = abs(z - destZ);
+
+			if dist <= 20 {
+				dif = 1;
+			}
+			else if dist <= 40 {
+				dif = 2;
+			}
+			else if dist <= 60 {
+				dif = 3;
+			}
+			else if dist <= 80 {
+				dif = 4;
+			}
+			else {
+				dif = 5;
+			}
+
+			if z < destZ {
+				z += dif;
+			}
+			if z > destZ {
+				z -= dif;
+			}
+		}
+
+		if c>=oabs {
+			return;
+		}
+		c += vel;
+		if axis = X_AXIS {
+			move(x,y,z);
+			x += ovel;
+			for v=1 to vel {
+				counter += r + q;
+				if counter >= oabs {
+					counter -= oabs;
+					y+=minor;
+				}
+			}
+		}
+		else {
+			move(x,y,z);
+			y += ovel;
+			for v=1 to vel {
+				counter += r + q;
+				if counter >= oabs {
+					counter -= oabs;
+					x+=minor;
+				}
+			}
+		}
+	}
+}
+*/
+
+process Item::candleAnim() {
+	[[PT_ANIM_UNK, referent]];
+
+	fram : Frame = getFrame();
+
+	if (fram != 0) and (fram != 4) and (fram != 8) and (fram != 12) {
+		if (fram = 3) or (fram = 7) or (fram = 11) or (fram = 15) {
+			fram -= 2;
+		}
+		else {
+			fram++;
+		}
+		setFrame(fram);
+// actually, this doesn't work, since it
+// gets called at a constant rate; it just
+// eats up processes!!  duh.
+//		wait(randRange(3,6));	// do this AFTER setFrame in case player
+								// turns off the candle during the wait!
+	}
+}
+
+process Item::boom(selfDestruct : Boolean)
+{
+	x : Coord = getX();
+	y : Coord = getY();
+	itemList : Item List;
+	item : Item;
+	range, lowDam, highDam: Number;
+	bigBomb : Boolean = false;
+
+	testme : Number = getStatus() & CONTAINED;
+	farthard : Referent = getRootContainer();
+
+	if ( testme ) and ( farthard = Avatar:Referent)
+	{
+
+		Avatar.bark( "Bye bye!!!!! \f Salut, Salut!!!! \g Lebt wohl...");
+		mrAvatar : Npc;
+		mrAvatar.referent = Avatar:Referent;
+//		spawn mrAvatar.blowUpParts()->return;
+		return;
+	}
+
+	if (getFrame()<4)
+		{
+		range=4;
+
+		lowDam=15;
+		highDam=30;
+		}
+	else
+		{
+		bigBomb=TRUE;
+
+		range=6;
+
+		lowDam=25;
+		highDam=40;
+		}
+
+
+	foreach item within range cells of referent
+		{
+		if (item.referent!=referent)
+			{
+			itemList += <<item>>;
+			}
+		}
+
+	if (bigBomb)
+		{		
+		playSFX(EXPLODE2,100);
+		createSprite(TypeExplosion,0,17,17,1,1,getX()+370,getY()+336,getZ()+56);
+		}
+	else
+		{
+		playSFX(EXPLODE1,100);
+		createSprite(TypeExplosion,40,65,65,1,1,getX()+415,getY()+390,getZ()+56);
+		}
+
+	item.referent=referent;
+
+	[[PT_ANIM_UNK,0]];
+
+	if (selfDestruct)
+		{
+		item.destroy();
+		}
+
+	foreach item in itemList
+		{
+
+		blueFlame : Item;
+		gotFlame : Boolean = false;
+
+		foreach blueFlame where type = TypeFireField
+			within 1 cell of item.referent {
+
+			if (blueFlame.getFrame() >= 10) and
+				(blueFlame.getFrame() >= 10) {
+
+				gotFlame = true;
+			}
+		}
+
+		if not gotFlame
+			{
+			item.receiveHit(0,item.getDirToCoords(x,y),randRange(lowDam,highDam),DMG_FIRE|DMG_BLUNT);
+			}
+		}
+}
+
+process Item::timedBark(time:Number,string:String Reference) {
+	[[PT_DEFAULT, referent]];
+
+	spawn bark(string) -> return;
+	wait(time);
+	killProcess(referent, PT_BARK);
+}
+
+process Item::isInWorld():Boolean {
+	[[PT_DEFAULT, referent]];
+	
+	if getZ() > 251 {
+		return false;
+	}
+	else {
+		return true;
+	}
+}
+
+
+process Item::lookBark( s : String Reference )
+{
+
+   [[PT_LOOK, referent]];
+
+   if Kernel::getNumProcesses( referent, PT_LOOK ) > 2 {
+     return;
+   }
+   else {
+     bark( s );
+   }
+
+}
+
+
+// NPC METHODS
+//------------
+
+process Npc::turnToFace(newDir:Number,forceDir:Number,speed:Number):Dir {
+	[[PT_ANIM_UNK, referent]];
+
+	startup {
+		right : Boolean = true;
+		newDir = newDir modulo 8;
+
+		if forceDir = RANDOM {
+			dir : Number = getDir();
+			count : Number = 0;
+	
+			while dir != newDir {
+				if dir = 7 {
+					dir = 0;
+				}
+				else {
+					dir++;
+				}
+	
+				count++;
+			}
+	
+			if count > 4 {
+				right = false;
+			}
+	
+			if count = 4 {
+				if urandom(100) >= 50 {
+					right = false;
+				}   
+			}
+		}
+		if forceDir = LEFT {
+			right = false;
+		}
+	}
+
+	process {
+		dir = getDir();
+
+		while dir != newDir {
+			if right {
+				if dir = 7 {
+					dir = 0;
+				}
+				else {
+					dir++;
+				}
+			}
+			else {
+				if dir = 0 {
+					dir = 7;
+				}
+				else {
+					dir--;
+				}
+			}
+
+			realDoAnim(AS_STAND,dir);
+			wait(speed);
+		}
+
+		if right {
+			return RIGHT;
+		}
+		else {
+			return LEFT;
+		}
+	}
+}
+
+process Npc::loiter() {
+	[[PT_ACTIVITY, referent]];
+
+	startup
+		{
+		dir:Number = 0;
+		count:Number = 0;
+		}
+	process
+		{
+		count ++;
+		if count > 3
+			{
+			dir ++;
+			if dir > 6
+				{
+				dir = 0;
+				}
+			}
+		wait(30);
+		doAnim(AS_WALK,dir,NO_ANIM_LIMIT,FALSE);
+		wait(30);
+		}
+
+	/*
+	startup {
+		homePoint,myPoint : WorldPoint;
+
+		homePoint.x = getX();
+		homePoint.y = getY();
+		homePoint.z = getZ();
+
+		dir,homeDir,tempDir : Dir;
+		time,count : Number;
+	}
+
+	process {
+		if not isBusy() {
+			count = -1;
+			dir = getDir();
+	
+			myPoint.x = getX();
+			myPoint.y = getY();
+			myPoint.z = getZ();
+	
+			dist : Number = getDistance(myPoint,homePoint);
+	
+			// TURN TO FACE "HOME"
+	
+			if dist > 320 {
+				count = 0;
+	
+				tempDir = dir;
+				homeDir = getDirToCoords(homePoint.x,homePoint.y);
+		
+				while tempDir != homeDir {
+					count++;
+					tempDir++;
+				}
+		
+				if not count {
+					dir = homeDir;
+				}
+				else if count <= 3 {    // Clockwise
+					dir++;
+				}
+				else if count >= 5 {    // Counter clockwise
+					dir--;
+				}
+			}
+	
+			// RANDOM TURN
+			
+			ran : Number;
+	
+			if count = 4 {
+				ran = urandom(2);
+			}
+			else if count = -1 {
+				ran = urandom(3);
+			}
+	
+			if not ran {
+				dir++;
+			}
+			else if ran = 1 {
+				dir--;
+			}
+	
+			if dir = -1 {
+				dir = 7;
+			}
+			if dir = 8 {
+				dir = 0;
+			}
+	
+			// MOVEMENT
+	
+			time = urandom(21);
+			wait(time);
+	
+			doAnim(AS_WALK,dir,NO_ANIM_LIMIT, 1,FALSE);
+		}
+	}
+	*/
+}
+
+process Npc::wander() {
+	startup {
+		if (isNpc() = false) or (isDead() = true) or (isInCombat() = true) {
+			return;
+		}
+
+		dir : Dir;
+	}
+
+	process {
+		// TURN
+		if random(2) {
+			dir = random(8);
+
+			if not dir = getDir() {
+				turnToFace(random(8),RANDOM,5);
+			}
+		}
+
+		realDoAnim(AS_WALK,getDir());
+		
+		if not random(6) {
+			realDoAnim(AS_STAND,getDir());
+			wait((300 + random(300)));
+		}
+	}
+}
+
+process Npc::follow():Boolean {
+}
+
+process Npc::lead():Boolean {
+}
+
+
+process Npc::enterConvo() {
+
+//DO NOT TALK TO DEAD PEOPLE!
+	if isDead() {
+		killProcess(referent,PT_USE);
+		return;
+	}
+
+	unkCloseAllGumps();
+
+//STOP WHATEVER THEY ARE DOING!
+
+	killProcess(referent,PT_ACTIVITY);
+	killProcess(referent,PT_BARK);
+	killProcess(referent,PT_ANIM);
+	killProcess(referent,PT_PATHFIND);
+
+
+//STASIS IS A GOOD THING!
+
+	if not getAvatarInStasis() {
+		setAvatarInStasis(true);
+	}
+
+// THIS IS A TEST TO SEE IF WE CAN GET THIS FUCKING THING WORKING!!!
+// *****************************************************************
+
+	if (referent = Beren:Referent) and (Avatar.getMap() = MapLavaRiverAfter) {
+		[[PT_DEFAULT,NULL_REF]];
+	}
+
+// *****************************************************************
+
+	spawn Avatar.turnToFace(Avatar.getDirToItem(referent),false,2) -> return;
+	turnToFace(getDirToItem(Avatar:Referent),false,2);
+
+
+//DO NOT TALK TO INVISIBLE PEOPLE!
+
+	if Avatar.getStatus() & INVISIBLE {
+
+		if urandom(10) > 5 {
+			wait(60);
+			bark("Thought I heard someone...
+				\f J'ai bien cru entendre quelqu'un...
+				\g Ich dachte, ich h„tte etwas geh”rt...");
+			bark("Oh well...
+				\f Oh, soit...
+				\g War wohl nichts...");
+		}
+		else {
+			bark("Hello...? \f Quelqu'un...? \g Hallo...?");
+			bark("Is someone there...?
+				\f Il y a quelqu'un icy...?
+				\g Ist da jemand...?");
+		}
+		wait(60);
+		setAvatarInStasis(false);
+		enterFastArea();
+		killProcess(referent,PT_USE);
+		return;
+	}
+
+
+	if getDistance(referent,Avatar:Referent) >= 384 {
+		scrollTo(getX(),getY(),(getZ()+20),30);
+	}
+	else {
+		scrollTo(getX(),getY(),(getZ()+20),25);
+	}
+
+	Camera::setCenterOn(referent);
+
+
+// STOP OTHER PEOPLE FROM BARKING!
+
+	somebodyTalking = true;
+
+}
+
+// FOR THOSE WHO WISH TO REMAIN SEATED DURING ENTERCONVO
+process Npc::enterConvo2() {
+
+	if isDead() {
+		killProcess(referent,PT_USE);
+		return;
+	}
+
+	unkCloseAllGumps();
+
+	killProcess(referent,PT_ACTIVITY);
+	killProcess(referent,PT_BARK);
+	killProcess(referent,PT_ANIM);
+	killProcess(referent,PT_PATHFIND);
+
+	if not getAvatarInStasis() {
+		setAvatarInStasis(true);
+	}
+
+	spawn Avatar.turnToFace(Avatar.getDirToItem(referent),false,2) -> return;
+
+
+	if Avatar.getStatus() & INVISIBLE {
+
+		if urandom(10) > 5 {
+			wait(60);
+			bark("Thought I heard someone...
+					\f J'ai bien cru entendre quelqu'un...
+					\g Ich dachte, ich h„tte jemanden geh”rt...");
+			bark("Oh well... \f Oh  soit... \g War wohl nichts...");
+		}
+		else {
+			bark("Hello...? \f Quelqu'un...? \g Hallo...?");
+			bark("Is someone there...?
+					\f Il y a quelqu'un icy...?
+					\g Ist da jemand...?");
+		}
+		wait(60);
+		setAvatarInStasis(false);
+		enterFastArea();
+		killProcess(referent,PT_USE);
+		return;
+	}
+
+
+	if getDistance(referent,Avatar:Referent) >= 384 {
+		scrollTo(getX(),getY(),(getZ()+20),30);
+	}
+	else {
+		scrollTo(getX(),getY(),(getZ()+20),25);
+	}
+	
+	Camera::setCenterOn(referent);
+
+
+// STOP OTHER PEOPLE FROM BARKING!
+
+	somebodyTalking = true;
+
+}
+
+
+process Npc::exitConvo() {
+
+	enterFastArea();
+
+	if getDistance(referent,Avatar:Referent) >= 384 {
+		scrollBack(30);
+	}
+	else {
+		scrollBack(25);
+	}
+
+
+// EVERYONE RESUME BARKING!
+
+	somebodyTalking = false;
+
+	setAvatarInStasis(false);
+}
+
+routine focusCheck(item:Item):Number {
+	if item.getType() = TypeFireItem {
+		if ((item.getFrame() >= 0) and (item.getFrame() <= 2)) or
+			(item.getFrame() = 15) {
+
+			return Wand;
+		}
+		else if ((item.getFrame() >= 3) and (item.getFrame() <= 5)) or
+			(item.getFrame() = 16) {
+
+			return Rod;
+		}
+		else if ((item.getFrame() >= 6) and (item.getFrame() <= 8)) or
+			(item.getFrame() = 17) {
+
+			return Staff;
+		}
+		else if ((item.getFrame() >= 9) and (item.getFrame() <= 11)) or
+			(item.getFrame() = 18) {
+
+			return Talisman;
+		}
+		else if ((item.getFrame() >= 12) and (item.getFrame() <= 14)) or
+			(item.getFrame() = 19) or (item.getFrame() = 20) {
+	
+			return Symbol;
+		}
+	}
+
+	return false;
+}
+
+routine Npc::isMage():Number {
+	mage : Item;
+	mage.referent = referent;
+
+	// Necromancer
+	// -----------
+	if referent = Vividos:Referent {
+		return Necromancer;
+	}
+
+	// Theurgists
+	// ----------
+	if (referent = Stellos:Referent) or (referent = Cyrrus:Referent) or
+		(referent = Xavier:Referent) {
+
+		return Theurgist;
+	}
+
+	// Tempests
+	// --------
+	if (referent = Mordea:Referent) or
+		((devonInRule = true) and (referent = Devon:Referent)) {
+
+		return Tempest;
+	}
+
+	// Sorcerers
+	// ---------
+	if (referent = Malchir:Referent) or (referent = Bane:Referent) or
+		(referent = Vardion:Referent) or (referent = Gorgrond:Referent) or
+		(referent = Beren:Referent) or (mage.getType() = TypeSorcerer) {
+
+		return Sorcerer;
+	}
+
+	// Thaumaturge
+	// -----------
+	if referent = Mythran:Referent {
+		return Thaumaturge;
+	}
+
+	return false;
+}
+
+process Npc::downUp(dir:Number) {
+	[[PT_DEFAULT, referent]];
+
+	if referent = Avatar:Referent {
+		setAvatarInStasis(true);
+	}
+
+//	spawn doAnim(AS_FALL_DOWN,dir,NO_ANIM_LIMIT,FALSE)->spawn doAnim(AS_GET_UP,dir,NO_ANIM_LIMIT,FALSE)->spawn doAnim(AS_STAND,dir,NO_ANIM_LIMIT,FALSE)->[[PT_DEFAULT,referent]]	{
+//		if referent = Avatar:Referent {
+//			setAvatarInStasis(false);
+//		}
+//	}->return;
+
+	realDoAnim(AS_FALL_DOWN,dir);
+//	wait(20);
+
+	realDoAnim(AS_GET_UP,dir);
+//	wait(10);
+
+	realDoAnim(AS_STAND,dir);
+
+	if referent = Avatar:Referent {
+		setAvatarInStasis(false);
+	}
+}
+
+process Npc::safeTeleport(destP:WorldPoint,destMap:MapNum):Boolean {
+	[[PT_DEFAULT, referent]];
+
+	avaP,myP : WorldPoint;
+
+	avaP.x = Avatar.getX();
+	avaP.y = Avatar.getY();
+	avaP.z = Avatar.getZ();
+
+	myP.x = getX();
+	myP.y = getY();
+	myP.z = getZ();
+
+// Do not teleport dead people!
+
+	if isDead() = false
+	{
+		if (Avatar.getMap() = getMap()) and (getDistance(avaP, myP) > 700) or
+			(Avatar.getMap() != getMap()) {
+	
+			if (Avatar.getMap() = destMap) and (getDistance(avaP, destP) > 700) or
+				(Avatar.getMap() != destMap) {
+	
+				teleport(destP.x,destP.y,destP.z,destMap);
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	return false;
+}
+
+process Npc::canSafeTeleport(destP:WorldPoint,destMap:MapNum):Boolean {
+	[[PT_DEFAULT, referent]];
+
+	avaP,myP : WorldPoint;
+
+	avaP.x = Avatar.getX();
+	avaP.y = Avatar.getY();
+	avaP.z = Avatar.getZ();
+	myP.x = getX();
+	myP.y = getY();
+	myP.z = getZ();
+
+	if isDead() = false
+	{
+		if (Avatar.getMap() = getMap()) and (getDistance(avaP, myP) > 700) or
+			(Avatar.getMap() != getMap()) {
+	
+			if (Avatar.getMap() = destMap) and (getDistance(avaP, destP) > 700) or
+				(Avatar.getMap() != destMap) {
+	
+				return true;
+			}
+		}
+		return false;
+	}
+
+	return false;
+}
+
+
+process [[PT_DEFAULT, referent]] Npc::pace(pathframe1 : Word, pathframe2 : Word)
+{
+	p1 : Item;
+	p2 : Item;
+	s  : Item;
+	x  : Number;
+	times : Number;
+
+	startup
+	{
+	   x = 0;
+	   times = 0;
+	   foreach s where type = TypePathMarker within 32 cells of referent {
+		 if s.getFrame() = pathframe1 {
+		   p1.referent = s.referent;
+		 }
+		 else if s.getFrame() = pathframe2 {
+		   p2.referent = s.referent;
+		 }
+	   }
+	}
+
+	process
+	{
+		times++;
+
+		if x = 0 {
+		  pathfind( p1.referent, 20 );
+		}
+
+		if x = 600 {
+		  pathfind( p2.referent, 20 );
+		}
+
+		x++;
+
+		if x = 1200 {
+		  x = 0;
+		}
+
+		if times=3
+		{
+			return;
+		}
+	}
+}
+
+process Npc::realDoAnim(animSet:Word,dir:Word) {
+	[[PT_DEFAULT, referent]];
+
+	startup{}
+	process {
+		killProcess(referent, PT_ANIM);
+		doAnim(animSet,dir,NO_ANIM_LIMIT,false);
+		return;
+	}
+}
+

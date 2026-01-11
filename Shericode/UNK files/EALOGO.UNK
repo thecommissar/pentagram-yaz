@@ -1,0 +1,14 @@
+/*
+uses "item";
+
+typeclass TypeEaLogo inherits Item
+{
+	process look();
+}
+
+process TypeEaLogo::look()
+{
+//@@@CHANGE Translate f/g
+	bark ("earthen shape");
+}
+/*

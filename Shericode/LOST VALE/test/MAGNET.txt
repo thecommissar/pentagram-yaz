@@ -1,0 +1,516 @@
+uses "egg";
+uses "item";
+uses "snddefs";
+
+eggclass EggMagnet inherits Egg
+{
+	process hatch();
+	process friskAvatar();
+	process cleanSweep();
+	process leaveFastArea();
+	process killMagnet();
+}
+
+
+process EggMagnet::hatch()
+{
+	startup
+	{
+		if (candlesCorrect = false)
+		{
+			monolithSucks = true;
+		}
+
+//		Avatar.setStr(40); // for TESTING with broken editor
+	}
+
+	process
+	{
+		if candlesCorrect = true
+		{
+			monolithSucks = false;
+			spawn killMagnet() -> return;
+		}
+		else
+		{
+			cleanSweep();
+			friskAvatar();
+		}
+	}
+}
+
+
+process EggMagnet::friskAvatar()
+{
+	[[PT_DEFAULT, referent]];
+
+	startup
+	{
+		backpack, item : Item;
+		num, count : Number;
+		count = 0;
+		backpack.referent = Avatar.getEquip( EQ_BACKPACK );
+	}
+
+	process
+	{
+		count = 0;
+
+		if backpack.referent != 0
+		{
+			foreach recursive item where (type = TypePotion)
+			within container backpack.referent // magic potion
+			{
+				if ( item.getFrame() > 0 )
+				{
+					item.push();
+					count ++;
+				}
+			}
+		}
+
+		foreach recursive item where (type = TypeKey)
+		and (frame = 3) within container Avatar // "magic" key in Cloud City
+		{
+			item.push();
+			count ++;
+		}
+
+		foreach recursive item where (type = TypeBagOReagents)
+		and (frame = 0) within container Avatar // endless bag of reagents
+		{
+			item.push();
+			count ++;
+		}
+
+		foreach recursive item where (type = TypeMagicScroll)
+		within container Avatar // magic scroll (any frame)
+		{
+			item.push();
+			count ++;
+		}
+
+		foreach recursive item where (type = TypeAirFocus)
+		within container Avatar // air spell foci (any frame)
+		{
+			item.push();
+			count ++;
+		}
+
+		foreach recursive item where (type = TypeEarthItem)
+		within container Avatar // earth spell foci (any frame)
+		{
+			item.push();
+			count ++;
+		}
+
+		foreach recursive item where (type = TypeFireItem)
+		within container Avatar // fire spell foci (any frame)
+		{
+			item.push();
+			count ++;
+		}
+
+		foreach recursive item where (type = TypeMagArmor)
+		within container Avatar // magic armor (frames 0 and/or 1)
+		{
+			item.push();
+			count ++;
+		}
+
+		foreach recursive item where (type = TypeMagArmorTwo)
+		within container Avatar // magic armor (frames 0 and/or 1)
+		{
+			item.push();
+			count ++;
+		}
+
+		foreach recursive item where (type = TypeMagShield)
+		and (frame = 0) within container Avatar // magic shield
+		{
+			item.push();
+			count ++;
+		}
+
+		foreach recursive item where (type = TypeMagArms)
+		and (frame = 0) within container Avatar // magic arm coverings
+		{
+			item.push();
+			count ++;
+		}
+
+		foreach recursive item where (type = TypeMagLegs)
+		and (frame = 0) within container Avatar // magic leg coverings
+		{
+			item.push();
+			count ++;
+		}
+
+		foreach recursive item where (type = TypeMagHelm)
+		and (frame = 0) within container Avatar // magic helm
+		{
+			item.push();
+			count ++;
+		}
+
+		foreach recursive item where (type = TypeHammerOfStrength)
+		and (frame = 0) within container Avatar // hammer
+		{
+			item.push();
+			count ++;
+		}
+
+		foreach recursive item where (type = TypeDeceiver)
+		and (frame = 0) within container Avatar // sword
+		{
+			item.push();
+			count ++;
+		}
+
+		foreach recursive item where (type = TypeSlayer) and
+		(frame = 0) within container Avatar // mace
+		{
+			item.push();
+			count ++;
+		}
+
+		foreach recursive item where (type = TypeScimitarOfKumashGor) and
+		(frame = 0) within container Avatar //sword
+		{
+			item.push();
+			count ++;
+		}
+
+		foreach recursive item where (type = TypeKorghinsFang) and
+		(frame = 0) within container Avatar // sword
+		{
+			item.push();
+			count ++;
+		}
+
+		foreach recursive item where (type = TypeFlameSting) and
+		(frame = 0) within container Avatar // sword
+		{
+			item.push();
+			count ++;
+		}
+
+		foreach recursive item where (type = TypeProtector) and
+		(frame = 0) within container Avatar //sword
+		{
+			item.push();
+			count ++;
+		}
+
+		foreach recursive item where (type = TypeBladeOfStriking) and
+		(frame = 0) within container Avatar // sword
+		{
+			item.push();
+			count ++;
+		}
+
+		if not candlesCorrect
+		{
+			if count < 1 // no magic items
+			{
+				suspend;
+			}
+		}
+
+		spawn safePlaySFX(MAGIC1, 200) -> return;
+
+		for num = 1 to count
+		{
+			item.referent = getEtherealTop();
+			item.pop(15615, 19839, 120);
+		}
+	}
+}
+
+
+process EggMagnet::cleanSweep()
+{
+	[[PT_DEFAULT, referent]];
+
+	startup
+	{
+		item : Item;
+		num, count : Number;
+		count = 0;
+	}
+
+	process
+	{
+		count = 0;
+
+		foreach recursive item where (type = TypePotion)
+		within 50 cells of referent // magic potion
+		{
+			if ( item.getFrame() > 0 )
+			{
+				if ((item.getX() != 15615) and (item.getY() != 19839))
+				or (item.isInNpc() = true)
+				{
+					item.push();
+					count ++;
+				}
+			}
+		}
+
+		foreach recursive item where (type = TypeKey)
+		and (frame = 3) within 50 cells of referent // "magic" key in Cloud City
+		{
+			if ((item.getX() != 15615) and (item.getY() != 19839))
+			or (item.isInNpc() = true)
+			{
+				item.push();
+				count ++;
+			}
+		}
+
+		foreach recursive item where (type = TypeBagOReagents)
+		and (frame = 0) within 50 cells of referent // endless bag of reagents
+		{
+			if ((item.getX() != 15615) and (item.getY() != 19839))
+			or (item.isInNpc() = true)
+			{
+				item.push();
+				count ++;
+			}
+		}
+
+		foreach recursive item where (type = TypeMagicScroll)
+		within 50 cells of referent // magic scroll (any frame)
+		{
+			if ((item.getX() != 15615) and (item.getY() != 19839))
+			or (item.isInNpc() = true)
+			{
+				item.push();
+				count ++;
+			}
+		}
+
+		foreach recursive item where (type = TypeAirFocus)
+		within 50 cells of referent // air spell foci (any frame)
+		{
+			if ((item.getX() != 15615) and (item.getY() != 19839))
+			or (item.isInNpc() = true)
+			{
+				item.push();
+				count ++;
+			}
+		}
+
+		foreach recursive item where (type = TypeEarthItem)
+		within 50 cells of referent // earth spell foci (any frame)
+		{
+			if ((item.getX() != 15615) and (item.getY() != 19839))
+			or (item.isInNpc() = true)
+			{
+				item.push();
+				count ++;
+			}
+		}
+
+		foreach recursive item where (type = TypeFireItem)
+		within 50 cells of referent // fire spell foci (any frame)
+		{
+			if ((item.getX() != 15615) and (item.getY() != 19839))
+			or (item.isInNpc() = true)
+			{
+				item.push();
+				count ++;
+			}
+		}
+
+		foreach recursive item where (type = TypeMagArmor)
+		within 50 cells of referent // magic armor (frames 0 and/or 1)
+		{
+			if ((item.getX() != 15615) and (item.getY() != 19839))
+			or (item.isInNpc() = true)
+			{
+				item.push();
+				count ++;
+			}
+		}
+
+		foreach recursive item where (type = TypeMagArmorTwo)
+		within 50 cells of referent // magic armor (frames 0 and/or 1)
+		{
+			if ((item.getX() != 15615) and (item.getY() != 19839))
+			or (item.isInNpc() = true)
+			{
+				item.push();
+				count ++;
+			}
+		}
+
+		foreach recursive item where (type = TypeMagShield)
+		and (frame = 0) within 50 cells of referent // magic shield
+		{
+			if ((item.getX() != 15615) and (item.getY() != 19839))
+			or (item.isInNpc() = true)
+			{
+				item.push();
+				count ++;
+			}
+		}
+
+		foreach recursive item where (type = TypeMagArms)
+		and (frame = 0) within 50 cells of referent // magic arm coverings
+		{
+			if ((item.getX() != 15615) and (item.getY() != 19839))
+			or (item.isInNpc() = true)
+			{
+				item.push();
+				count ++;
+			}
+		}
+
+		foreach recursive item where (type = TypeMagLegs)
+		and (frame = 0) within 50 cells of referent // magic leg coverings
+		{
+			if ((item.getX() != 15615) and (item.getY() != 19839))
+			or (item.isInNpc() = true)
+			{
+				item.push();
+				count ++;
+			}
+		}
+
+		foreach recursive item where (type = TypeMagHelm)
+		and (frame = 0) within 50 cells of referent // magic helm
+		{
+			if ((item.getX() != 15615) and (item.getY() != 19839))
+			or (item.isInNpc() = true)
+			{
+				item.push();
+				count ++;
+			}
+		}
+
+		foreach recursive item where (type = TypeHammerOfStrength)
+		and (frame = 0) within 50 cells of referent // hammer
+		{
+			if ((item.getX() != 15615) and (item.getY() != 19839))
+			or (item.isInNpc() = true)
+			{
+				item.push();
+				count ++;
+			}
+		}
+
+		foreach recursive item where (type = TypeDeceiver)
+		and (frame = 0) within 50 cells of referent // sword
+		{
+			if ((item.getX() != 15615) and (item.getY() != 19839))
+			or (item.isInNpc() = true)
+			{
+				item.push();
+				count ++;
+			}
+		}
+
+		foreach recursive item where (type = TypeSlayer) and
+		(frame = 0) within 50 cells of referent // mace
+		{
+			if ((item.getX() != 15615) and (item.getY() != 19839))
+			or (item.isInNpc() = true)
+			{
+				item.push();
+				count ++;
+			}
+		}
+
+		foreach recursive item where (type = TypeScimitarOfKumashGor) and
+		(frame = 0) within 50 cells of referent //sword
+		{
+			if ((item.getX() != 15615) and (item.getY() != 19839))
+			or (item.isInNpc() = true)
+			{
+				item.push();
+				count ++;
+			}
+		}
+
+		foreach recursive item where (type = TypeKorghinsFang) and
+		(frame = 0) within 50 cells of referent // sword
+		{
+			if ((item.getX() != 15615) and (item.getY() != 19839))
+			or (item.isInNpc() = true)
+			{
+				item.push();
+				count ++;
+			}
+		}
+
+		foreach recursive item where (type = TypeFlameSting) and
+		(frame = 0) within 50 cells of referent // sword
+		{
+			if ((item.getX() != 15615) and (item.getY() != 19839))
+			or (item.isInNpc() = true)
+			{
+				item.push();
+				count ++;
+			}
+		}
+
+		foreach recursive item where (type = TypeProtector) and
+		(frame = 0) within 50 cells of referent //sword
+		{
+			if ((item.getX() != 15615) and (item.getY() != 19839))
+			or (item.isInNpc() = true)
+			{
+				item.push();
+				count ++;
+			}
+		}
+
+		foreach recursive item where (type = TypeBladeOfStriking) and
+		(frame = 0) within 50 cells of referent // sword
+		{
+			if ((item.getX() != 15615) and (item.getY() != 19839))
+			or (item.isInNpc() = true)
+			{
+				item.push();
+				count ++;
+			}
+		}
+
+		if (candlesCorrect = false)
+		{
+			if count < 1 // no magic items
+			{
+				wait(100);
+			}
+			else
+			{
+				spawn safePlaySFX(MAGIC1, 200) -> return;
+
+				for num = 1 to count
+				{
+ 					item.referent = getEtherealTop();
+ 					item.pop(15615, 19839, 120);
+				}
+			}
+		}
+		else
+		{
+			return;
+		}
+	}
+}
+
+
+process EggMagnet::leaveFastArea()
+{
+	spawn killMagnet() -> return;
+}
+
+
+process EggMagnet::killMagnet()
+{
+	[[PT_DEFAULT, referent]];
+
+	killProcess(referent, PT_UNKHATCH);
+}

@@ -1,0 +1,565 @@
+uses "flags";
+uses "free";
+uses "npc";
+uses "snddefs";
+uses "titans";
+
+
+
+typeclass TypeAirTitan inherits MrsStratos
+{
+	process use();
+	process look();
+
+	process sailAvatar();
+	process circleAvatar();
+	process blowMe();
+	process giveFocus();
+}
+
+process TypeAirTitan::look()
+{
+	if stratosName
+	{
+		bark("Stratos, the Air Titan 
+		\f Stratos, Titan de l'Air
+		\g Stratos, die Titanin der LÅfte");
+	}
+	else
+	{
+		bark("Titan");
+	}
+}
+
+
+process TypeAirTitan::use()
+{
+	miniTitan:Item;
+	answer, Correct:String;
+	askList:String List;
+	referent:Referent;
+	counter:Number;
+
+	resetRef(Avatar:Referent, PT_ANIM);
+	playMusic(115);
+
+	Avatar.turnToFace(7,0,1);
+	Avatar.realDoAnim(AS_STAND,7);
+	setAvatarInStasis(true);
+
+
+	safePlaySFX (MIXSPELL,200);
+	spawn blowMe() -> return;
+	levitateAvatar = true;
+
+	item:Item;
+	item.create(TypeMiniAirTitan,0);
+	item.pop(getX(),getY(),getZ());
+	item.look();
+	item.moveItemTo(Avatar.getX(),Avatar.getY(),Avatar.getZ() + 20, 15);
+
+	Avatar.orStatus( HANGING );
+	wait( 20 );
+	safePlaySFX (AROWFLY1,200);
+	item.push();
+	Avatar.realDoAnim(AS_FALL_DOWN,Avatar.getDir());
+
+
+	item2:Item;
+	item2.legal_create(TypeMiniAirTitan,0,Avatar.getX() - 4,Avatar.getY(),Avatar.getZ():Coord);
+	item3:Item;
+	item3.legal_create(TypeMiniAirTitan,0,Avatar.getX(),Avatar.getY() - 4,Avatar.getZ():Coord);
+	item4:Item;
+	item4.legal_create(TypeMiniAirTitan,0,Avatar.getX() - 4,Avatar.getY() - 4,Avatar.getZ():Coord);
+
+	item2.use();
+	wait( 10 );
+	item3.use();
+	wait( 10 );
+	item4.use();
+	wait( 10 );
+
+
+	for counter = 1 to 45
+	{
+		Avatar.move( Avatar.getX(), Avatar.getY(), Avatar.getZ() + 2);
+		if counter = 6
+		{
+			safePlaySFX(WHOA1A,200);
+		}
+		wait(1);
+	}
+
+	scrollTo(getX(),getY(),getZ(),15);
+	spawn sailAvatar() -> return;
+
+	if stratosMet
+	{
+		rock:Item;
+		bool:Boolean;
+
+		foreach recursive rock where (type = TypeBlackrockFragments)
+			and (frame = 3) within container Avatar 
+		{
+			rock.destroy();
+			bool = true;
+		}
+
+		if (stratosTakenBreath = false) and (bool = true) 
+		{
+			stratosTakenBreath = true;
+
+			bark("Oh small one, you You have come to
+			return the Breath of Wind.
+
+			\f Oh, mon petit, tu es venu me rapporter
+			le Souffle du Vent.
+
+			\g Mein Kleines, du bist gekommen, um den Atem des Windes zurÅckzubringen.");
+
+			askList=<<"bye \f bon vent \g Lebt wohl.">>;
+		}
+
+		else 
+		{
+			if stratosTakenBreath
+			{
+				bark("Yes, my most precious child?
+					\f Oui, mon enfant adorÇ?
+					\g Ja, teuerstes Kind?");
+				askList=<<"I must have the Breath of Wind. 
+					\f J'ai besoin du Souffle du Vent.
+					\g Ich benîtige den Atem des Windes.",
+						"bye \f bon vent \g Lebt wohl.">>;
+			}
+	
+			else
+			{
+				bark("My child, you have returned to me.
+					\f Mon enfant, tu es revenu vers moy.
+					\g Mein Kind, du bist zu mir zurÅckgekehrt.");
+				askList=<<"Who are your children?
+							\f Qui sont tes enfants?
+							\g Wer sind Eure Kinder?",
+						"bye \f bon vent \g Lebt wohl.">>;
+				if not rewardMe
+				{
+			 		askList^=<<"Reward me?
+					\f Me rÇcompenser?
+					\g Mich belohnen?">>;
+				}
+				if spokenAboutBreath
+				{
+					askList^=<<"I must have the Breath of Wind. 
+						\f J'ai besoin du Souffle du Vent.
+						\g Ich benîtige den Atem des Windes.",
+							"bye \f bon vent \g Lebt wohl.">>;
+				}
+			}
+		}
+	}
+	else
+	{
+		bark("And yet another child is found. Please, small one, come closer.
+
+		\f Ah, un enfant de plus. Je t'en prie, approche-toy, mon petit.
+
+		\g Und wieder ein Kind, das zu mir zurÅckgefunden hat. Tritt nÑher, mein Kleines.");
+
+		askList=<<"Who are you? \f Qui es-tu? \g Wer seid Ihr?">>;
+	}
+
+	while answer != "bye \f bon vent \g Lebt wohl."
+	{
+		answer = ask(askList);
+		switch answer
+		{
+
+			case "Who are you? \f Qui es-tu? \g Wer seid Ihr?"
+			{
+				stratosName = true;
+				stratosMet = true;
+
+				bark("Who am I? Ah, such a dear child. So very young in his
+				knowledge. Why, he is no more than a babe. I am Stratos, Titan of Air,
+				Giver of Life. To reach me took a great deal of courage.
+				I wish to reward you.
+
+				\f Qui je suis? Ah, ce cher petit. Encore si jeune dans son savoir.
+				A peine un nourrisson. Je suis Stratos, Titan de l'Air, celle qui donne
+				la Vie. Pour me joindre tu as fais montre d'un grand courage.
+				Je dÇsire te rÇcompenser.
+
+				\g Wer ich bin? Ach, welch ein liebes Kind; noch so unschuldig in
+				seiner Unwissenheit; fast noch ein SÑugling. So viele meiner Kinder
+				haben meinen Namen vergessen. Ich bin Stratos, die Titanin der LÅfte,
+				die Lebensspenderin. Es gehîrte sehr viel Mut und Entschlossenheit
+				dazu, mich zu finden. DafÅr will ich dich belohnen.");
+				askList-=<<"Who are you? \f Qui es-tu? \g Wer seid Ihr?">>;
+				askList^=<<"Titan of Air?
+							\f Titan de l'Air?
+							\g Titanin der LÅfte?",
+							"Reward me?
+							\f Me rÇcompenser?
+							\g Mich belohnen?",
+							 "Who are your children?
+							 \f Qui sont tes enfants?
+							 \g Wer sind Eure Kinder?",
+							 "bye \f bon vent \g Lebt wohl.">>;
+			}
+
+			case "Titan of Air?
+					\f Titan de l'Air?
+					\g Titanin der LÅfte?"
+			{
+				bark("I am the breeze which cools your cheek on a warm day. I
+				am the raging wind which drives the waves
+				before it. I am the fuel which feeds the tongues of flame to heat
+				your supper and the teeth that bite you in a winter storm.
+				With my help, my children can be cured of their illnesses
+				and pain; without me, they die.
+
+				\f Je suis la douce brise qui rafraåchit ta joue par grande chaleur.
+				Je suis le vent furieux qui souläve les vagues. Je suis la nourriture
+				du feu qui rÇchauffe ton souper, et les dents qui
+				mordent ta peau en hiver. Grace Ö moy, mes enfants peuvent estre soignÇs
+				de leurs maux. Sans moy, ils meurent.
+
+				\g Ich bin die Brise, die an einem hei·en Tag deine Wangen kÅhlt. Ich
+				bin der tobende Sturm, der die Wellen peitscht. Ich fache die
+				Flammen an, die deine Speise erwÑrmen, und es sind meine ZÑhne, die dich
+				in einem Schneesturm bei·en. Mit meiner Hilfe kînnen meine Kinder von
+				ihren Krankheiten und Schmerzen geheilt werden; ohne mich sind sie dem Tod geweiht.");
+				askList-=<<"Titan of Air?
+							\f Titan de l'Air?
+							\g Titanin der LÅfte?">>;
+			}
+
+			case "Reward me?
+					\f Me rÇcompenser?
+					\g Mich belohnen?"
+			{
+				rewardMe = true;
+				bark("Take this Focus, Adept. With it you will be able to
+				cast the Air Walk spell at will.
+
+				\f Adepte, prends ce Substrat. Grace Ö luy, tu pourras
+				jeter Ö volontÇ le sortiläge du Giga-Saut.
+
+				\g Nimm dieses Zaubersymbol, Eingeweihter. Mit ihm kannst du jederzeit den
+				Luftschrittzauber aussprechen.");
+				askList-=<<"Reward me?
+							\f Me rÇcompenser?
+							\g Mich belohnen?">>;
+				giveFocus();
+			}
+
+			case "Who are your children?
+				 \f Qui sont tes enfants?
+				 \g Wer sind Eure Kinder?"
+			{
+				bark("All who live are my children. Do they not all
+				partake of my gift of sweet air? Some have forgotten their
+				mother. But they will return to me, they always do. When
+				they are hurt or ailing, they will come to me for healing.
+
+				\f Tous les estres vivants sont mes enfants. Ne partagent-ils point
+				l'air doux que je leur offre? D'aucuns m'ont oubliÇe. Mais ils me reviendront.
+				Ils me reviennent toujours. Quand ils souffrent ou sont blessÇs, ils viennent
+				Ö moy pour estre guÇris.
+
+				\g Ich nenne alle Lebenden meine Kinder. Empfangen sie nicht alle das
+				Geschenk meiner sÅ·en Luft? Manche haben ihre Mutter vergessen. Aber sie
+				werden zu mir zurÅckkehren; das tun sie immer. Wenn sie krank oder
+				verwundet sind, kehren sie in meine Arme zurÅck, um Heilung zu empfangen.");
+				askList-=<<"Who are your children?
+							\f Qui sont tes enfants?
+							\g Wer sind Eure Kinder?">>;
+				askList^=<<"How are they healed?
+							\f Comment sont-ils guÇris?
+							\g Wie werden sie geheilt?">>;
+			}
+			case "How are they healed?
+					\f Comment sont-ils guÇris?
+					\g Wie werden sie geheilt?"
+			{
+
+				bark("Through the Breath of Wind my Chosen Children
+				heal those in need.
+
+				\f Grace au Souffle du Vent, mes Enfants Choisis ont le don
+				de guÇrison.
+
+				\g Durch den Atem des Windes kînnen meine auserwÑhlten Kinder die
+				BedÅrftigen heilen.");
+				askList-=<<"How are they healed?
+							\f Comment sont-ils guÇris?
+							\g Wie werden sie geheilt?">>;
+				askList^=<<"Tell me of the Breath of Wind.
+							\f Parle-moy du Souffle du Vent.
+							\g ErzÑhlt mir mehr Åber den Atem des Windes.">>;
+			}
+			case "Tell me of the Breath of Wind.
+					\f Parle-moy du Souffle du Vent.
+					\g ErzÑhlt mir mehr Åber den Atem des Windes."
+			{
+
+				spokenAboutBreath = true;
+				bark("The Breath of Wind is that through which I touch
+				my children. It's location is known
+				only to Honorable Stellos.
+
+				\f Le Souffle du Vent est le lien qui m'unit Ö mes
+				enfants. Seul l'Honorable Stellos sait oó le trouver.
+
+				\g Mit dem Atem des Windes streichle ich meine Kinder. Nur der ehrenwerte
+				Stellos kennt das Versteck.");
+				askList-=<<"Tell me of the Breath of Wind.
+							\f Parle-moy du Souffle du Vent.
+							\g ErzÑhlt mir mehr Åber den Atem des Windes.">>;
+				askList=<<"May I have the Breath of Wind?
+							\f Puis-je avoir le Souffle du Vent?
+							\g Kînnte ich den Atem des Windes haben?",
+							 "bye \f bon vent \g Lebt wohl.">>;
+			}
+
+			case "May I have the Breath of Wind?
+					\f Puis-je avoir le Souffle du Vent?
+					\g Kînnte ich den Atem des Windes haben?"
+			{
+				bark("Oh, child, you know not what you ask. To take the
+				Breath of Wind from me is to sever the
+				link to my healers.
+
+				\f Oh, mon enfant. Tu ne te rends point compte de ce que tu
+				me demandes. Me prendre le Souffle du Vent risque de briser mon
+				lien avec mes guÇrisseurs.
+
+				\g Oh, mein Kind, du wei·t nicht, was du von mir verlangst. Den Atem des
+				Windes von mir zu nehmen bedeutet, das Band zwischen mir und meinen
+				Heilern zu durchtrennen.");
+				askList-=<<"May I have the Breath of Wind?
+							\f Puis-je avoir le Souffle du Vent?
+							\g Kînnte ich den Atem des Windes haben?">>;
+				askList^=<<"I must have the Breath of Wind.
+							\f J'ai besoin du Souffle du Vent.
+							\g Ich benîtige den Atem des Windes.",
+				"bye \f bon vent \g Lebt wohl.">>;
+			}
+
+			case "I must have the Breath of Wind. 
+					\f J'ai besoin du Souffle du Vent.
+					\g Ich benîtige den Atem des Windes."
+			{
+
+					bark("Without the Breath of Wind, many would die.
+					Many would pay the price for your quest for power.
+					No, Child, I cannot allow this.
+					
+					\f Sans le Souffle du Vent, beaucoup mourroient. Beaucoup
+					paieroient le prix de ta soif du pouvoir.
+					Non, mon Enfant, je ne puis le permettre.
+					
+					\g Ohne den Atem des Windes wÅrden viele sterben. Viele wÅrden den 
+					Preis fÅr dein Streben nach der Macht bezahlen mÅssen. Nein, mein Kind, das
+					 kann ich nicht zulassen.");
+				askList=<<"bye \f bon vent \g Lebt wohl.">>;
+			}
+
+			case "bye \f bon vent \g Lebt wohl."
+			{
+ 
+				if not rewardMe 
+				{
+					rewardMe = true;
+					bark("Take this Focus, Adept. With it you will be able to
+					cast the Air Walk spell at will.
+	
+					\f Adepte, prends ce Substrat. Grace Ö luy, tu pourras
+					jeter Ö volontÇ le sortiläge du Giga-Saut.
+	
+					\g Nimm dieses Zaubersymbol, Eingeweihter. Mit ihm kannst du jederzeit den
+					Luftschrittzauber aussprechen.");
+					askList-=<<"Reward me?
+								\f Me rÇcompenser?
+								\g Mich belohnen?">>;
+					giveFocus();
+				}
+
+				bark("Farewell, my dear child.
+				
+				\f Adieu, mon cher enfant.
+				
+				\g Leb' wohl, mein liebes Kind.");
+				scrollBack(15);
+			//	Avatar.moveItemTo(Avatar.getX() + 100,Avatar.getY() - 300,Avatar.getZ(), 5);
+			
+				for counter = 1 to 40 
+				{
+					Avatar.move( Avatar.getX(), Avatar.getY(), Avatar.getZ() - 2);
+					wait( 2);
+				}
+			
+				if (Avatar.getZ() > 113) 
+				{
+					numb:Number = (Avatar.getZ() - 112);
+					for counter = 1 to numb 
+					{
+						Avatar.move( Avatar.getX(), Avatar.getY(), Avatar.getZ() - 1);
+						wait( 4 );
+					}
+				}
+				
+				safePlaySFX (IMPACT1A,200);
+				Avatar.orStatus( HANGING );
+				levitateAvatar = false;
+				resetRef(item.referent, PT_ANIM);
+				resetRef(item2.referent, PT_ANIM);
+				resetRef(item3.referent, PT_ANIM);
+				resetRef(item4.referent, PT_ANIM);
+				item2.push();
+				item3.push();
+				item4.push();
+			
+				resetRef(Avatar:Referent, PT_ANIM);
+				Avatar.realDoAnim(AS_GET_UP,7);
+				wait( 10 );
+				resetRef(Avatar:Referent, PT_ANIM);
+				Avatar.realDoAnim(AS_STAND,Avatar.getDir());
+			
+				wait( 30 );
+				Avatar.turnToFace(7,0,10);
+				setAvatarInStasis(false);
+				item.destroy();
+				item2.destroy();
+				item3.destroy();
+				item4.destroy();
+
+				playMusic(97);
+				return;
+			}
+		}
+	}
+}
+
+
+
+
+
+process TypeAirTitan::sailAvatar()
+{
+
+	[[PT_DEFAULT, Avatar:Referent]];
+
+	startup
+	{
+		countz:Number = 0;
+		dirz:Number = 1;
+	}
+
+	process
+	{
+	  	wait(20);
+
+		if levitateAvatar
+		{
+
+			if countz > 5
+			{
+				dirz = -1;
+			}
+
+			if countz < -5
+			{
+				dirz = 1;
+			}
+
+			countz = countz + dirz;
+
+			Avatar.move(Avatar.getX(), Avatar.getY(), Avatar.getZ() + dirz);
+		}
+		else
+		{
+
+			if countz > 0
+			{
+				Avatar.move(Avatar.getX(), Avatar.getY(), Avatar.getZ() - countz);
+			}
+			return;
+		}
+	}
+}
+
+
+process TypeAirTitan::blowMe()
+{
+	[[PT_DEFAULT, referent:Referent]];
+
+	startup
+	{
+	}
+
+	process
+	{
+		wait(100);
+
+		if not levitateAvatar
+		{
+			return;
+		}
+
+      if (not isSFXPlaying( WIND3 )) and (not isSFXPlaying( WIND4 ))
+      {
+         if urandom(2) = 0
+         {
+            if urandom(2)
+            {
+               playSFX( WIND3, 10, referent );
+            }
+            else
+            {
+               playSFX( WIND4, 10, referent );
+            }
+         }
+      }
+	}
+}
+
+
+process TypeAirTitan::giveFocus()
+{
+	[[PT_DEFAULT, referent:Referent]];
+
+	dustDevil,pathEgg,focus,magic:Item;
+	eggX,eggY,eggZ:Number;
+
+	dustDevil.create(TypeMiniAirTitan,12);
+	dustDevil.pop(getX(),getY(),getZ());
+
+	safePlaySFX(MAGIC9,200);
+	dustDevil.look();
+	wait(100);
+
+	foreach	pathEgg where type = TypePathMarker within 50 cells of referent
+	{
+		eggX=pathEgg.getX();
+		eggY=pathEgg.getY();
+		eggZ=pathEgg.getZ();
+		dustDevil.moveItemTo(eggX + 10,eggY + 10,eggZ + 10,15);
+		safePlaySFX(MAGIC2,200);
+
+		magic.create(TypeMagicSparkle,11);
+		magic.pop(eggX + 10,eggY + 10,eggZ + 10);
+		wait(150);
+		focus.create(TypeAirFocus,13);
+		focus.pop(eggX,eggY,eggZ);
+		wait(150);
+		magic.destroy();
+		dustDevil.moveItemTo(getX(),getY(),getZ() + 10,15);
+		wait(30);
+	}
+
+	safePlaySFX(MAGIC9,200);
+	dustDevil.destroy();
+}
+

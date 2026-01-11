@@ -1,0 +1,1989 @@
+uses "free";
+uses "npc";
+uses "flags";
+uses "door";
+
+npcclass Cyrrus inherits Npc
+{
+	process use();
+	process look();
+	process enterFastArea();
+	process leaveFastArea();
+	process schedule( currentTime : Long);
+	process cast(ref:Referent);
+	process AvatarStoleSomething(ref:Referent);
+
+	process atHome(); 
+	process randomBarkAtHome(); 
+	process atMonastery(); 
+	process randomBarkAtMonastery(); 
+	process inWoods(); 
+	process randomBarkInWoods(); 
+	process closeDoor();
+}
+
+process Cyrrus::look()
+{
+
+
+	if Cyrrus.isDead()
+	{
+		bark("the late Cyrrus \f despouille de Cyrrus \g Der verstorbene Cyrrus");
+		return;
+	}
+
+	if cyrrusName and cyrrusJob
+	{
+		bark("Holy Cyrrus, the healer \f VÇnÇrable Cyrrus, le guÇrisseur
+			\g Der ehrwÅrdige Heiler Cyrrus");
+	}
+	else if cyrrusName
+	{
+		bark("Cyrrus");
+	}
+
+	else if cyrrusJob 
+	{
+		bark("monk \f moine \g Mînch");
+	}
+
+	else 
+	{
+		bark("man \f homme \g Mann");
+	}
+}
+
+
+process Cyrrus::schedule(currentTime:Long)
+{
+
+	if Cyrrus.isDead()
+	{
+		return;
+	}
+
+	point : WorldPoint;
+	map : MapNum = MapArgentrockIsle;
+	sched : Number;
+
+
+// If time to go to work, head for the Monastery
+	if (getPeriod() = threemoons) 
+	{
+		point.x = 18975;
+		point.y = 17695;
+		point.z = 56;
+		sched = at_monastery;
+	}
+
+
+// Head for the woods
+	if (getPeriod() = lastebb) or (getPeriod() = eventide)
+		{
+		point.x = 23039;
+		point.y = 17663;
+		point.z = 56;
+		sched = in_woods;
+		}
+
+
+// if it's nap time, head for home.
+	if (getPeriod() = bloodwatch) or  (getPeriod() = firstebb) or  
+		(getPeriod() = daytide) 
+		{
+		point.x = 20223;
+		point.y = 21535;
+		point.z = 56;
+		sched = at_home;
+	}
+
+
+	if canSafeTeleport(point,map)
+	{
+		cyrrusSchedule = sched;
+		safeTeleport(point,map);
+	}
+}
+
+
+
+
+process Cyrrus::enterFastArea()
+{
+	if Cyrrus.isDead()
+	{
+		teleport(urandom(10000),urandom(10000),0,0);
+		return;
+	}
+
+	resetRef(referent,PT_ACTIVITY);
+	resetRef(referent,PT_PATHFIND);
+	resetRef(referent,PT_ANIM);
+	resetRef(referent,PT_BARK);
+	
+
+
+	if (cyrrusSchedule = at_home) 
+	{
+		spawn atHome() -> return;
+	}
+	
+	else if (cyrrusSchedule = at_monastery) 
+	{
+		spawn atMonastery() -> return;
+	}
+
+	else if (cyrrusSchedule = in_woods) 
+	{
+		spawn inWoods() -> return;
+	}
+
+}
+
+
+process Cyrrus::leaveFastArea()
+{
+	cyrrusJustHealed = false;
+
+	resetRef(referent,PT_ACTIVITY);
+	resetRef(referent,PT_PATHFIND);
+	resetRef(referent,PT_ANIM);
+	resetRef(referent,PT_BARK);
+}
+
+
+
+
+process Cyrrus::cast(ref:Referent)
+{
+	count:Number;
+	count = 10;
+
+	// TEST TO MAKE SURE THAT THE NPC HAS A TARGET
+	// -------------------------------------------
+	while (not getTarget()) and (count) {
+		wait(1);
+		count--;
+	}
+
+	ref = getTarget();
+
+
+
+	if ref = Avatar:Referent
+	{
+
+		resetRef(referent,PT_ACTIVITY);
+		resetRef(referent,PT_PATHFIND);
+		resetRef(referent,PT_BARK);
+		resetRef(referent,PT_ANIM);
+
+		bark("Aid me, Stratos!
+				\f Aide-moy, Stratos!
+				\g Helft mir, Stratos!");
+
+		spawn safePlaySFX(MAGIC3,200) -> return;
+		realDoAnim(AS_ENTER_CAST,getDir());
+		realDoAnim(AS_CAST1,getDir());
+		toggleStatus(INVISIBLE);
+		spawn safePlaySFX( WIND4,100) -> return;
+		setFrame(getFrame());
+		realDoAnim(AS_EXIT_CAST,getDir());
+		clrImmortal();
+		setDead();
+		teleport(urandom(10000),urandom(10000),0,0);
+	}
+}
+
+
+
+
+process Cyrrus::AvatarStoleSomething(ref:Referent)
+{
+	item,stolenItem:Item;
+	item.referent = ref;
+
+
+	if cyrrusSchedule != at_home
+	{
+		return;
+	}
+
+	resetRef(referent,PT_ACTIVITY);
+	resetRef(referent,PT_PATHFIND);
+	resetRef(referent,PT_BARK);
+	resetRef(referent,PT_ANIM);
+
+	foreach recursive stolenItem within container Avatar 
+	{
+		if stolenItem.referent = item.referent
+		{
+			cSetActivity(ACT_COMBAT);
+		}
+	}
+
+	turnToFace(getDirToItem(Avatar:Referent),false,10);
+	bark("What are you doing there...?
+		\f Eh! Qu'est-ce que tu trafiques, lÖ-bas...?
+		\g Was macht Ihr denn da...?");
+	wait(120);
+	enterFastArea();
+	return;
+}
+
+
+
+
+process Cyrrus::atHome()
+{
+
+	[[PT_ACTIVITY, referent]];
+
+	startup 
+	{
+		pathEgg:Item;
+		counter, counter2 :Number;
+		if getLastAnimSet() = AS_SIT_DOWN 
+		{
+			realDoAnim(AS_SIT_UP,getDir());
+		}
+		foreach	pathEgg where (type = TypePathMarker) and (quality = 7) within 10 cells of Cyrrus {
+			counter2 = pathEgg.getFrame();
+		}
+	}
+
+	process
+	{
+		for counter = counter2 to 7
+		{
+			foreach	pathEgg where (type = TypePathMarker) and (frame = counter)
+			and (quality = 7) within 25 cells of Cyrrus
+			{
+				if pathfind(pathEgg.referent,10)
+				{
+					if counter = 0 {
+						turnToFace(2,0,10);
+						bark("I must meditate! \f Il faut que je mesdite!
+							\g Ich mu· meditieren!");
+						realDoAnim(AS_SIT_DOWN,getDir());
+						wait(1000);
+						realDoAnim(AS_SIT_UP,getDir());
+						bark("I feel refreshed now! \f Je me sens bien mieux, maintenant!
+							\g Jetzt fÅhle ich mich erfrischt!");
+					}
+					else if (counter = 1) or (counter = 3)
+					{
+						turnToFace(2,0,10);
+						closeDoor();
+					}
+					else
+					{
+						if not somebodyTalking
+						{
+							randomBarkAtHome();
+							wait(30);
+						}
+						else
+						{
+							realDoAnim(AS_FIDGET,getDir());
+							wait(30);
+						}
+					}
+				}
+				else
+				{
+					wait(500);
+				}
+			wait(60 + urandom(100));
+			}
+		}
+
+	counter2 = 0;
+	}
+}
+
+
+process Cyrrus::randomBarkAtHome()
+{
+	[[PT_ACTIVITY, referent]];
+
+	ran:Number;
+
+
+	ran = getDistance(Avatar:Referent, Cyrrus:Referent);
+
+	if (ran < 200) and ((Avatar.getStatus() & INVISIBLE) = false) 
+	{
+
+		ran = urandom(4);
+
+		if ran = 1 
+		{
+			turnToFace(getDirToItem(Avatar:Referent),false,15);
+			bark("Why are you still here?
+				\f Pourquoi es-tu encore icy?
+				\g Weshalb seid Ihr immer noch hier?");
+		}
+		if ran = 2 
+		{
+			turnToFace(getDirToItem(Avatar:Referent),false,15);
+			if not cyrrusMet
+			{
+				bark("Why are you here, stranger?
+					\f Pourquoi es-tu icy, estranger?
+					\g Weshalb seid Ihr hier, Fremder?");
+			}
+			else
+			{
+			bark("Please, I'd like my privacy.
+					\f J'aimerois qu'on me laisse tranquille...
+					\g Ich wÑre jetzt gerne alleine...");
+			}
+			wait(120);
+		}
+		if ran = 3 
+		{
+			turnToFace((getDirToItem(Avatar:Referent)),false,15);
+			if not cyrrusMet
+			{
+				bark("Are you here to rob me?!
+					\f Es-tu icy pour me dÇvaliser?!
+					\g Wollt Ihr mich etwa berauben?!");
+			}
+			else
+			{
+				bark("Please, I need to be alone.
+					\f S'il te plaist, j'ai besoin d'estre seul.
+					\g Ich bitte Euch; ich mu· jetzt alleine sein.");
+			}
+			wait(120);
+		}
+
+		if ran = 4 
+		{
+			turnToFace(getDirToItem(Avatar:Referent),false,15);
+			if not cyrrusMet
+			{
+				bark("What are you doing here?
+					\f Que viens-tu faire icy?
+					\g Was tut Ihr hier?");
+			}
+			else
+			{
+ 
+				bark("May I help you with something?
+					\f Puis-je t'aider?
+					\g Kann ich Euch helfen?");
+			}
+			wait(120);
+		}
+	}
+
+	else
+	{
+		ran = urandom(12);
+		turnToFace(urandom(7),0,10);
+
+		if ran = 1 
+		{
+			if not torwinJumped
+			{
+
+			bark("I wonder if Torwin has supper plans?
+				\f Je me demande si Torwin a des projets pour le souper.
+				 \g Torwin wÅrde vielleicht gerne zum Abendessen kommen.");
+			}
+			else
+			{
+				bark("Gee, I miss Torwin. 
+				\f Ah fichtre, que Torwin me manque!
+				\g Torwin fehlt mir!");
+			}
+		}
+
+		if ran = 2 
+		{
+			bark("Hmmmm... \f Hmmmm... \g Hmmmm...");
+			wait(60);
+		}
+
+		if ran = 3 
+		{
+			bark("I need to return to my studies.
+				\f Il faut que je me remette Ö mes recherches.
+				\g Ich mu· mich wieder meinen Studien widmen.");
+		}
+
+		if ran = 4 
+		{
+
+			bark("Perhaps I should travel home to Tenebrae.
+				\f Peut-estre devrois-je rentrer chez moy Ö Tenebrae?
+				\g Vielleicht sollte ich Tenebrae mal einen Besuch abstatten.");
+			wait(50);
+			bark("Then I could visit my true love, Jenna. 
+				\f Je pourrois rendre visite Ö ma bien aimÇe, Jenna.
+				\g Dann kînnte ich Jenna, meine gro·e Liebe, besuchen.");
+			wait(100);
+		}
+
+		if ran = 5 
+		{
+			realDoAnim(AS_SIT_DOWN,getDir());
+			bark("Curse these shoes. \f Maudites chaussures. \g Verdammte Schuhe.");
+			realDoAnim(AS_SIT_UP,getDir());
+		}
+
+		if ran = 6 
+		{
+			bark("I should tend to the garden.
+				\f Je devrois m'occuper du jardin.
+				\g Ich mu· mich mal wieder um den Garten kÅmmern.");
+		}
+
+		if ran = 7 
+		{
+			bark("It is rather humid today.
+				\f Il fait plutost humide, aujourd'huy.
+				\g Es ist ganz schîn schwÅl heute.");
+			wait(60);
+		}
+	}
+}
+
+
+process Cyrrus::atMonastery()
+{
+
+	[[PT_ACTIVITY, referent]];
+
+	startup 
+	{
+		pathEgg:Item;
+		counter, counter2 :Number;
+
+		if getLastAnimSet() = AS_SIT_DOWN  
+		{
+			realDoAnim(AS_SIT_UP,getDir());
+		}
+
+		foreach	pathEgg where (type = TypePathMarker) and (quality = 8) within 10 cells of Cyrrus
+		{
+			counter2 = pathEgg.getFrame();
+		}
+	}
+
+	process
+	{
+		for counter = counter2 to 12
+		{
+			foreach	pathEgg where (type = TypePathMarker) and (frame = counter)
+			and (quality = 8) within 25 cells of Cyrrus
+			{
+				if pathfind(pathEgg.referent,10)
+				{
+					if (counter = 3) or (counter = 10)
+					{
+						turnToFace(2,0,10);
+						closeDoor();
+					}
+					else
+					{
+						if not somebodyTalking
+						{
+							randomBarkAtMonastery();
+							wait(30);
+						}
+						else
+						{
+							realDoAnim(AS_FIDGET,getDir());
+							wait(30);
+						}
+					}
+				}
+				else
+				{
+					wait(500);
+				}
+			wait(60 + urandom(100));
+			}
+		}
+	counter2 = 0;
+	}
+}
+
+process Cyrrus::randomBarkAtMonastery()
+{
+	[[PT_ACTIVITY, referent]];
+
+	ran:Number;
+
+	ran = getDistance(Avatar:Referent, Cyrrus:Referent);
+
+	if (ran < 200) and ((Avatar.getStatus() & INVISIBLE) = false) 
+	{
+		ran = urandom(3);
+		if ran = 1 
+		{
+			turnToFace(getDirToItem(Avatar:Referent),false,15);
+			bark("Do you require my assistance?
+				\f As-tu besoin de mon aide?
+				\g Braucht Ihr Hilfe?");
+		}
+
+		if ran = 2 
+		{
+			turnToFace(getDirToItem(Avatar:Referent),false,15);
+			if not torwinMet
+			{
+				bark("What do you need here, stranger?
+					\f De quoi as-tu besoin icy, estranger?
+					\g Was sucht Ihr hier, Fremder?");
+			}
+			else
+			{
+				bark("What do you require?
+					\f De quoi as-tu besoin?
+					\g Was braucht Ihr?");
+			}
+			wait(120);
+		}
+
+		if ran = 3 
+		{
+			turnToFace((getDirToItem(Avatar:Referent)),false,15);
+			if not torwinMet
+			{
+				bark("Yes, stranger? \f Oui, estranger? \g Ja, Fremder?");
+			}
+			else
+			{
+				bark("Yes? \f Oui? \g Ja?");
+			}
+			wait(120);
+		}
+	}
+
+
+	else
+	{
+		ran = urandom(12);
+		turnToFace(urandom(7),0,10);
+
+		if ran = 1 
+		{
+
+			bark("I need to speak to Torwin.
+				\f Il faut que je parle Ö Torwin.
+				\g Ich mu· mit Torwin sprechen.");
+		}
+		if ran = 2 
+		{
+			bark("Mmmmm \f Mmmmm \g Mmmmm...");
+		}
+
+		if ran = 3 
+		{
+			bark("I'm feeling a bit peckish.
+				\f Je me sens le ventre creux.
+				\g Irgendwie fÅhle ich mich heute ein wenig unwohl.");
+		}
+
+		if ran = 4 
+		{
+			bark("I should leave for Tenebrae soon.
+				\f Je devrois bientost partir pour Tenebrae.
+				\g Ich sollte bald nach Tenebrae aufbrechen.");
+		}
+
+		if ran = 5 
+		{
+			bark("Blast these bunions.
+				\f Ces cors me font trop souffrir.
+				\g Diese verfluchten HÅhneraugen.");
+			wait(100);
+		}
+
+		if ran = 6 
+		{
+ 
+			bark("I must remember to prune the garden.
+				\f Il ne faut point que j'oublie de tailler les arbustes.
+				\g Ich mu· die Hecken im Garten zurÅckschneiden.");
+		}
+
+		if ran = 7 
+		{
+			bark("Let me see... \f Voyons voir... \g Mal sehen...");
+			wait(60);
+			bark("No, that's not it. \f Non, ce n'est point áa.
+				\g Nein, das ist es nicht.");
+		}
+	}
+}
+
+
+process Cyrrus::inWoods()
+{
+
+	[[PT_ACTIVITY, referent]];
+
+	startup 
+	{
+		pathEgg:Item;
+		counter, counter2 :Number;
+
+		if getLastAnimSet() = AS_SIT_DOWN  
+		{
+			realDoAnim(AS_SIT_UP,getDir());
+		}
+		foreach	pathEgg where (type = TypePathMarker) and (quality = 6) within 10 cells of Cyrrus
+		{
+			counter2 = pathEgg.getFrame();
+		}
+	}
+
+	process
+	{
+		for counter = counter2 to 19
+		{
+			foreach	pathEgg where (type = TypePathMarker) and (frame = (19 - counter))
+			and (quality = 6) within 25 cells of Cyrrus
+			{
+			if pathfind(pathEgg.referent,12)
+			{
+				if counter = 10
+				{
+					turnToFace(urandom(7),0,10);
+					realDoAnim(AS_SIT_DOWN,getDir());
+					wait(1200);
+					realDoAnim(AS_SIT_UP,getDir());
+				}
+				else if counter = 14
+				{
+					turnToFace(urandom(7),0,10);
+					realDoAnim(AS_SIT_DOWN,getDir());
+					wait(1200);
+					realDoAnim(AS_SIT_UP,getDir());
+				}
+				else
+				{
+					if not somebodyTalking
+					{
+						randomBarkInWoods();
+						wait(30);
+					}
+					else
+					{
+						realDoAnim(AS_FIDGET,getDir());
+						wait(30);
+					}
+				}
+			}
+			else
+			{
+				wait(500);
+			}
+		}
+	}
+	counter2 = 0;
+	}
+}
+
+
+process Cyrrus::randomBarkInWoods()
+{
+	[[PT_ACTIVITY, referent]];
+
+	ran:Number;
+
+
+	ran = getDistance(Avatar:Referent, Cyrrus:Referent);
+
+	if (ran < 400) and ((Avatar.getStatus() & INVISIBLE) = false) 
+	{
+		ran = urandom(4);
+
+		if ran = 1 
+		{
+			turnToFace(getDirToItem(Avatar:Referent),false,15);
+			bark("Are you lost? \f Es-tu perdu? \g Habt Ihr Euch verirrt?");
+		}
+
+		if ran = 2 
+		{
+			turnToFace(getDirToItem(Avatar:Referent),false,15);
+			if not cyrrusMet
+			{
+				bark("Is it not lovely here?
+					\f C'est point joli, icy?
+					\g Es ist schîn hier, nicht wahr?");
+			}
+			else
+			{
+				bark("Do you want something, my friend?
+					\f Veux-tu quelque chose, mon amy?
+					\g Was wollt Ihr, mein Freund?");
+			}
+			wait(120);
+		}
+
+		if ran = 3 
+		{
+			turnToFace((getDirToItem(Avatar:Referent)),false,15);
+			if not cyrrusMet
+			{
+				bark("Hello, stranger! \f Salut, estranger! \g Seid gegrÅ·t, Fremder!");
+				bark("Do you need something?
+					\f As-tu besoin de quelque chose?
+					\g Braucht Ihr etwas?");
+			}
+			else
+			{
+				bark("This is lovely, but I do miss Tenebrae.
+					\f C'est vraiment agrÇable, mais Tenebrae me manque.
+					\g Es ist sehr schîn hier, aber ich vermisse Tenebrae sehr!");
+			}
+			wait(100);
+		}
+		if ran = 4 
+		{
+			turnToFace(getDirToItem(Avatar:Referent),false,15);
+			if not cyrrusMet
+			{
+				bark("Are you in need?
+					\f Es-tu dans le besoin?
+					\g Braucht Ihr Hilfe?");
+			}
+			else
+			{
+				bark("I wish Jenna were here.
+					\f Ah, si seulement Jenna estoit lÖ.
+					\g Ach, wenn Jenna doch nur hier wÑre.");
+			}
+			wait(120);
+		}
+	}
+
+	else
+	{
+		ran = urandom(12);
+		turnToFace(urandom(7),0,10);
+
+		if ran = 1 
+		{
+
+			bark("I wish I were in Tenebrae.
+				\f J'aimerois bien estre Ö Tenebrae.
+				\g Ich wÅnschte, ich wÑre in Tenebrae.");
+		}
+
+		if ran = 2 
+		{
+			bark("Ouch! \f Aãe! \g Au!");
+			bark("Curse these insects! \f Maudits insectes!
+				\g Diese verfluchten Insekten!");
+			wait(60);
+		}
+
+		if ran = 3 
+		{
+			bark("I should have brought my cloak.
+				\f J'aurois dñ emporter ma cape.
+				\g Ich hÑtte meinen Umhang mitbringen sollen.");
+		}
+
+		if ran = 4 
+		{
+			bark("Hummm, no birds today.
+				\f Hum, il n'y a point d'oiseaux, aujourd'huy.			   
+				\g Hmmm, keine Vîgel heute.");
+			wait(100);
+		}
+
+		if ran = 5 
+		{
+			bark("The clouds are turning grey...
+				\f Les nuages deviennent gris...
+				\g Es ziehen Wolken auf...");
+
+				bark("I think it's going to rain.
+				\f Je crois qu'il va pleuvoir.
+				\g ... ich glaube, es gibt bald Regen.");
+			wait(100);
+		}
+	}
+}
+
+
+
+process Cyrrus::use()
+{
+	answer:String;
+	askList:String List;
+
+
+	Avatar.bark("Pardon me.
+		\f Excuse-moy.
+		\g Verzeihung.");
+
+	if getLastAnimSet() = AS_SIT_DOWN  
+	{
+		killProcess(referent,PT_ANIM);
+		realDoAnim(AS_SIT_UP,getDir());
+	}
+
+	enterConvo();
+	killProcess(Avatar:Referent,PT_BARK);
+
+	if cyrrusMet
+	{
+		if cyrrusName
+		{
+			askList=<<"Hello, Cyrrus. \f Salut, Cyrrus. \g Seid gegrÅ·t, Cyrrus.">>;
+		}
+		else
+		{
+			askList=<<"Hello. \f Salut. \g Seid gegrÅ·t.">>;
+		}
+
+		if (Avatar.getHp() < (Avatar.getStr() * 2)) and cyrrusJob
+		{
+			askList^=<< "I need healing. \f J'ai besoin de guÇrison. \g Ich benîtige Heilung.">>;
+		}
+
+
+		if attemptedWisdomTest and not passedWisdomTest
+		{
+			askList^=<<"Have you passed the Test of Wisdom?
+				\f As-tu rÇussi le Test de la Sagesse?
+				\g Habt Ihr die PrÅfung der Weisheit bestanden?">>;
+// encouragment for wisdom
+		}
+
+
+		if passedWisdomTest and not attemptedCenteredTest
+		{
+			askList^=<<"Is the Test of Centeredness difficult?
+				\f Le Test de l'Equilibre est-il difficile?
+				\g Ist die PrÅfung des Gleichgewichts schwierig?">>;
+			askList-=<<"Have you passed the Test of Wisdom?
+				\f As-tu rÇussi le Test de la Sagesse?
+				\g Habt Ihr die PrÅfung der Weisheit bestanden?">>;
+//centeredness is next, be careful
+		}
+
+
+		if passedWisdomTest and passedCenteredTest and not attemptedThirdTest
+		{
+			askList^=<<"I have passed the Tests of Wisdom and Centeredness.
+				\f J'ai rÇussi les Tests de la Sagesse et de l'Equilibre.
+				\g Ich habe die beiden ersten PrÅfungen bestanden.">>;
+			askList-=<<"Have you passed the Test of Wisdom?
+				\f As-tu rÇussi le Test de la Sagesse?
+				\g Habt Ihr die PrÅfung der Weisheit bestanden?",
+			"Is the Test of Centeredness difficult?
+				\f Le Test de l'Equilibre est-il difficile?
+				\g Ist die PrÅfung des Gleichgewichts schwierig?">>;
+//for third test go to Stellos
+		}
+
+
+		if passedThirdTest and not torwinJumped and not hasOwnFoci
+		{
+			askList^=<<"I passed the Third Test.
+				\f J'ai rÇussi le Troisiäme Test.
+				\g Ich habe die Dritte PrÅfung bestanden.">>;
+//missing focus, saw someone outside of Xavier's house
+			askList-=<<"I have passed the Tests of Wisdom and Centeredness.
+				\f J'ai rÇussi les Tests de la Sagesse et de l'Equilibre.
+				\g Ich habe die beiden ersten PrÅfungen bestanden.",
+			"Have you passed the Test of Wisdom?
+				\f As-tu rÇussi le Test de la Sagesse?
+				\g Habt Ihr die PrÅfung der Weisheit bestanden?",
+			"Is the Test of Centeredness difficult?
+				\f Le Test de l'Equilibre est-il difficile?
+				\g Ist die PrÅfung des Gleichgewichts schwierig?">>;
+		}
+
+
+		if passedThirdTest and hasOwnFoci and torwinMet
+		{
+			askList^=<<"I have passed the Third Test and have my Foci.
+				\f J'ai rÇussi le Troisiäme Test et j'ai mes Substrats.
+				\g Ich habe meine Symbole fertiggestellt.">>;
+			askList-=<<"I passed the Third Test.
+				\f J'ai rÇussi le Troisiäme Test.
+				\g Ich habe die Dritte PrÅfung bestanden.",
+			"I have passed the Tests of Wisdom and Centeredness.
+				\f J'ai rÇussi les Tests de la Sagesse et de l'Equilibre.
+				\g Ich habe die beiden ersten PrÅfungen bestanden.",
+			"Have you passed the Test of Wisdom?
+				\f As-tu rÇussi le Test de la Sagesse?
+				\g Habt Ihr die PrÅfung der Weisheit bestanden?",
+			"Is the Test of Centeredness difficult?
+				\f Le Test de l'Equilibre est-il difficile?
+				\g Ist die PrÅfung des Gleichgewichts schwierig?">>;
+//torwin moves silently, 
+  
+		}
+
+
+		if spokeAboutTorwinS and spokeAboutTorwinX
+		{
+			askList^=<<"Have you seen Torwin? \f As-tu vu Torwin? \g Habt Ihr Torwin gesehen?">>;
+		}
+
+
+		if torwinJumped and hasRing
+		{
+			askList^=<<"I found this ring.
+					\f J'ai trouvÇ cet anneau.
+					\g Ich habe diesen Ring gefunden.">>;
+		}
+
+
+		if hasBreath
+		{
+			askList^=<<"I have the Breath of Wind. 
+				\f J'ai le Souffle du Vent.
+				\g Ich habe den Atem des Windes.">>;
+			askList-=<<"I passed the Third Test.
+				\f J'ai rÇussi le Troisiäme Test.
+				\g Ich habe die Dritte PrÅfung bestanden.",
+			"I have passed the Tests of Wisdom and Centeredness.
+				\f J'ai rÇussi les Tests de la Sagesse et de l'Equilibre.
+				\g Ich habe die beiden ersten PrÅfungen	bestanden.",
+			"Have you passed the Test of Wisdom?
+				\f As-tu rÇussi le Test de la Sagesse?
+				\g Habt Ihr die PrÅfung der Weisheit bestanden?",
+			"Is the Test of Centeredness difficult?
+				\f Le Test de l'Equilibre est-il difficile?
+				\g Ist die PrÅfung des Gleichgewichts schwierig?">>;
+// sad about healing, now can go to tennebrae
+		}
+	}
+
+	else
+	{
+		askList=<<"Good day to you. \f Bonne journÇe. \g Seid gegrÅ·t.">>;
+	}
+
+
+	while answer!="bye \f bon vent \g Lebt wohl."
+	{
+
+		askList-=<<"bye \f bon vent \g Lebt wohl.">>;
+		askList+=<<"bye \f bon vent \g Lebt wohl.">>;
+		answer=ask(askList);
+
+		switch answer
+		{
+			case "Good day to you. \f Bonne journÇe. \g Seid gegrÅ·t."
+			{
+				bark("Welcome to our island. 
+					\f Bienvenue sur nostre isle.
+					\g Willkommen auf unserer Insel.");
+				askList-=<<"Good day to you. \f Bonne journÇe. \g Seid gegrÅ·t.">>;
+				askList+=<<"By what are you called? 
+					\f Comment t'appelle-t-on?
+					\g Wie hei·t Ihr?",
+				"What place is this? 
+					\f Quel est cet endroit?
+					\g Wie hei·t dieser Ort?">>;
+			}
+
+			case "Hello, Cyrrus. \f Salut, Cyrrus. \g Seid gegrÅ·t, Cyrrus.",
+				  "Hello. \f Salut. \g Seid gegrÅ·t."
+			{
+				bark("Ah, hello my friend. I am pleased to see you.
+					\f Ah, salut mon amy. Ravi de te voir.
+					\g Guten Tag, mein Freund. Es freut mich, Euch hier zu sehen.");
+				askList-=<<"Hello, Cyrrus. \f Salut, Cyrrus. \g Seid gegrÅ·t, Cyrrus.",
+							"Hello. \f Salut. \g Seid gegrÅ·t.">>;
+				askList^=<<"Where are you from? 
+							\f Oó est ta maison? 
+							\g Wo seid Ihr her?">>;
+			}
+
+			case "By what are you called? 
+				\f Comment t'appelle-t-on? 
+				\g Wie hei·t Ihr?"
+			{
+				cyrrusName = true;
+				cyrrusMet = true;
+				bark("I am called Holy Cyrrus but please, just 
+				call me Cyrrus.
+					\f On m'appelle VÇnÇrable Cyrrus, mais je t'en prie, appelle-moy
+					Cyrrus.
+					\g Man nennt mich den EhrwÅrdigen Cyrrus, aber bitte sagt doch
+					einfach Cyrrus zu mir.");
+				askList-=<<"By what are you called? 
+					\f Comment t'appelle-t-on? 
+					\g Wie hei·t Ihr?">>;
+				askList^=<<"Holy Cyrrus? \f VÇnÇrable Cyrrus? \g EhrwÅrdiger Cyrrus?">>;
+			}
+
+			case "I need healing. \f J'ai besoin de guÇrison. \g Ich benîtige Heilung."
+			{
+				if cyrrusJustHealed
+				{
+					bark("I am sorry, but I do not have the strength to
+					perform such a service. Come back later after I have rested.
+					
+					\f Je regrette, mais je n'ai point assez de force pour accomplir
+					une telle tÉche. Reviens quand je me seroi reposÇ.
+					
+					\g Es tut mir leid, aber ich habe im Augenblick nicht die nîtige 
+					Kraft, um Euch zu heilen. Bitte kommt doch wieder, 
+					wenn ich mich ein wenig ausgeruht habe.");
+					askList^=<<"I need healing. \f J'ai besoin de guÇrison. \g Ich benîtige Heilung.">>;
+				}
+				else
+				{
+					bark("That is certainly no problem. 
+						\f Cela ne devroit poser aucune difficultÇ.
+						\g Das ist kein Problem.");
+					healingTouch(Avatar:Referent);
+					cyrrusJustHealed = true;
+					bark("Please leave me now, I need to rest. 
+						\f Laisse-moy, maintenant, je dois me reposer.
+						\g Bitte la·t mich jetzt allein, ich mu· ruhen.");
+					exitConvo();
+					return;
+				}
+			}
+
+			case "Have you passed the Test of Wisdom?
+				\f As-tu rÇussi le Test de la Sagesse?
+				\g Habt Ihr die PrÅfung der Weisheit bestanden?"
+			{
+				bark("For certes. It is only the first step on the road to
+				Enlightenment. It was not easy by any means.
+				
+				\f Certes. Ce n'est que le premier pas sur le chemin de l'Illumination.
+				Ce n'estoit point facile.
+				
+				\g NatÅrlich. Das ist der erste Schritt auf dem Weg zur 
+				Erleuchtung. Aber es war gar nicht so leicht.");
+				askList+=<<"Will you tell me the answers? 
+					\f Peux-tu me donner les responses?
+					\g WÅrdet Ihr mir die Antworten verraten?", 
+				"Where did you get the answers? 
+					\f Oó as-tu trouvÇ les responses?
+					\g Woher wu·tet Ihr die richtigen Antworten?">>;
+				askList-=<<"Have you passed the Test of Wisdom? 
+					\f As-tu rÇussi le Test de la Sagesse?
+					\g Habt Ihr die PrÅfung der Weisheit bestanden?">>;
+			}
+
+			case "The Test of Centeredness was difficult?
+				\f Le Test de l'Equilibre estoit-il difficile?
+				\g War die PrÅfung des Gleichgewichts schwierig?",
+			"Is the Test of Centeredness difficult? 
+				\f Le Test de l'Equilibre est-il difficile?
+				\g Ist die PrÅfung des Gleichgewichts schwierig?"
+			{
+				bark("Difficult? It was nearly the death of me! I fell at least
+				five times. Fortunately Stratos saw fit to keep me and not send
+				me to my death over the steep side. But, you'll see for yourself
+				when you get there!
+				
+				\f Difficile? J'ai failli y laisser ma peau! Je suis au moins
+				tombÇ cinq fois. Heureusement que Stratos a bien voulu me garder au
+				lieu de m'envoyer au trÇpas. Mais tu verras par toy-mesme quand ce sera
+				ton tour!
+				
+				\g Schwierig? Sie hÑtte mich fast das Leben gekostet. Ich bin mindestens
+				fÅnfmal hingefallen. GlÅcklicherweise entschied sich Stratos dafÅr, mich 
+				trotzdem zu behalten und nicht in die Schlucht stÅrzen zu lassen. Aber 
+				Ihr werdet schon sehen, was ich meine.");
+				askList-=<<"The Test of Centeredness was difficult?
+					\f Le Test de l'Equilibre estoit-il difficile?
+					\g War die PrÅfung des Gleichgewichts schwierig?",
+				"Is the Test of Centeredness difficult? 
+					\f Le Test de l'Equilibre est-il difficile?
+					\g Ist die PrÅfung des Gleichgewichts schwierig?">>;
+			}
+
+			case "I have passed the Tests of Wisdom and Centeredness.
+				\f J'ai rÇussi les Tests de la Sagesse et de l'Equilibre.
+				\g Ich habe die beiden ersten PrÅfungen bestanden."
+			{
+				bark("You have? But you've just arrived on our island. I don't
+				believe we've ever had anyone complete them this fast. Stratos
+				will be so pleased with your accomplishments. Now you must
+				find Stellos and begin on the next part of your journey.
+				
+				\f Ah oui? Mais tu viens Ö peine d'arriver sur nostre isle. Je ne
+				pense point que quelqu'un les ait jamais rÇussis aussy prestement. Stratos 
+				sera fort satisfaite de tes rÇsultats. Lors, il te faut trouver Stellos pour
+				poursuivre ton initiation.
+				
+				\g Ihr habt sie bereits bestanden? Aber Ihr seid doch gerade auf der
+				Insel angekommen. Ich glaube, es gab noch nie einen SchÅler, der die
+				PrÅfungen so schnell ablegen konnte. Stratos wird Åber Eure
+				Errungenschaft sehr erfreut sein. Jetzt mÅ·t Ihr Stellos finden und
+				die nÑchste Etappe Eurer Aufgabe bewÑltigen.");
+				askList-=<<"I have passed the Tests of Wisdom and Centeredness.
+					\f J'ai rÇussi les Tests de la Sagesse et de l'Equilibre.
+					\g Ich habe die beiden ersten PrÅfungen bestanden.">>;
+			}
+	
+			case "I have passed the Third Test and have my Foci.
+				\f J'ai rÇussi le Troisiäme Test et j'ai mes Substrats.
+				\g Ich habe meine Symbole fertiggestellt."
+			{
+				bark("I am sorry I can not celebrate with you, but a terrible
+				thing has happened. Brother Xavier has lost one of his Foci.
+
+					\f Je regrette, je ne puis me resjouir avec toy car une
+					catastrophe est arrivÇe. Fräre Xavier a perdu un de ses Substrats.
+
+					\g Ich bedaure, da· ich diesen Anla· nicht mit Euch feiern kann,
+					aber etwas Schreckliches ist geschehen. Bruder Xavier hat eines
+					seiner Zaubersymbole verloren. ");
+				askList-=<<"I have passed the Third Test and have my Foci.
+					\f J'ai rÇussi le Troisiäme Test et j'ai mes Substrats.
+					\g Ich habe meine Symbole fertiggestellt.">>;
+				askList^=<<"How did it happen? \f Comment cela est-il arrivÇ?
+					\g Wie konnte das passieren?">>;
+			}
+	
+			case "How did it happen? \f Comment cela est-il arrivÇ?
+				\g Wie konnte das passieren?"
+			{
+				bark("It seems it was taken while he slept. I am sorry 
+				but I must be going. I have to help look for the missing
+				Focus.
+					\f On diroit qu'il a ÇtÇ dÇrobÇ pendant que Fräre Xavier sommeilloit. DÇsolÇ,
+					mais il me faut partir. Je dois aider Ö retrouver ce Substrat.
+					
+					\g Anscheinend wurde es entwendet, wÑhrend er schlief. Es tut mir leid,
+					aber ich mu· mich auf den Weg machen. Ich mu· bei der Suche nach
+					dem fehlenden Symbol helfen.");
+				exitConvo();
+				return;
+			}
+
+			case "Have you seen Torwin? \f As-tu vu Torwin? \g Habt Ihr Torwin gesehen?"
+			{
+				if hearTruthActive
+				{
+					bark("No I have not. (yes I have) \f Non. (Oui) \g Nein. (Ja.) ");
+					askList=<<"Why are you covering up for him? 
+						\f Pourquoi mens-tu pour le protÇger?
+						\g Warum lÅgt Ihr, um ihn zu beschÅtzen?",
+					"Where is he? \f Oó est-il? \g Wo ist er?">>;
+				}
+				else
+				{
+					bark("No, I haven't seen him all day. 
+						
+						\f Que nenny, je ne l'ai vu de la journÇe.
+						
+						\g Ich habe ihn heute noch gar nicht gesehen.");
+				}
+			askList-=<<"Have you seen Torwin? \f As-tu vu Torwin? \g Habt Ihr Torwin gesehen?">>;
+			}
+
+			case "Where is he? \f Oó est-il? \g Wo ist er?"
+			{
+				if hearTruthActive
+				{
+					bark("I do not know. (He told me he was going to go to
+					Windy Point today for something very important.)
+						\f Vraiment, je l'ignore. (Il m'a dit qu'il avoit 
+						rendez-vous Ö Zona Ventus, aujourd'huy, pour une chose fort importante.)
+						
+						\g Ich wei· nicht. (Er sagte mir, da· er auf dem Weg zur Sturmspitze 
+						sei, um etwas Ñu·erst Wichtiges zu erledigen.)");
+					torwinGottaJump = true;
+					Torwin.schedule(100:Long);
+				}
+				else
+				{
+					bark("I do not know. \f Je l'ignore. \g Ich wei· nicht.");
+				}
+			askList-=<<"Where is he? \f Oó est-il? \g Wo ist er?">>;
+			}
+
+			case "Why are you covering up for him? 
+				\f Pourquoi mens-tu pour le protÇger?
+				\g Warum lÅgt Ihr, um ihn zu beschÅtzen?"
+			{
+				if hearTruthActive
+				{
+					bark("I am not covering for him! (I think he is the
+					one who took the Focus. I don't think he meant any harm
+					by it, though. He is not a mean-spirited person)
+					
+					\f Je ne le protäge point! (Je crois que c'est luy qui a
+					pris le Substrat. Il ne pensoit sans doute point Ö mal. Il n'est
+					point mauvais bougre.)
+					
+					\g Ich beschÅtze ihn nicht! (Ich glaube, er war es, der das 
+					Symbol genommen hat. Aber er hatte keine bîse Absichten.
+					Er ist ein guter Mann.)");
+				}
+				else
+				{
+					bark("Pardon me? I am not covering up for him. That would
+					go against all the teachings of Stratos.
+						\f Comment cela? Je ne mens point. Ce seroit contraire
+						aux enseignements de Stratos.
+						\g Wie bitte? Ich beschÅtze ihn nicht. Das stÅnde im
+						Widerspruch zu Stratos' Lehren. ");
+				}
+				askList-=<<"Why are you covering up for him? 
+						\f Pourquoi mens-tu pour le protÇger?
+					\g Warum lÅgt Ihr, um ihn zu beschÅtzen?">>;
+			}
+
+			case "Holy Cyrrus? \f VÇnÇrable Cyrrus? \g EhrwÅrdiger Cyrrus?"
+			{
+				bark("That is the name given to me by Stellos. Everyone thinks
+				it is a grand name.
+					\f C'est le nom que m'a donnÇ Stellos. Tout le monde dit que c'est un
+					nom träs respectable qui en impose.
+					\g Das ist der Name, den Stellos mir gab. Alle meinen, es sei
+					ein sehr wÅrdevoller Name.");
+				askList-=<<"Holy Cyrrus? \f VÇnÇrable Cyrrus? \g EhrwÅrdiger Cyrrus?">>;
+				askList+=<<"It is a grand name. 
+							\f Qui en impose? 
+							\g Es ist ein wÅrdevoller Name.", 
+							"Everyone? \f Tout le monde? \g Alle?">>;
+			}
+
+			case "It is a grand name. \f Qui en impose? \g Es ist ein wÅrdevoller Name."
+			{
+				bark("I am sure my father has bragged about it to everyone, including
+				the torax!
+					\f Je suis certain que mon päre l'a clamÇ sur tous les toits, il l'a
+					sans doute mesme annoncÇ Ö ses torax!
+					\g Ich bin mir sicher, da· alle es bereits wissen, weil mein 
+					Vater sich stÑndig damit brÅstet. Wahrscheinlich hat er es sogar 
+					schon seinen Torax erzÑhlt.");
+				askList-=<<"It is a grand name. 
+						\f Qui en impose?
+						\g Es ist ein wÅrdevoller Name.">>;
+				askList+=<<"Your father is a herdsman? 
+						\f Ton päre garde des torax?
+						\g Euer Vater ist ein Hirte?">>;
+			}
+
+			case "Everyone? \f Tout le monde? \g Alle?"
+			{
+				bark("My mother and father, the others here... why, just
+				everyone.
+					
+				\f Ma märe et mon päre, les aultres... enfin, tous, quoi!
+					
+				\g Meine Mutter, die anderen hier... nun, einfach alle wissen es.");
+				askList-=<<"Everyone? \f Tout le monde? \g Alle?">>;
+			}
+
+			case "Your father is a herdsman? 
+				\f Ton päre garde des torax?
+				\g Euer Vater ist ein Hirte?"
+			{
+				bark("Yes, and so I would be. It's birthing time back home. My favorite 
+				time of the year. Watching the beginning of a new life, helping that 
+				new life to stand... aahhh, it is one of greatest joys
+				in my life. But that is all behind me now.
+				
+					\f Oui, et je devrois en faire autant. C'est l'Çpoque oó les torax
+					mettent bas, Ö la ferme. Ma saison prÇfÇrÇe de l'annÇe. Le dÇbut d'une
+					nouvelle vie... ahhh, une des plus grandes joies de l'existence. 
+					Mais tout cela est du passÇ, maintenant.
+					
+				\g Ja, das ist er. Ich sollte auch ein Hirte sein. Jetzt kommen gerade die
+				kleinen Torax zur Welt. Das ist meine liebste Jahreszeit. Den Beginn eines neuen
+				Lebens zu beobachten, einem kleinen Torax zum ersten Mal auf die Beine
+				helfen... ach, das war eines der grî·ten Freuden meines Lebens. Aber all
+				das liegt jetzt hinter mir.");
+				askList-=<<"Your father is a herdsman? 
+						\f Ton päre garde des torax?
+						\g Euer Vater ist ein Hirte?">>;
+				askList=<<"Where are you from? 
+						\f Oó est ta maison?
+						\g Wo seid Ihr her?">>;
+			}
+
+			case "Where are you from? 
+				\f Oó est ta maison? 
+				\g Wo seid Ihr her?"
+			{
+				bark("My home is in the hills of Tenebrae. Even Argent
+				Rock with all its finery is but a pale shadow of the beauty
+				of Tenebrae. The ocean, the hills, the people...I miss it
+				so.
+				
+				\f Ma maison est dans les collines de Tenebrae. Mesme l'Isle 
+				du Roc d'Argent, avec toutes ces beautÇs, n'est qu'une pasle ombre 
+				de la splendeur de Tenebrae. 
+				L'ocÇan, les collines, les gens... j'ai le mal du pays.
+				
+				\g Ich bin in den HÅgeln von Tenebrae geboren und aufgewachsen. Selbst Silberfels mit
+				all seinem Luxus ist nur ein Schatten, verglichen mit der Schînheit
+				Tenebraes. Das Meer, die HÅgel, die Menschen... Ich vermisse es so.");
+				askList-=<<"Where are you from? 
+							\f Oó est ta maison? 
+							\g Wo seid Ihr her?">>;
+				askList+=<<"You miss the people of Tenebrae? 
+							\f Ceux de Tenebrae te manquent?
+							\g Euch fehlen die Menschen von Tenebrae?",
+				 "Why are you here? \f Pourquoi es-tu icy? \g Weshalb seid Ihr dann hier?">>;
+			}
+
+			case "Why are you here? \f Pourquoi es-tu icy? \g Weshalb seid Ihr dann hier?"
+			{
+				bark("It was discovered when I was quite young that I had a
+				talent for healing. My mother and father were so proud. They
+				told everyone about their brilliant child who was going to
+				heal the world. Then my sister was injured by a kith. No matter
+				how I tried, my meager skills were no match for her injury.
+				He died and I vowed it would never happen again. I
+				left home and made my way here. I've been here ever since.
+				
+				\f Quand j'estois encore bien jeune, on a remarquÇ que j'avois
+				des talents de guÇrison. Ma märe et mon päre estoient
+				tellement fiers. Ils crioient sur tous les toits que leur enfant 
+				alloit guÇrir le monde entier. Puis mon fräre aisnÇ est tombÇ
+				malade. J'ai eu beau essayer, mes piätres talents n'ont rien
+				pu faire. Il est mort et j'ai jurÇ que cela ne se reproduiroit plus
+				jamais. J'ai quittÇ la maison et je suis venu icy. Je n'en suis jamais
+				reparti.
+				
+				\g Als ich noch sehr jung war, entdeckte man, da· ich eine Begabung fÅr die 
+				Heilkunst hatte. Meine Eltern waren so stolz auf mich. Sie erzÑhlten allen
+				von ihrem genialen Kind, das eines Tages die ganze Welt heilen wÅrde. 
+				Dann wurde mein Ñlterer Bruder eines Tages krank. Ich versuchte alles,
+				aber meine armseligen Versuche konnten seine Krankheit nicht abwehren.
+				Als er starb, schwor ich, da· dergleichen nie wieder geschehen 
+				wÅrde. Ich ging von zu Hause fort und kam nach Silberfels. Seitdem lebe ich
+				hier.");
+				askList-=<<"Why are you here? \f Pourquoi es-tu icy? \g Weshalb seid Ihr dann hier?">>;
+			}
+
+			case "You miss the people of Tenebrae? 
+					\f Ceux de Tenebrae te manquent?
+					\g Euch fehlen die Menschen von Tenebrae?"
+			{
+				bark("It has been my home since birth. I miss the people. 
+				Darion with all his bluff and bluster, used to carry candy
+				in his pocket for me. Bentic tutored both Jenna and I 
+				when we were young. Oh, my beloved Jenna. I try not to
+				think of her, it pains me so.
+				
+				\f J'ai vu le jour Ö Tenebrae. Ses habitants me manquent.
+				Darion, avec toute son esbrouffe, avoit toujours ses poches pleines de bonbons
+				pour moy. Bentic estoit nostre tuteur, Ö Jenna et moy, quand nous estions
+				jeunots. Oh, ma Jenna adorÇe. J'essoie de ne point penser Ö elle, car j'ai trop
+				de peine.
+				
+				\g Ja, die Leute dort sind einfach etwas Besonderes. Trotz all 
+				seinem wichtigen Getue trug Darion immer SÅ·igkeiten fÅr 
+				mich in seiner Tasche. Bentic unterrichtete Jenna und mich, als wir noch
+				klein waren. Oh, meine geliebte Jenna. Ich vermeide es, an sie zu denken.
+				Der Schmerz ist zu gewaltig.");
+				askList-=<<"You miss the people of Tenebrae? 
+							\f Ceux de Tenebrae te manquent?
+							\g Euch fehlen die Menschen von Tenebrae?">>;
+				askList+=<<"Tell me of Jenna. 
+							\f Parle-moy de Jenna.
+							\g ErzÑhlt mir mehr Åber Jenna.", 
+							"Tell me of Darion. 
+							\f Parle-moy de Darion.
+							\g Was wi·t Ihr noch Åber Darion.">>;
+				if benticCacked
+				{
+					askList+=<<"Bentic is dead. \f Bentic est mort. \g Bentic ist tot.">>;
+				}
+				else
+				{
+					askList+=<<"Tell me of Bentic. 
+								\f Parle-moy de Bentic.
+								\g ErzÑhlt mir von Bentic.">>;
+				}
+			}
+
+			case "Tell me of Bentic. 
+					\f Parle-moy de Bentic. 
+					\g ErzÑhlt mir von Bentic."
+			{
+				bark("I miss him so. He is a kind and gentle man who's
+				greatest loves in life are his books and his studies. He
+				knows so much about so many things, he is fascinating to
+				talk with.
+				
+				\f Il me manque tant. C'est un homme bon. Ses plus grandes joies dans la
+				vie sont les livres et les estudes. Il sait tant de choses sur tout, quel
+				plaisir de converser avec luy.
+				\g Er fehlt mir so. Er ist ein sanfter und freundlicher Mann, dessen gro·e
+				Liebe seinen Studien und seinen BÅchern gilt. Es ist faszinierend, sich mit ihm
+				zu unterhalten, denn er hat auf fast allen Gebieten ein erstaunliches Wissen.");
+				askList-=<<"Tell me of Bentic. 
+						\f Parle-moy de Bentic.
+						\g ErzÑhlt mir von Bentic.">>;
+			}
+
+			case "Tell me of Darion. 
+					\f Parle-moy de Darion.
+					\g Was wi·t Ihr noch Åber Darion."
+			{
+				bark("He talked of the day I would join the guard. I told
+				him many times I would be a herdsman like my father. 
+				'Nonsense,' he would say, 'you're cut out to be a guard, you
+				have the spirit for it.' I don't know why, the guard never
+				does anything but hang around the castle hoping Aramina will
+				bring them a sweet from the Tempest's table! He is Jenna's
+				father, you know.
+				
+				\f C'est le päre de Jenna, tu sais. Il parloit toujours du jour 
+				oó je seroi garde. Mais je luy ai dit moultes
+				fois que je garderoi les torax. 'Sornettes', disoit-il. 'Tu es fait pour 
+				estre garde, tu en as l'esprit.' Je ne sais point pourquoi, car les 
+				gardes ne font que traisner autour du castel Ö espÇrer qu'Aramina
+				leur apporte une douceur provenant de la table de la Tempeste!
+
+				\g Er schwÑrmte immer von dem Tag, an dem ich der Wache beitreten wÅrde.
+				Ich sagte ihm oft, da· ich ein Hirte werden wolle wie mein Vater auch.
+				'Unsinn', sagte er dann immer, 'Du bist fÅr den Wachdienst geschaffen, Junge.
+				Du hast das Feuer dazu.' Ich wei· nicht, weshalb er das sagte, denn die
+				Wachen hÑngen nur im Palast herum und warten darauf, da· Aramina ihnen
+				einen Leckerbissen vom Tisch der GezeitenfÅrstin bringt. Er ist Åbrigens
+				Jennas Vater, wi·t Ihr.");
+				askList-=<<"Tell me of Darion. 
+						\f Parle-moy de Darion.
+						\g Was wi·t Ihr noch Åber Darion.">>;
+				askList+=<<"Jenna's father? \f Le päre de Jenna? \g Jennas Vater?">>;
+			}
+
+			case "Jenna's father? \f Le päre de Jenna? \g Jennas Vater?"
+			{
+				bark("Yes, and in my fondest dreams, he was to be my father-
+				in-law, for I love Jenna so.
+				
+				\f Oui, et dans mes resves les plus fous, il devenoit mon beau-päre,
+				car j'esprouve une grande flamme pour Jenna.
+				
+				\g Ja, und in meinen WunschtrÑumen ist er mein Schwiegervater, 
+				denn ich liebe Jenna zutiefst.");
+				askList-=<<"Jenna's father? \f Le päre de Jenna? \g Jennas Vater?">>;
+			}
+
+			case "Bentic is dead. \f Bentic est mort. \g Bentic ist tot."
+			{
+				bark("Oh no! Say it is not so! Oh dear! You bring me
+				sad news of my home! Pray, how did this happen?
+				
+				\f Oh, non! C'est impossible! Oh, juste Ciel! Tu me portes lÖ de bien
+				mauvaises nouvelles! Dis, comment cela est-il arrivÇ?
+				
+				\g Oh, nein! Das ist unmîglich! Oh Gott! Ihr bringt mir traurige Nachrichten
+				aus der Heimat! Wie konnte das nur geschehen?");
+				askList-=<<"Bentic is dead. \f Bentic est mort. \g Bentic ist tot.">>;
+				askList=<<"Mordea had him executed. 
+						\f Mordea l'a fait exÇcuter.
+						\g Mordea lie· ihn hinrichten.",
+				 "I know not \f Je l'ignore. \g Ich wei· es nicht.">>;
+			}
+
+			case "I know not \f Je l'ignore. \g Ich wei· es nicht."
+			{
+				bark("'Tis a sad day for me. Bentic was a dear friend.
+				\f Quel triste jour, pour moy. Bentic estoit un amy bien cher.
+				\g Das ist ein trauriger Tag fÅr mich. Bentic war ein guter Freund.");
+				askList-=<<"I know not \f Je l'ignore \g Ich wei· es nicht.",
+				 "Mordea had him executed. 
+				 		\f Mordea l'a fait exÇcuter.
+				 		\g Mordea lie· ihn hinrichten.">>;
+			}
+
+			case "Mordea had him executed. 
+					\f Mordea l'a fait exÇcuter.
+					\g Mordea lie· ihn hinrichten."
+			{
+				bark("The Tempest? I knew she was a hard woman, but to
+				execute someone as gentle and harmless as Bentic? What
+				terrible thing did he do that would anger the
+				Tempest so?
+				
+				\f La Tempeste? Je savois que c'estoit une femme dure, mais de
+				lÖ Ö exÇcuter un homme aussy doux et inoffensif que Bentic!
+				Quel forfait terrible avoit-t-il commis pour encourir un tel
+				courroux de la Tempeste?
+				
+				\g Die GezeitenfÅrstin? Ich kannte sie ja schon immer als unbarmherzige
+				Frau, aber wie konnte sie nur jemanden hinrichten lassen, der so sanft
+				und harmlos war wie Bentic? Was hatte er denn getan, um die
+				GezeitenfÅrstin so zu erzÅrnen?");
+				askList-=<<"Mordea had him executed. 
+							\f Mordea l'a fait exÇcuter.
+							\g Mordea lie· ihn hinrichten.", 
+				"I know not \f Je l'ignore. \g Ich wei· es nicht.">>;
+				askList+=<<"He conducted forbidden research. 
+						\f Il a fait des recherches interdites.
+						\g Er betrieb verbotene Forschungen.",
+				 "I do not know \f Je ne sais point. \g Ich wei· nicht.">>;
+			}
+
+			case "I do not know \f Je ne sais point. \g Ich wei· nicht."
+			{
+				bark("I cannot imagine what terrible wrong Bentic committed
+				that would result in his death. He was a kind and good man.
+				
+				\f Je ne puis m'imaginer quel terrible forfait Bentic a pu
+				commettre pour mÇriter la mort. C'estoit un homme bon et droit.
+				
+				\g Ich kann mir nicht vorstellen, welch schreckliche Tat Bentic
+				verÅbt haben kînnte, die seinen Tod rechtfertigen wÅrde. Er war
+				ein guter und harmloser Mann.");
+				askList-=<<"I do not know \f Je ne sais point. \g Ich wei· nicht.">>;
+			}
+
+			case "He conducted forbidden research. 
+					\f Il a fait des recherches interdites.
+					\g Er betrieb verbotene Forschungen."
+			{
+				bark("Research was what Bentic loved most. Ah, 'tis a sad day
+				when good folks are executed for doing something which
+				they love and brings harm to no one.
+				
+				\f Les recherches, c'estoit ce que Bentic aimoit le mieux. Ah, c'est
+				triste espoque quand de bonnes gens sont exÇcutÇes pour avoir fait
+				ce qu'ils aiment, et cela sans faire tort Ö personne.
+				
+				\g Bentic liebte die Forschung Åber alles. Ach, das ist ein 
+				trauriger Tag, an dem gute Menschen fÅr etwas hingerichtet werden,
+				das sie Åber alles lieben und das keinem etwas zuleide tut.");
+				askList-=<<"He conducted forbidden research. 
+						\f Il a fait des recherches interdites.
+						\g Er betrieb verbotene Forschungen.",
+				 "I do not know \f Je ne sais point. \g Ich wei· nicht.">>;
+			}
+
+			case "Tell me of Jenna. 
+					\f Parle-moy de Jenna. 
+					\g ErzÑhlt mir mehr Åber Jenna."
+			{
+				if jennaMet
+				{
+					bark("Ah, you've met her, then. Isn't she a lovely creature?
+					I have loved her from the moment I laid eyes on 
+					her. I always dreamed she would marry me and live with me
+					in the hills, helping tend the torax. It is funny how
+					things never work out like we expect.
+					
+					\f Alors tu l'as dÇjÖ rencontrÇe. N'est-elle point adorable
+					crÇature? Je suis tombÇ fol d'amor pour elle au premier regard.
+					J'ai toujours resvÇ qu'elle deviendroit ma femme et vivroit avec moy
+					dans les collines pour m'aider avec les torax. Ah, les choses ne vont point
+					toujours comme on le dÇsire!
+					
+					\g Ach, Ihr habt sie kennengelernt? Ist sie nicht ein
+					wundervolles Geschîpf? Ich liebte sie von dem Augenblick an,
+					als ich sie zum ersten Mal sah. Ich trÑumte immer davon, da·
+					sie mich eines Tages heiraten wÅrde und mit mir in den HÅgeln
+					die Torax hÅten wÅrde. Es ist schon eigenartig, da· das Leben nie
+					so lÑuft, wie wir es erwarten.");
+				}
+				else
+				{
+					bark("She lives in Tenebrae. If you should travel there,
+					stop in and see her. She is a lovely girl, so
+					full of life. I would that I could marry her, but I 
+					cannot.
+					
+					\f Elle vit Ö Tenebrae. Si tu t'y rends, va la voir. C'est une
+					adorable jeunesse, pleine de vie. Si seulement je pouvois
+					l'espousailler, mais c'est impossible.
+					
+					\g Sie wohnt in Tenebrae. Wenn Ihr dorthin reist, solltet Ihr
+					sie besuchen. Sie ist ein wunderbares MÑdchen, so voller
+					Lebensfreude. Ich wÅrde sie so gerne heiraten, aber das ist
+					unmîglich.");
+				}
+				askList+=<<"Why not marry her? 
+					\f Pourquoi ne peux-tu le faire?
+					\g Weshalb ist das unmîglich?">>;
+				askList-=<<"Tell me of Jenna. 
+						\f Parle-moy de Jenna.
+						\g ErzÑhlt mir mehr Åber Jenna.">>;
+			}
+
+			case "Why not marry her? 
+					\f Pourquoi ne peux-tu le faire?
+					\g Weshalb ist das unmîglich?"
+			{
+				bark("Look around you, my friend. There are few enough of us
+				here on Argentrock. Rare are those with the talent it takes
+				to touch the power of Stratos and use it to heal. 
+				I am one of those few. To help the people of this land
+				I must sacrifice that which I most dearly desire...to marry
+				my beloved Jenna and live a simple herdsman's life
+				in the hills above Tenebrae.
+				
+				\f Regarde autour de toy, mon amy. Nous sommes dÇjÖ fort peu nombreux, icy Ö
+				l'Isle du Roc d'Argent. Rares sont ceux qui ont le talent d'accÇder au pouvoir
+				de guÇrison de Stratos. Je suis l'un d'entre eux. Afin d'aider les gens
+				de ce pays, il me faut sacrifier ce que je dÇsire le plus... 
+				espousailler ma chäre Jenna et mener avec elle et mes torax une vie 
+				pastorale dans les collines surplombant Tenebrae.
+				
+				\g Seht Euch um, mein Freund. Wir sind so wenige hier in Silberfels.
+				 Nur selten finden sich Menschen, die die Begabung besitzen,
+				Stratos' Macht zur Heilung anzuwenden. Ich
+				bin einer dieser wenigen. Um den Leuten in diesem Land zu helfen,
+				mu· ich das opfern, was ich mir am meisten wÅnsche... meine
+				geliebte Jenna zu heiraten und in den HÅgeln von Tenebrae das 
+				einfache Leben eines Hirten zu leben.");
+				askList-=<<"Why not marry her? 
+						\f Pourquoi ne peux-tu le faire?
+						\g Weshalb ist das unmîglich?">>;
+			}
+	
+			case "What place is this? 
+				\f Quel est cet endroit?
+				\g Wie hei·t dieser Ort?"
+			{
+				bark("This is Argentrock, home of the Theurgists.
+				\f Tu es sur l'Isle du Roc d'Argent, la demeure des Theurgistes.
+				\g Das ist Silberfels, die Heimat der Theurgisten.");
+				askList-=<<"What place is this? 
+						\f Quel est cet endroit?
+						\g Wie hei·t dieser Ort?">>;
+				askList+=<<"Who are the Theurgists? 
+						\f Qui sont les Theurgistes?
+						\g Wer sind die Theurgisten?">>;
+			}
+	
+			case "Who are the Theurgists? 
+					\f Qui sont les Theurgistes?
+					\g Wer sind die Theurgisten?"
+			{
+				cyrrusJob = true;
+				bark("Why we are the disciples of Stratos, the Great Titan
+				of Air. We are healers.
+				\f Eh bien, nous sommes les disciples de Stratos, le Grand Titan de
+				l'Air. Nous sommes des guÇrisseurs.
+				
+				\g Wir sind die SchÅler der Stratos, der Gro·en Titanin der LÅfte.
+				Wir sind Heiler.");
+				askList-=<<"Who are the Theurgists? 
+						\f Qui sont les Theurgistes?
+						\g Wer sind die Theurgisten?">>;
+			}
+
+			case "I passed the Third Test. 
+					\f J'ai rÇussi le Troisiäme Test.
+					\g Ich habe die Dritte PrÅfung bestanden."
+			{
+				bark("I have heard. This is certainly a great occasion. Now
+				you are ready to attempt the greatest feat of your life...to
+				reach out and touch the power that is Stratos.
+				
+				\f C'est ce qu'on m'a dit. C'est un tournant dans ton existence.
+				Lors, tu peux tenter le plus bel exploit de ta vie... accÇder au pouvoir
+				de Stratos.
+				
+				\g Ich habe schon davon gehîrt. Das ist wahrlich ein Anla· zu gro·er
+				Freude. Jetzt seid Ihr bereit, den grî·ten Versuch Eures Lebens
+				zu unternehmen... nach Stratos' Macht zu greifen, auf da· ein Teil davon auf 
+				Euch Åbergehe.");
+				askList-=<<"I passed the Third Tests. 
+							\f J'ai rÇussi le Troisiäme Test.
+							\g Ich habe die Dritte PrÅfung bestanden.">>;
+				askList^=<<"Touch Stratos' power? 
+							\f Le pouvoir de Stratos?
+							\g Stratos' Macht?",
+				 		"The greatest feat? 
+						\f Le plus bel exploit? 
+						\g Den grî·ten Versuch?">>;
+			}
+	
+			case "Touch Stratos' power? 
+					\f Le pouvoir de Stratos? 
+					\g Stratos' Macht?"
+			{
+				bark("The power that gives us the ability to heal people. It
+				is a thrilling moment when you first touch the Titan. Certainly
+				nothing you will ever forget.
+				\f Le pouvoir qui nous donne la compÇtence de guÇrir les gens.
+				C'est un instant fabuleux quand tu communies pour la premiäre fois
+				avec le Titan. Certainement quelque chose que tu ne pourras jamais oublier.
+				\g Diese Macht verleiht uns die FÑhigkeit, Menschen zu heilen. Es ist
+				ein aufregender Augenblick, wenn Ihr zum ersten Mal die NÑhe der Titanin
+				fÅhlt. Ihr werdet dieses GefÅhl nie wieder vergessen.");
+				askList-=<<"Touch Stratos' power? 
+						\f Le pouvoir de Stratos?
+						\g Stratos' Macht?">>;
+			}
+	
+			case "The greatest feat? 
+				\f Le plus bel exploit? 
+				\g Den grî·ten Versuch?"
+			{
+ 
+				bark("You must go to Stellos. He will tell you how to reach Stratos.
+				\f Tu dois te rendre chez Stellos. Il te dira comment atteindre Stratos. 
+				\g Ihr mÅ·t Stellos aufsuchen. Er wird Euch sagen, wie man Stratos 
+				erreichen kann.");
+				askList-=<<"The greatest feat? 
+							\f Le plus bel exploit?
+							\g Den grî·ten Versuch?">>;
+				
+			}
+			
+
+			case "I have the Breath of Wind. 
+					\f J'ai le Souffle du Vent.
+					\g Ich habe den Atem des Windes."
+			{
+				bark("That explains it then. I felt a tremor in my link with
+				Stratos, then it was broken. I am unable to heal.
+				
+				\f Tout s'explique, alors. Il y a peu, j'ai senti une vibration 
+				dans ma liaison avec Stratos, puis elle s'est interrompue.
+				Je suis incapable de guÇrir.
+				
+				\g Das erklÑrt, was ich gespÅrt habe. Ich fÅhlte meine Verbindung mit Stratos
+				schwanken, dann brach sie plîtzlich ab. Ich kann nicht mehr heilen.");
+				askList-=<<"I have the Breath of Wind. 
+							\f J'ai le Souffle du Vent.
+							\g Ich habe den Atem des Windes.">>;
+				askList+=<<"You are unable to heal? 
+						\f Tu es incapable de guÇrir?
+						\g Ihr kînnt nicht mehr heilen?">>;
+			}
+	
+			case "You are unable to heal? 
+					\f Tu es incapable de guÇrir?
+					\g Ihr kînnt nicht mehr heilen?"
+			{
+				bark("I hope that you use the Breath of Wind for a higher purpose,
+				for it was taken at great sacrifice to the people of 
+				this land. It is a bitter sweet time for me.
+				
+				\f J'espäre que tu useras le Souffle du Vent pour de nobles desseins, car il
+				a nÇcessitÇ moults sacrifices aux gens de ce pays. C'est une espoque
+				Ö la fois douce et amäre pour moy.
+				
+				\g Ich hoffe, da· Ihr den Atem des Windes fÅr einen hîheren Zweck nutzen werdet,
+				denn die Menschen dieses Landes haben viel dafÅr opfern mÅssen. Dies
+				ist eine bittersÅ·e Zeit fÅr mich.");
+				askList+=<<"Why bittersweet? 
+						\f Pourquoi douce et amäre?
+						\g Weshalb bittersÅ·?">>;
+				askList-=<<"You are unable to heal? 
+							\f Tu es incapable de guÇrir?
+							\g Ihr kînnt nicht mehr heilen?">>;
+			}
+	
+			case "Why bittersweet? 
+				\f Pourquoi douce et amäre?
+				\g Weshalb bittersÅ·?"
+			{
+				bark("For if my link with Stratos is permanently broken then
+				I can never heal the sick and injured of this land again.
+				This would be a tragic thing for the people, however, it also
+				would release me of my vow to Stratos, leaving me free to
+				return to Tenebrae and marry my beloved Jenna. So while I
+				mourn for the people, I thank you for giving my love to me.
+				
+				\f Car si mon lien avec Stratos est dÇfinitivement brisÇ, je ne puis plus
+				guÇrir les malades et les blessÇs de ce royaume. Ce seroit chose tragique
+				pour les gens, mais cela me permettroit aussy de revenir sur ma promesse 
+				Ö Stratos, de retourner Ö Tenebrae et d'y espousailler ma douce Jenna. Alors,
+				bien que je sois fort triste pour mes semblables, je te remercie aussy de me
+				rendre mon amor.
+				
+				\g Wenn meine Verbindung mit Stratos fÅr immer unterbrochen ist, werde
+				ich die kranken und verletzten Menschen dieses Landes nie mehr heilen
+				kînnen. Das wÑre eine furchtbare Tragîdie fÅr die Bevîlkerung, aber 
+				gleichzeitig wÅrde es mich von meinem GelÅbde an Stratos entbinden. Ich
+				wÑre frei, um nach Tenebrae zurÅckzukehren und mich mit meiner
+				geliebten Jenna zu vermÑhlen. WÑhrend ich fÅr das Volk trauere, danke ich
+				Euch dafÅr, da· Ihr mir meine Liebe geschenkt habt. ");
+				askList-=<<"Why bittersweet? 
+							\f Pourquoi douce et amäre? 
+							\g Weshalb bittersÅ·?">>;
+			}
+	
+			case "Will you tell me the answers? 
+					\f Peux-tu me donner les responses?
+					\g WÅrdet Ihr mir die Antworten verraten?"
+			{
+				bark("Certainly not. That is an unthinkable thing. You must find
+				the answers yourself as have all those seeking Enlightenment
+				before you have.
+				
+				\f Mais enfin! Ce seroit impensable. Tu dois trouver toy-mesme les
+				responses, tout comme ceux qui ont cherchÇ l'Illumination avant toy.
+				
+				\g Nein, natÅrlich nicht. Das wÑre undenkbar. Ihr mÅ·t schon selbst auf die
+				Antworten kommen, so wie alle anderen vor Euch, die nach Erleuchtung
+				strebten.");
+				askList-=<<"Will you tell me the answers? 
+							\f Peux-tu me donner les responses?
+							\g WÅrdet Ihr mir die Antworten verraten?", 
+						"Where did you get the answers? 
+						\f Oó as-tu trouvÇ les responses?
+						\g Woher wu·tet Ihr die richtigen Antworten?">>;
+			}
+	
+			case "Where did you get the answers?  
+				\f Oó as-tu trouvÇ les responses?
+						\g Woher wu·tet Ihr die richtigen Antworten?"
+			{
+				bark("From the library. Oh, the hours I spent in there pouring
+				over the old texts until the candle I was using was burned to
+				a nub. Yes, those were difficult days. But not as difficult as
+				the Test of Centeredness.
+				
+				\f A la bibliothäque. Oh, toutes ces heurs passÇes dans les vieux textes
+				jusqu'Ö ce que ma chandelle se meure. Oui, c'estoient des jours difficiles.
+				Mais point aussy difficiles que le Test de l'Equilibre.
+				
+				\g Aus der Bibliothek. Oh, wie viele Stunden habe ich dort verbracht, Åber die
+				alten Texte gebeugt, bis meine Kerze zu einem kleinen Stummel abgebrannt war.
+				Ja, das waren schwierige Tage und NÑchte. Aber nicht einmal annÑhernd so 
+				schwierig wie die PrÅfung des Gleichgewichts.");
+				askList-=<<"Where did you get the answers? 
+						\f Oó as-tu trouvÇ les responses?
+						\g Woher wu·tet Ihr die richtigen Antworten?",
+				 	"Will you tell me the answers? 
+					\f Peux-tu me donner les responses?
+				 	\g WÅrdet Ihr mir die Antworten verraten?">>;
+				askList+=<<"The Test of Centeredness was difficult? 
+						\f Le Test de l'Equilibre estoit-il difficile?
+						\g Die PrÅfung des Gleichgewichts war schwierig?">>;
+			}
+
+			case "I found this ring.
+				\f J'ai trouvÇ cet anneau.
+				\g Ich habe diesen Ring gefunden."
+			{
+				bark("My goodness. That's Torwin's ring! Oh my, it belonged
+				to his father. He showed it to everyone he met. Oh how
+				terribly, terribly sad! You should take it to his mother.
+				\f Juste ciel! C'est l'anneau de Torwin! Oh, misÇricorde,
+				il appartenoit Ö son päre. Il le montroit Ö tous ceux
+				qu'il rencontroit. Quelle tristesse! Tu devrois l'apporter
+				Ö sa pauvre märe.
+				\g Du meine GÅte. Das ist Torwins Ring! Das war ein Geschenk 
+				seines Vaters. Er hat ihn immer voller Stolz vorgezeigt. 
+				Das ist wirklich schrecklich traurig! Ihr solltet den Ring 
+				seiner Mutter bringen.");
+				askList-=<<"I found this ring.
+						\f J'ai trouvÇ cet anneau.
+						\g Ich habe diesen Ring gefunden.">>;
+				askList+=<<"I shall.
+						\f Je le luy apporteroi.
+						\g Das werde ich tun.", 
+						"I don't think I will.
+						\f Je ne pense point que je le feroi.
+						\g Ich glaube nicht, da· ich das tun werde.">>;
+			}
+
+
+			case "I shall.
+				\f Je le luy apporteroi.
+				\g Das werde ich tun."
+			{
+				bark("I know she will be very happy. It is a kind thing you
+				do. Give her my regards, will you?
+				\f Je sais qu'elle en sera träs heureuse. C'est un geste gÇnÇreux.
+				Salue-la de ma part, veux-tu?
+				\g Das ist sehr nett von Euch. Sie wird Euch sicherlich sehr 
+				dankbar sein. Sagt Ihr doch bitte, da· ich oft an sie denke.");
+				exitConvo();
+				return;
+			}
+
+
+			case "I don't think I will.
+				\f Je ne pense point que je le feroi.
+				\g Ich glaube nicht, da· ich das tun werde."
+			{
+				bark("Perhaps you are right. The shock and sadness might
+				be too much for her. Still, I think it would be best to
+				return it to her.
+				\f Tu as sans doute raison. Cela l'attristeroit encore davantage.
+				Mais peut-estre seroit-elle contente de l'avoir.
+				\g Vielleicht habt Ihr recht. Ihr Schmerz ist noch so frisch. 
+				Aber ich glaube trotzdem, da· es richtig ist, ihr den Ring 
+				zu geben.");
+				askList-=<<"I shall.
+							\f Je le luy apporteroi
+							\g Das werde ich tun.", 
+							"I don't think I will.
+							\f Je ne pense point que je le feroi.
+							\g Ich glaube nicht, da· ich das tun werde.">>;
+			}
+
+			case "The Test of Centeredness was difficult? 
+				\f Le Test de l'Equilibre estoit-il difficile?
+				\g Die PrÅfung des Gleichgewichts war schwierig?",
+			"Is the Test of Centeredness difficult? 
+				\f Le Test de l'Equilibre est-il difficile?
+				\g Ist die PrÅfung des Gleichgewichts schwierig?"
+			{
+				bark("Difficult? It was nearly the death of me! I fell at least
+				five times. Fortunately Stratos saw fit to keep me and not send
+				me to my death over the steep side. But, you'll see for yourself
+				when you get there!
+				
+				\f Difficile? J'ai failli y laisser ma peau! Je suis au moins
+				tombÇ cinq fois. Heureusement que Stratos a bien voulu me garder au
+				lieu de m'envoyer au trÇpas. Mais tu verras par toy-mesme quand ce sera
+				ton tour!
+				
+				\g Schwierig? Sie hÑtte mich fast das Leben gekostet. Ich bin mindestens
+				fÅnfmal hingefallen. GlÅcklicherweise entschied sich Stratos dafÅr, mich 
+				trotzdem zu behalten und mich nicht in die Schlucht zu stÅrzen. Aber Ihr werdet
+				schon sehen, was ich meine.");
+				askList-=<<"The Test of Centeredness was difficult? 
+					\f Le Test de l'Equilibre estoit-il difficile?
+					\g Die PrÅfung des Gleichgewichts war schwierig?",
+					"Is the Test of Centeredness difficult?
+					\f Le Test de l'Equilibre est-il difficile?
+					\g Ist die PrÅfung des Gleichgewichts schwierig?">>;
+			}
+
+			case "bye \f bon vent \g Lebt wohl."
+			{
+				bark("Goodbye. \f Bon vent. \g Lebt wohl.");
+				exitConvo();
+				return;
+			}
+		}
+	}
+
+	exitConvo();
+}
+
+
+process Cyrrus::closeDoor()
+{
+	[[PT_ACTIVITY, referent]];
+
+		sped : Item;
+		door : Door;
+
+		foreach	sped where (type = TypeDoorEW) or (type = TypeTallDoorEW)
+			within 10 cells of Cyrrus {
+
+			door.referent = sped.referent;
+			break;
+		}
+
+		if door {
+			bark("Why is this wide open?
+				\f Pourquoi cette porte est-elle grand ouverte?
+				\g Weshalb steht diese TÅr offen?");
+			door.doorDriver(Cyrrus:Referent);
+		}
+}
+

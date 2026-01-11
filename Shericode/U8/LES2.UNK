@@ -1,0 +1,32 @@
+uses "free";
+uses "item";
+
+npcclass Avatar inherits Npc
+{
+	process look();
+	process use();
+}
+
+process Avatar::use()
+{
+
+	s : String;
+	c : Byte;
+
+	s = "";
+	c = 1;
+
+	while c < 10
+	{
+		s+=numToStr(c);
+		c = c+2;
+	}
+	bark (s);
+}
+
+process Avatar::look() 
+{
+	// nothing here yet
+}
+
+

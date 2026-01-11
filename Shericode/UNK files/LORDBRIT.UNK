@@ -1,0 +1,131 @@
+//@@@Tranlate g f 
+uses "free";
+uses "item";
+uses "flags";
+//uses "lordbrit";
+
+globalflag lbStarted;
+globalflag lbDone;
+
+typeclass TypeLordBritish inherits Item {
+	process use();
+	process [[PT_DEFAULT, referent]] puppet( lb : Item);
+}
+
+process TypeLordBritish::use() {
+	[[PT_DEFAULT, referent]];
+
+	if lbStarted = 1 {
+		return;
+	} 
+
+	lbStarted = 1;
+
+	item, lb, red, yellow, blue, mushroom : Item;
+	mushFrame : Number = 0;
+
+	foreach item where type = TypeLordBritish within 1024 of Avatar {
+		lb.referent = item.referent;
+	}
+			
+	wait (120);
+	lb.bark ("Avatar...");
+	wait (30);
+	scrollTo(lb.getX(),lb.getY(),lb.getZ(),25);
+	
+	blue.create (TypeMagicSparkle,0);
+	blue.pop (lb.getX() + 20,lb.getY(),lb.getZ() + 40);
+
+	yellow.create (TypeMagicSparkle,20);
+	yellow.pop (lb.getX() + 24,lb.getY(),lb.getZ() + 24);
+
+	red.create (TypeMagicSparkle,11);
+	red.pop (lb.getX() - 28,lb.getY(),lb.getZ() + 28);
+
+	wait (30);
+	lb.bark ("Avatar...");
+	Avatar.turnToFace(Avatar.getDirToItem(referent),false,10);
+	
+	wait (10);
+	lb.setFrame(0);
+	wait (30);
+	blue.destroy ();
+	yellow.destroy ();
+	red.destroy ();
+
+	wait(30);
+	spawn puppet(lb) -> return;
+	
+	lb.bark ("Avatar, I have found a portal through which I can speak, yet I
+		can neither see nor hear thee. Nystul, my magiciain and trusted friend, 
+		has managed to pierce the Guardian's dark veil to locate thee and
+		send this message. Yet the tether that binds to this world grows 
+		threadbare and I fear my time here is short. Seek the counsel of 
+		the wise man known as Mythran. I feel that he is near thee and can  
+		offer much help. Ask him of the race that once thrived upon the land
+		that is now your prison. Through him thou canst find the ancient race 
+		and earn their help, for Pagan is now their prison too. Journey with 
+		great haste to Mythran. Only with his aid canst thou escape. Farewell,
+		Avatar and please hurry. Britannia is in great need of thee...");
+
+	lbDone = 1; // true
+	
+	wait (30);
+	blue.create (TypeMagicSparkle,0);
+	blue.pop (lb.getX() + 20,lb.getY(),lb.getZ() + 40);
+
+	yellow.create (TypeMagicSparkle,20);
+	yellow.pop (lb.getX() + 24,lb.getY(),lb.getZ() + 24);
+
+	red.create (TypeMagicSparkle,11);
+	red.pop (lb.getX() - 28,lb.getY(),lb.getZ() + 28);
+
+	wait (30);
+	
+//	lb.setFrame(9);
+	
+	wait (30);
+	blue.destroy ();
+	yellow.destroy ();
+	red.destroy ();
+
+	scrollBack (25);
+
+	wait (120);
+	lb.destroy();
+	return;
+}
+
+process TypeLordBritish::puppet (lb : Item) {
+	startup	{
+		count : Number = 0;
+		fram : Frame = 0;
+		lb.setFrame(fram);
+	}
+
+	process {
+	  	
+		if lbDone = 1 {
+			lb.setFrame (9);
+			return;
+		}
+
+		if count = 4 {
+			wait (5);
+			lb.setFrame (2);
+			wait (120);
+			count = 0;
+		}
+		
+		if lb.getFrame() = 8 {
+			count++;
+			fram = 0;
+		}
+
+		fram++;
+
+		wait (5);
+		lb.setFrame (fram);
+  	}
+}
+

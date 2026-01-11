@@ -1,0 +1,585 @@
+<opcodes>
+    <0x00>
+        <name> UC_INIT </name>
+        <asm_nmo> init %1 </asm_nmo>
+        <ucs_nmo> /* init locals size %1 */ </ucs_nmo>
+        <num_bytes> 1 </num_bytes>
+        <param_types> {byte} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 0 </num_push>
+        <not_param/>
+    </0x00>
+    <0x01>
+        <name> UC_POP_LOCAL_WORD </name>
+        <asm_nmo> pop [BP+%1] </asm_nmo>
+        <ucs_nmo> %v1 = %p2 </ucs_nmo>
+        <num_bytes> 2 </num_bytes>
+        <param_types> {short} </param_types>
+        <num_pop> 1 </num_pop>
+        <num_push> 0 </num_push>
+        <not_param/>
+    </0x01>
+    <0x02>
+        <name> UC_PUSH_LOCAL_WORD </name>
+        <asm_nmo> push [BP+%1] </asm_nmo>
+        <ucs_nmo> push %v1 </ucs_nmo>
+        <num_bytes> 2 </num_bytes>
+        <param_types> {short} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 1 </num_push>
+    </0x02>
+    <0x0A>
+        <name> UC_PUSH_BYTE </name>
+        <asm_nmo> pushb %1 </asm_nmo>
+        <ucs_nmo> push %1 </ucs_nmo>
+        <num_bytes> 1 </num_bytes>
+        <param_types> {byte} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 1 </num_push>
+    </0x0A>
+    <0x0B>
+        <name> UC_PUSH_WORD </name>
+        <asm_nmo> push %1 </asm_nmo>
+        <ucs_nmo> push %1 </ucs_nmo>
+        <num_bytes> 2 </num_bytes>
+        <param_types> {short} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 1 </num_push>
+    </0x0B>
+    <0x0C>
+        <name> UC_PUSH_DWORD </name>
+        <asm_nmo> pushl %1 </asm_nmo>
+        <ucs_nmo> push %1 </ucs_nmo>
+        <num_bytes> 4 </num_bytes>
+        <param_types> {long} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 1 </num_push>
+    </0x0C>
+    <0x0D>
+        <name> UC_PUSH_STRING </name>
+        <asm_nmo> pushs %1 </asm_nmo>
+        <ucs_nmo> push "%t1" </ucs_nmo>
+        <num_bytes> variable </num_bytes>
+        <param_types> {string} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 1 </num_push>
+    </0x0D>
+    <0x0E>
+        <name> UC_CREATE_LIST </name>
+        <asm_nmo> create_list %1 </asm_nmo>
+        <ucs_nmo> create_list %p1 </ucs_nmo>
+        <num_bytes> 1 </num_bytes>
+        <param_types> {byte} </param_types>
+        <num_pop> variable </num_pop>
+        <num_push> 1 </num_push>
+    </0x0E>
+    <0x0F>
+        <name> UC_CALLI </name>
+        <asm_nmo> calli %1 %2 </asm_nmo>
+        <ucs_nmo> %2(%p3) </ucs_nmo>
+        <num_bytes> 3 </num_bytes>
+        <param_types> {byte,short} </param_types>
+        <num_pop> variable </num_pop>
+        <num_push> variable </num_push>
+        <call_effect/>
+        <paren/>
+    </0x0F>
+    <0x10>
+        <name> UC_CALL </name>
+        <asm_nmo> call %1 </asm_nmo>
+        <ucs_nmo> call %1 </ucs_nmo>
+        <num_bytes> 2 </num_bytes>
+        <param_types> {short} </param_types>
+        <num_pop> variable </num_pop>
+        <num_push> variable </num_push>
+        <function_effect/>
+    </0x10>
+    <0x11>
+        <name> UC_CALL_EXTERNAL </name>
+        <asm_nmo> call %1 %2 </asm_nmo>
+        <ucs_nmo> %p3-&gt;%1(%p4) </ucs_nmo>
+        <num_bytes> 4 </num_bytes>
+        <param_types> {short,short} </param_types>
+        <num_pop> variable </num_pop>
+        <num_push> variable </num_push>
+        <method_effect/>
+        <paren/>
+    </0x11>
+    <0x12>
+        <name> UC_POP_TEMP </name>
+        <asm_nmo> pop temp </asm_nmo>
+        <ucs_nmo> temp = %p1 </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 1 </num_pop>
+        <num_push> 0 </num_push>
+    </0x12>
+    <0x14>
+        <name> UC_ADD </name>
+        <asm_nmo> add </asm_nmo>
+        <ucs_nmo> %p1 + %p2 </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 2 </num_pop>
+        <num_push> 1 </num_push>
+    </0x14>
+    <0x16>
+        <name> UC_CONCAT </name>
+        <asm_nmo> concat </asm_nmo>
+        <ucs_nmo> %p1 + %p2 </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 2 </num_pop>
+        <num_push> 1 </num_push>
+    </0x16>
+    <0x17>
+        <name> UC_APPEND </name>
+        <asm_nmo> append </asm_nmo>
+        <ucs_nmo> append %p1 to %p2 </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 2 </num_pop>
+        <num_push> 1 </num_push>
+    </0x17>
+    <0x1A>
+        <name> UC_REMOVE_SLIST </name>
+        <asm_nmo> remove_slist </asm_nmo>
+        <ucs_nmo> remove %p1 from %p2 </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 2 </num_pop>
+        <num_push> 1 </num_push>
+    </0x1A>
+    <0x1C>
+        <name> UC_SUB </name>
+        <asm_nmo> sub </asm_nmo>
+        <ucs_nmo> %p1 - %p2 </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 2 </num_pop>
+        <num_push> 1 </num_push>
+    </0x1C>
+    <0x1E>
+        <name> UC_MUL </name>
+        <asm_nmo> mul </asm_nmo>
+        <ucs_nmo> %p1 * %p2 </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 2 </num_pop>
+        <num_push> 1 </num_push>
+    </0x1E>
+    <0x24>
+        <name> UC_CMP_EQ </name>
+        <asm_nmo> cmp </asm_nmo>
+        <ucs_nmo> %p1 == %p2 </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 2 </num_pop>
+        <num_push> 1 </num_push>
+    </0x24>
+    <0x26>
+        <name> UC_STRCMP </name>
+        <asm_nmo> strcmp </asm_nmo>
+        <ucs_nmo> %p1 == %p2 </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 2 </num_pop>
+        <num_push> 1 </num_push>
+    </0x26>
+    <0x28>
+        <name> UC_LT </name>
+        <asm_nmo> lt </asm_nmo>
+        <ucs_nmo> %p1 < %p2 </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 2 </num_pop>
+        <num_push> 1 </num_push>
+    </0x28>
+    <0x2A>
+        <name> UC_LE </name>
+        <asm_nmo> le </asm_nmo>
+        <ucs_nmo> %p1 <= %p2 </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 2 </num_pop>
+        <num_push> 1 </num_push>
+    </0x2A>
+    <0x2C>
+        <name> UC_GT </name>
+        <asm_nmo> gt </asm_nmo>
+        <ucs_nmo> %p1 > %p2 </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 2 </num_pop>
+        <num_push> 1 </num_push>
+    </0x2C>
+    <0x2E>
+        <name> UC_IN </name>
+        <asm_nmo> in </asm_nmo>
+        <ucs_nmo> %p1 in %p2 </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 2 </num_pop>
+        <num_push> 1 </num_push>
+    </0x2E>
+    <0x30>
+        <name> UC_NOT </name>
+        <asm_nmo> not </asm_nmo>
+        <ucs_nmo> not %p1 </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 1 </num_pop>
+        <num_push> 1 </num_push>
+    </0x30>
+    <0x32>
+        <name> UC_AND </name>
+        <asm_nmo> and </asm_nmo>
+        <ucs_nmo> %p1 and %p2 </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 2 </num_pop>
+        <num_push> 1 </num_push>
+    </0x32>
+    <0x34>
+        <name> UC_OR </name>
+        <asm_nmo> or </asm_nmo>
+        <ucs_nmo> %p1 or %p2 </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 2 </num_pop>
+        <num_push> 1 </num_push>
+    </0x34>
+    <0x36>
+        <name> UC_NE </name>
+        <asm_nmo> ne </asm_nmo>
+        <ucs_nmo> %p1 != %p2 </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 2 </num_pop>
+        <num_push> 1 </num_push>
+    </0x36>
+    <0x38>
+        <name> UC_SAY </name>
+        <asm_nmo> say </asm_nmo>
+        <ucs_nmo> say %p1 </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 1 </num_pop>
+        <num_push> 0 </num_push>
+        <nosemicolon/>
+    </0x38>
+    <0x3A>
+        <name> UC_RET </name>
+        <asm_nmo> ret </asm_nmo>
+        <ucs_nmo> return </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 0 </num_push>
+        <return/>
+    </0x3A>
+    <0x3F>
+        <name> UC_PUSH_LOCAL_WORD </name>
+        <asm_nmo> push [BP+%1] </asm_nmo>
+        <ucs_nmo> push %v1 </ucs_nmo>
+        <num_bytes> 2 </num_bytes>
+        <param_types> {short} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 1 </num_push>
+    </0x3F>
+    <0x40>
+        <name> UC_PUSH_LOCAL_DWORD </name>
+        <asm_nmo> pushl [BP+%1] </asm_nmo>
+        <ucs_nmo> push %v1 </ucs_nmo>
+        <num_bytes> 2 </num_bytes>
+        <param_types> {short} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 1 </num_push>
+    </0x40>
+    <0x41>
+        <name> UC_PUSH_LOCAL_STRING </name>
+        <asm_nmo> pushs [BP+%1] </asm_nmo>
+        <ucs_nmo> push %v1 </ucs_nmo>
+        <num_bytes> 2 </num_bytes>
+        <param_types> {short} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 1 </num_push>
+    </0x41>
+    <0x43>
+        <name> UC_PUSH_LOCAL_SLIST </name>
+        <asm_nmo> pushsl [BP+%1] </asm_nmo>
+        <ucs_nmo> push %v1 </ucs_nmo>
+        <num_bytes> 2 </num_bytes>
+        <param_types> {short} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 1 </num_push>
+    </0x43>
+    <0x4B>
+        <name> UC_PUSH_BP_ADDR </name>
+        <asm_nmo> push &amp;[BP+%1] </asm_nmo>
+        <ucs_nmo> push &amp;%v1 </ucs_nmo>
+        <num_bytes> 2 </num_bytes>
+        <param_types> {short} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 1 </num_push>
+    </0x4B>
+    <0x4C>
+        <name> UC_PUSH_INDIRECT </name>
+        <asm_nmo> push_indirect %1 </asm_nmo>
+        <ucs_nmo> push *%p1 </ucs_nmo>
+        <num_bytes> 1 </num_bytes>
+        <param_types> {byte} </param_types>
+        <num_pop> 1 </num_pop>
+        <num_push> 1 </num_push>
+    </0x4C>
+    <0x4E>
+        <name> UC_PUSH_GLOBAL </name>
+        <asm_nmo> pushg %1 %2 </asm_nmo>
+        <ucs_nmo> push global %1 %2 </ucs_nmo>
+        <num_bytes> 3 </num_bytes>
+        <param_types> {short,byte} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 1 </num_push>
+    </0x4E>
+    <0x4F>
+        <name> UC_POP_GLOBAL </name>
+        <asm_nmo> popg %1 %2 </asm_nmo>
+        <ucs_nmo> global %1 %2 = %p3 </ucs_nmo>
+        <num_bytes> 3 </num_bytes>
+        <param_types> {short,byte} </param_types>
+        <num_pop> 1 </num_pop>
+        <num_push> 0 </num_push>
+    </0x4F>
+    <0x50>
+        <name> UC_RET </name>
+        <asm_nmo> ret </asm_nmo>
+        <ucs_nmo> return </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 0 </num_push>
+        <return/>
+    </0x50>
+    <0x51>
+        <name> UC_JNE </name>
+        <asm_nmo> jne %1 </asm_nmo>
+        <ucs_nmo> if not (%p1) goto label%f*_%2 </ucs_nmo>
+        <num_bytes> 2 </num_bytes>
+        <param_types> {offset} </param_types>
+        <num_pop> 1 </num_pop>
+        <num_push> 0 </num_push>
+    </0x51>
+    <0x52>
+        <name> UC_JMP </name>
+        <asm_nmo> jmp %1 </asm_nmo>
+        <ucs_nmo> goto label%f*_%2 </ucs_nmo>
+        <num_bytes> 2 </num_bytes>
+        <param_types> {offset} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 0 </num_push>
+    </0x52>
+    <0x53>
+        <name> UC_SUSPEND </name>
+        <asm_nmo> suspend </asm_nmo>
+        <ucs_nmo> suspend </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 0 </num_push>
+    </0x53>
+    <0x54>
+        <name> UC_IMPLIES </name>
+        <asm_nmo> implies </asm_nmo>
+        <ucs_nmo> %p1 implies %p2 </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 2 </num_pop>
+        <num_push> 1 </num_push>
+    </0x54>
+    <0x57>
+        <name> UC_SPAWN </name>
+        <asm_nmo> spawn %1 %2 %3 %4 </asm_nmo>
+        <ucs_nmo> spawn %p5 in %3 at %4 with %1 params, this size %2 </ucs_nmo>
+        <num_bytes> 6 </num_bytes>
+        <param_types> {byte,byte,short,short} </param_types>
+        <num_pop> variable </num_pop>
+        <num_push> 1 </num_push>
+        <paren/>
+    </0x57>
+    <0x59>
+        <name> UC_PID </name>
+        <asm_nmo> pid </asm_nmo>
+        <ucs_nmo> pid </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 1 </num_push>
+    </0x59>
+    <0x5A>
+        <name> UC_INIT </name>
+        <asm_nmo> init %1 </asm_nmo>
+        <ucs_nmo> /* init locals size %1 */ </ucs_nmo>
+        <num_bytes> 1 </num_bytes>
+        <param_types> {byte} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 0 </num_push>
+        <not_param/>
+    </0x5A>
+    <0x5D>
+        <name> UC_PUSH_BYTE_RETVAL </name>
+        <asm_nmo> pushb retval </asm_nmo>
+        <ucs_nmo> push retval </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 1 </num_push>
+    </0x5D>
+    <0x5E>
+        <name> UC_PUSH_RETVAL </name>
+        <asm_nmo> push retval </asm_nmo>
+        <ucs_nmo> push retval </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 1 </num_push>
+    </0x5E>
+    <0x60>
+        <name> UC_WORD_TO_DWORD </name>
+        <asm_nmo> word_to_dword </asm_nmo>
+        <ucs_nmo> (dword)%p1 </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 1 </num_pop>
+        <num_push> 1 </num_push>
+    </0x60>
+    <0x61>
+        <name> UC_DWORD_TO_WORD </name>
+        <asm_nmo> dword_to_word </asm_nmo>
+        <ucs_nmo> (word)%p1 </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 1 </num_pop>
+        <num_push> 1 </num_push>
+    </0x61>
+    <0x62>
+        <name> UC_FREE_STRING_BP </name>
+        <asm_nmo> free_string [BP+%1] </asm_nmo>
+        <ucs_nmo> free %v1 </ucs_nmo>
+        <num_bytes> 2 </num_bytes>
+        <param_types> {short} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 0 </num_push>
+    </0x62>
+    <0x63>
+        <name> UC_FREE_SLIST_BP </name>
+        <asm_nmo> free_slist [BP+%1] </asm_nmo>
+        <ucs_nmo> free %v1 </ucs_nmo>
+        <num_bytes> 2 </num_bytes>
+        <param_types> {short} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 0 </num_push>
+    </0x63>
+    <0x65>
+        <name> UC_FREE_STRING_SP </name>
+        <asm_nmo> free_string [SP+%1] </asm_nmo>
+        <ucs_nmo> free %vs1 </ucs_nmo>
+        <num_bytes> 1 </num_bytes>
+        <param_types> {signed_byte} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 0 </num_push>
+    </0x65>
+    <0x67>
+        <name> UC_FREE_SLIST_SP </name>
+        <asm_nmo> free_slist [SP+%1] </asm_nmo>
+        <ucs_nmo> free %vs1 </ucs_nmo>
+        <num_bytes> 1 </num_bytes>
+        <param_types> {signed_byte} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 0 </num_push>
+    </0x67>
+    <0x6B>
+        <name> UC_STR_TO_PTR </name>
+        <asm_nmo> str_to_ptr </asm_nmo>
+        <ucs_nmo> &amp;%p1 </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 1 </num_pop>
+        <num_push> 1 </num_push>
+    </0x6B>
+    <0x6D>
+        <name> UC_PUSH_PROCESS_RESULT </name>
+        <asm_nmo> push process_result </asm_nmo>
+        <ucs_nmo> push process_result </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 1 </num_push>
+    </0x6D>
+    <0x6E>
+        <name> UC_ADD_SP </name>
+        <asm_nmo> add_sp %1 </asm_nmo>
+        <ucs_nmo> /* add_sp %1 */ </ucs_nmo>
+        <num_bytes> 1 </num_bytes>
+        <param_types> {signed_byte} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 0 </num_push>
+        <not_param/>
+    </0x6E>
+    <0x70>
+        <name> UC_LOOP </name>
+        <asm_nmo> loop [BP+%1], %2, %3 </asm_nmo>
+        <ucs_nmo> loop %v1 = %p2 to %p3 </ucs_nmo>
+        <num_bytes> 3 </num_bytes>
+        <param_types> {byte,byte,byte} </param_types>
+        <num_pop> 1 </num_pop>
+        <num_push> 0 </num_push>
+        <loop/>
+    </0x70>
+    <0x73>
+        <name> UC_LOOPNEXT </name>
+        <asm_nmo> loopnext </asm_nmo>
+        <ucs_nmo> next </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 0 </num_push>
+    </0x73>
+    <0x74>
+        <name> UC_LOOPSCR </name>
+        <asm_nmo> loopscr %1 </asm_nmo>
+        <ucs_nmo> %1 </ucs_nmo>
+        <num_bytes> 1 </num_bytes>
+        <param_types> {byte} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 0 </num_push>
+        <not_param/>
+    </0x74>
+    <0x77>
+        <name> UC_SET_INFO </name>
+        <asm_nmo> set_info %1 %2 </asm_nmo>
+        <ucs_nmo> set_info %p1, %2 </ucs_nmo>
+        <num_bytes> 4 </num_bytes>
+        <param_types> {short,short} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 0 </num_push>
+    </0x77>
+    <0x78>
+        <name> UC_PROCESS_EXCLUDE </name>
+        <asm_nmo> process_exclude </asm_nmo>
+        <ucs_nmo> process_exclude </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 0 </num_push>
+    </0x78>
+    <0x7A>
+        <name> UC_END </name>
+        <asm_nmo> end </asm_nmo>
+        <ucs_nmo> end </ucs_nmo>
+        <num_bytes> 0 </num_bytes>
+        <param_types> {} </param_types>
+        <num_pop> 0 </num_pop>
+        <num_push> 0 </num_push>
+        <not_param/>
+    </0x7A>
+</opcodes>

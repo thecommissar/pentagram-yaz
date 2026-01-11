@@ -1,0 +1,1538 @@
+
+uses "npc";
+uses "flags";
+uses "free";
+
+
+
+npcclass Kilandra inherits Npc
+{
+	process use();
+	process look();
+	process schedule(currentTime:Long);
+	process enterFastArea();
+	process leaveFastArea();
+	process cast(ref:Referent);
+	process AvatarStoleSomething(ref:Referent);
+
+	process atHome();
+	process randomBarkAtHome();
+}
+
+
+
+process Kilandra::look()
+{
+	if isDead()
+	{
+		if kilandraName 
+		{
+			bark("the body of Kilandra \f despouille de Kilandra \g Kilandras Leiche");
+			return;
+		}
+		else
+		{
+			bark("dead woman \f femme morte \g Tote Frau");
+			return;
+		}
+	}
+
+	if kilandraName and kilandraJob
+	{
+		bark("Kilandra the fisherwoman \f Kilandra, la femme pàcheur
+		\g Die Fischerin Kilandra");
+		return;
+	}
+	else if kilandraName
+	{
+		bark("Kilandra \&");
+		return;
+	}
+
+	else if kilandraJob
+	{
+		bark("Fisherwoman \f Femme pàcheur \g Fischerin");
+		return;
+	}
+
+
+	else
+	{
+		bark("woman \f femme \g Frau");
+	}
+}
+
+
+
+
+process Kilandra::schedule(currentTime:Long)
+{
+	point : WorldPoint;
+	map : MapNum = MapFishermansReef;
+
+	// Time to head to the fish market...
+
+	if (getPeriod() = threemoons) or (getPeriod() = daytide) or (getPeriod() = eventide)
+	{
+		point.x = 11743;
+		point.y = 16095;
+		point.z = 48;
+	}
+
+	// Head to the house.
+
+	if (getPeriod() = firstebb) or (getPeriod() = lastebb) or (getPeriod() = bloodwatch) 
+	{
+		point.x = 11391;
+		point.y = 17695;
+		point.z = 48;
+	}
+
+	safeTeleport(point,map); 
+
+}
+
+
+
+
+process Kilandra::enterFastArea()
+{
+	resetRef(referent,PT_ACTIVITY);
+	resetRef(referent,PT_PATHFIND);
+	resetRef(referent,PT_ANIM);
+	resetRef(referent,PT_BARK);
+
+	spawn atHome() -> return;
+}
+
+
+
+process Kilandra::leaveFastArea()
+{
+
+	killProcess(referent,PT_ACTIVITY);
+	killProcess(referent,PT_PATHFIND);
+	killProcess(referent,PT_ANIM);
+	resetRef(referent,PT_BARK);
+
+	if isDead() 
+	{
+		teleport(urandom(1000),urandom(1000),0,0);
+	}
+}
+
+
+process Kilandra::cast(ref:Referent)
+{
+	count:Number;
+	count = 10;
+
+	// TEST TO MAKE SURE THAT THE NPC HAS A TARGET
+	// -------------------------------------------
+	while (not getTarget()) and (count) {
+		wait(1);
+		count--;
+	}
+
+	ref = getTarget();
+
+
+	if ref = Avatar:Referent
+	{
+		if not isDead()
+		{
+			spawn callTheGuards(NULL_REF) -> return;
+	
+			killProcess(referent,PT_ACTIVITY);
+			killProcess(referent,PT_PATHFIND);
+			killProcess(referent,PT_ANIM);
+			killProcess(referent,PT_BARK);
+	
+			bark("Beren! I am assaulted!
+					\f Beren! On m'attaque!
+					\g Beren! Ich werde angegriffen!");
+		}
+	
+	}
+}
+
+
+
+
+process Kilandra::AvatarStoleSomething(ref:Referent)
+{
+	if isDead()
+	{
+		return;
+	}
+
+	item:Item;
+	item.referent = ref;
+	resetRef(referent,PT_ACTIVITY);
+	resetRef(referent,PT_PATHFIND);
+	resetRef(referent,PT_BARK);
+	resetRef(referent,PT_ANIM);
+
+
+	turnToFace(getDirToItem(Avatar:Referent),false,10);
+	bark("What are you doing there...?
+		\f Eh! Qu'est-ce que tu trafiques, lÖ-bas...?
+		\g Was machst du denn da...?");
+	wait(100);
+	enterFastArea();
+	return;
+}
+
+
+
+process Kilandra::atHome() 
+{
+	[[PT_ACTIVITY, referent]];
+
+	startup 
+	{
+		pathEgg:Item;
+		counter,counter2:Number;
+		foreach pathEgg where (type = TypePathMarker) within 10 cells of Kilandra
+		{
+			counter2 = pathEgg.getFrame();
+		}
+	}
+
+	process
+	{
+
+		for counter = counter2 to 4 
+		{
+
+			foreach pathEgg where (type = TypePathMarker) and (frame = counter)
+				within 30 cells of Kilandra 
+			{
+				if pathfind(pathEgg.referent,10)
+				{
+					realDoAnim(AS_STAND,getDir());
+					randomBarkAtHome();
+				}
+				else
+				{
+					realDoAnim(AS_FIDGET,getDir());
+					wait(200);
+					realDoAnim(AS_FIDGET,getDir());
+				}
+			}
+		}										 
+
+		counter2 = 0;
+	}
+}
+
+
+process Kilandra::randomBarkAtHome()
+{
+	[[PT_ACTIVITY, referent]];
+
+	ran:Number;
+
+
+	if (getDistance(Avatar:Referent,Rhian:Referent) < 200) 
+		and ((Avatar.getStatus() & INVISIBLE) = false) 
+	{
+		ran = urandom(5);
+
+		if ran = 1 
+		{
+			turnToFace(getDirToItem(Avatar:Referent),false,10);
+			bark("How 'bout some fish, mate?
+				\f Eh l'amy, tu veux un peu d'poisson?
+				\g Wie wÑr's mit'm bi·chen Fisch, Kamerad?");
+			realDoAnim(AS_FIDGET,getDir());
+			wait(120);
+		}
+
+		if ran = 2 
+
+		{
+			turnToFace(getDirToItem(Avatar:Referent),false,10);
+			if not kilandraMet
+			{
+				bark("Well, what can I do fer ye' stranger...?
+					\f Qu'est-ce que j'peux faire pour toy, l'estranger...?
+					\g Na, was kann ich fÅr dich tun, Fremder...?");
+					return;
+			}
+			else 
+			{
+				bark("Need something, friend?
+					\f T'as b'soin d'quelque chose, l'amy?
+					\g Brauchste 'was, mein Freund?");
+				return;
+			}
+			realDoAnim(AS_FIDGET,getDir());
+		}
+
+		if ran = 3 
+		{
+			turnToFace(getDirToItem(Avatar:Referent),false,10);
+			if not kilandraMet
+			{
+				bark("Well, what can I do fer ye' stranger...?
+					\f Qu'est-ce que j'peux faire pour toy, l'estranger...?
+					\g Na, was kann ich fÅr dich tun, Fremder...?");
+					return;
+			}
+
+			else
+  
+			{
+				#if English {
+				bark("Well, what are ye lookin' at, "+ getName()+".");
+				}
+				#if French {
+				bark("Eh bien, qu'est-ce que t'as Ö regarder comme áa, "+ getName()+".");
+				}
+				#if German {
+				bark("Und warum glotzt du so,\& "+ getName()+"?\&");
+				}
+				return;
+			}
+
+			realDoAnim(AS_FIDGET,getDir());
+			wait(60);
+		}
+
+
+		if ran = 4 
+		{
+ 
+			turnToFace(getDirToItem(Avatar:Referent),false,10);
+			bark("Ye know, the fish have stories to tell.
+			\f T'sais, les poissons peuvent t'en dire des choses!
+				\g Die Fische kînnen dir viel erzÑhlen...");
+			realDoAnim(AS_FIDGET,getDir());
+			bark("Ye should listen to 'em sometime. 
+				  \f Tu devrois parfois les escouter.
+					\g Solltest ihnen mal zuhîren...");
+			wait(120);
+		}
+	}
+
+	else if (getDistance(Avatar:Referent,Rhian:Referent) < 800) 
+	{
+		wait(100);
+		ran = urandom(8);
+		turnToFace(urandom(7),0,15);
+
+		if ran = 1 
+		{
+
+			realDoAnim(AS_FIDGET,getDir());
+			bark("I wonder how the fish are running today.
+				\f J'me demande si cela va mordre, aujourd'huy.
+				\g Wie's heut' wohl mit den Fischen aussieht...?");
+				return;
+			realDoAnim(AS_FIDGET,getDir());
+		}
+
+		if ran = 2 
+		{
+			bark("Hmmmm... \f Hmmmm...\g Hmmmm...");
+			return;
+			realDoAnim(AS_FIDGET,getDir());
+			wait(60);
+		}
+
+		if ran = 3 
+
+		{
+			bark("Looks to be a fine day for sailin'.
+				\f Le temps idÇal pour sortir en mer.
+				\g Is'n guter Tag heut' zum Segeln...");
+			return;
+		}
+
+		if ran = 4 
+
+		{
+			bark("About time to head out to sea. 
+				\f Il est temps que je sorte en mer.
+				\g Na, ich glaub', es ist Zeit, auf's Meer rauszufahren...");
+			wait(60);
+		}
+
+		if ran = 5 
+		{
+ 
+			bark("I sure could use a rest.
+				\f Une p'tite sieste seroit point d'refus.
+				\g Ich sollte mich mal ausruhen.");
+			realDoAnim(AS_FIDGET,getDir());
+			bark("Maybe I'll take a little nap.
+				\f J'vais p't'estre piquer un p'tit roupillon.
+				\g Ich werd' ein kleines Nickerchen machen.");
+		}
+
+		if ran = 6 
+ 
+		{
+			realDoAnim(AS_FIDGET,getDir());
+			bark("A nice bit o' fish would sure taste good.
+				\f Ah, j'mangerois volontiers un peu d'poisson.
+				\g Ein schînes Fischfilet wÑr' jetzt lecker.");
+			return;
+		}
+
+		if ran = 7 
+
+		{
+		bark("Me bones say there's a storm a brewin'.
+		\f Mes vieux os sentent qu'un orage se prÇpare.
+		\g Ich spÅr's in den Knochen. Da braut sich ein Sturm zusammen.");
+		realDoAnim(AS_FIDGET,getDir());
+			wait(100);
+		}
+	}
+}
+
+
+process Kilandra::use()
+{
+
+	answer:String;
+	askList:String List;
+	avaName : String;
+	
+	#if English {
+		avaName = "I am "+getName()+".";
+	}
+	#if French {
+		avaName = "Je suis "+getName()+".";
+	}
+	#if German {
+		avaName = "Ich hei·e\& "+getName()+".\&";
+	}
+
+
+	if not kilandraMet
+	{
+		spawn Avatar.bark("Excuse me. \f Excuse-moy. \g Verzeihung.") -> return;
+	}
+	else
+	{
+		spawn Avatar.bark("Hello there. \f Bien le bonjour. \g Guten Tag.") -> return;
+	}
+
+	enterConvo();
+	killProcess(Avatar:Referent,PT_BARK);
+
+	if kilandraMet
+	{
+		if gwillimToldDoor
+		{
+			if not askedFirstTime and not askedSecondTime
+			{
+				askList^=<<"Tell me about ghosts.
+					\f Parle-moy des fantosmes.
+					\g Ich will mehr Åber die Geister wissen.">>;
+			}
+
+			if askedFirstTime and not askedSecondTime
+			{
+				askList^=<<"Do you know of a key?
+					\f Tu es au courant d'une clef?
+					\g Ich suche nach einem SchlÅssel.">>;
+			}
+
+			if askedFirstTime and askedSecondTime
+			{
+				askList^=<<"Tell me where the key is!
+					\f Dis-moy oó se trouve la clef!
+					\g Sagt mir, wo der SchlÅssel ist!">>;
+			}
+		}
+
+		else
+		{
+		askList^=<<"Hello, Kilandra.
+			\f Salut, Kilandra.
+			\g Seid gegrÅ·t, Kilandra.">>;
+		}
+	}
+
+	else
+	{
+		askList^=<<"Hello \f Salut \g Seid gegrÅ·t.">>;
+	}
+
+	if kilandraPissed
+	{
+		askList=<<"Kilandra? \f Kilandra? \g Kilandra?">>;
+	}
+
+
+if deadWalk
+	{
+		askList=<<"Pardon me.
+			\f Excuse-moy.
+			\g Verzeihung.">>;
+	}
+
+
+	while answer!="bye \f Adieu \g Lebt wohl."
+	{
+		askList-=<<"bye \f Adieu \g Lebt wohl.">>;
+		askList+=<<"bye \f Adieu \g Lebt wohl.">>;
+		answer=ask(askList);
+		switch answer
+		{
+			case "Hello \f Salut \g Seid gegrÅ·t."
+			{
+				bark("Well, what can I do for ye today, stranger?
+					\f Eh ben, l'estranger. Qu'est c'que j'peux faire pour toy?
+					\g Na, was kann ich fÅr dich tun, Fremder?");
+				askList=<<avaName>>;
+			}
+
+			case avaName
+			{
+				kilandraMet = true;
+				kilandraName = true;
+				bark("Pleased to meet ye, I am Kilandra. I
+				haven't seen ye' here before. Are ye' new in town?
+				
+				\f Ravie de t'connoistre. J'suis Kilandra. J't'ai
+				jamais vu chez nous. T'es nouveau en ville?
+				
+				\g Freut mich, ich bin Kilandra. Hab' dich noch nie
+				gesehen hier. Bist neu in der Stadt, was?");
+				askList=<<"Yes \f Oui \g Ja.", "No \f Non \g Nein.">>;
+			}
+
+			case "Yes \f Oui \g Ja."
+			{
+				bark("Well then, welcome. I don't
+				get into town much, so I'm afraid I would be a poor 
+				guide there. But I can tell ye about the Sea of Rains. Been
+				fishin' it for years. I knows it like the back of me hand.
+				
+				\f Alors sois l'bienvenu. J'vais point souvent
+				en ville, et j'peux point te guider. Mais je peux t'causer
+				de la Mer des Pluies. Äa fait belle lurette que j'y pàche. J'la
+				connais comme la paume de ma main.
+				
+				\g Na dann, willkommen. Ich geh' nich'
+				oft in die Stadt. Ein guter FremdenfÅhrer wÑr' ich wohl nicht.
+				Aber ich kann dir vom Regenmeer erzÑhlen. Angel schlie·lich schon
+				seit Jahren drin rum. Die PfÅtze kenne ich wie meine Rocktasche. ");
+				askList-=<<"Yes \f Oui \g Ja.", "No \f Non \g Nein.">>;
+				askList=<<"Tell me of the Sea of Rains.
+					\f Parle-moy de la Mer des Pluies.
+					\g ErzÑhlt mir mehr Åber das Regenmeer.",
+				"Tell me of Tenebrae.
+					\f Parle-moy de Tenebrae.
+					\g ErzÑhlt mir mehr Åber Tenebrae.">>;
+				kilandraJob = true;
+			}
+
+			case "Tell me about ghosts.
+				\f Parle-moy des fantosmes.
+				\g Ich will mehr Åber die Geister wissen."
+			{
+				bark("Ghosts? Ghosts, ye say? Well, why would ye be wanting
+				to know about ghosts?
+				\f Des fantosmes? Des fantosmes, tu dis? Et pourquoi qu'tu
+				voudrois entendre parler d'fantosmes?
+				\g Geister? Und warum interessieren die dich?");
+				askList=<<"I'm looking for a ghost.
+							\f Je suis Ö la recherche d'un fantosme.
+							\g Ich bin nach einem bestimmten Geist auf der Suche.", 
+							"I heard Orlok's ghost story.
+							\f Orlok m'a racontÇ l'histoire du fantosme.
+							\g Orlok hat mir von einem Geist erzÑhlt.", 
+							"No particular reason.
+							\f Oh, juste comme áa.
+							\g Es ist eigentlich unwichtig.">>;
+				askedFirstTime = true;
+			}
+ 
+			case "I'm looking for a ghost.
+				\f Je suis Ö la recherche d'un fantosme.
+				\g Ich bin nach einem bestimmten Geist auf der Suche."
+			{
+				bark("Looking for a ghost, eh? That's a strange thing for
+				a nice young man like yerself to be doing! There is one
+				ghost I'd like to find, that of my daughter. If I could
+				find her ghost, maybe I could find a way to bring her back.
+				\f Un fantosme? C'est ben curieux, pour un beau ladre comme toy!
+				Y a ben un fantosme qu'j'aimerois trouver, et c'est celuy d'ma
+				fillotte. Comme áa, j'pourrois p'testre la ramener Ö la vie.
+				\g Du suchst einen Geist? So'n netter junger Mann wie du sollte 
+				lieber die Finger von sowas lassen! Aber ich wÅrd' auch ganz 
+				gern den Geist von meiner kleinen Tochter finden. Dann kînnt' ich 
+				sie vielleicht irgendwie auferwecken.");
+				askList-=<<"I'm looking for a ghost.
+						\f Je suis Ö la recherche d'un fantosme.
+						\g Ich bin nach einem bestimmten Geist auf der Suche.", 
+						"I heard Orlok's ghost story.
+						\f Orlok m'a racontÇ l'histoire du fantosme.
+						\g Orlok hat mir von einem Geist erzÑhlt.", 
+						"No particular reason.
+						\f Oh, juste comme áa.
+						\g Es ist eigentlich unwichtig.">>;
+			}
+
+
+			case "I heard Orlok's ghost story.
+				\f Orlok m'a racontÇ l'histoire du fantosme.
+				\g Orlok hat mir von einem Geist erzÑhlt."
+			{
+				bark("Of course, and ye would be one of those young men thinking
+				to find riches and adventure by disturbing the dead. It's
+				bad business, bad business I say. Why, no one should go
+				about mucking in the affairs of the dead. They don't like
+				it, no sirree. Why I talk to my daughter all the time and
+				she tells me all about being dead, and how much they dislikes
+				the living.
+				\f Ben tiens! Et tu es d'ceux qui sont prests Ö rÇveiller les
+				morts pour s'en mett' plein les poches. C'est point joli, joli, áa!
+				Les morts, áa aime point estre desrangÇ! Äa f'ra du vilain.
+				Quand j'parle Ö ma p'tiote, elle me raconte comment c'est, chez
+				les morts, et combien ils aiment point les vivants!
+				\g NatÅrlich, und du bist wohl so'n junger Hupfer, der glaubt, er 
+				kann bei den Toten Abenteuer erleben und auf Schatzsuche gehen. Das 
+				is'ne gefÑhrliche Sache, sag' ich dir. Die Toten zu stîren, das 
+				is'ne ganz teuflisch gefÑhrliche Sache! Das mîgen sie nÑmlich ganz 
+				und gar nicht! Ich red' oft mit meiner Kleinen und sie erzÑhlt mir 
+				immer davon, wie es ist, tot zu sein. Sie sagt auch immer, da· 
+				die Toten die Lebenden nicht ausstehen kînnen.");
+				askList-=<<"I'm looking for a ghost.
+						\f Je suis Ö la recherche d'un fantosme.
+						\g Ich bin nach einem bestimmten Geist auf der Suche.", 
+						"I heard Orlok's ghost story.
+						\f Orlok m'a racontÇ l'histoire du fantosme.
+						\g Orlok hat mir von einem Geist erzÑhlt.", 
+						"No particular reason.
+						\f Oh, juste comme áa.
+						\g Es ist eigentlich unwichtig.">>;
+				askList+=<<"You talk to your daughter?
+						\f Tu parles Ö ta fille?
+						\g Ihr sprecht mit Eurer Tochter?">>;
+			}
+
+
+			case "No particular reason.
+				\f Oh, juste comme áa.
+				\g Es ist eigentlich unwichtig."
+			{
+				bark("Hmmm, ye're a peculiar one, ye are.
+					\f Hmmm, t'es un peu bizarre, hein?
+					\g Du bist'n komischer Kauz, nich'?");
+				askList-=<<"I'm looking for a ghost.
+						\f Je suis Ö la recherche d'un fantosme.
+						\g Ich bin nach einem bestimmten Geist auf der Suche.", 
+						"I heard Orlok's ghost story.
+						\f Orlok m'a racontÇ l'histoire du fantosme.
+						\g Orlok hat mir von einem Geist erzÑhlt.", 
+						"No particular reason.
+						\f Oh, juste comme áa.
+						\g Es ist eigentlich unwichtig.">>;
+			}
+
+
+			case "Do you know of a key?
+				\f Tu es au courant d'une clef?
+				\g Ich suche nach einem SchlÅssel."
+			{
+				bark("A key? Well, of course. I have several keys. Was there
+				one in particular you were looking for?
+				\f Pour sñr. J'ai plein de clefs. Tu en cherches une en
+				particulier?
+				\g Ein SchlÅssel? Ich hab' hier einige SchlÅssel 'rumliegen. 
+				Und wie soll der aussehen?");
+				askList-=<<"Do you know of a key?
+						\f Tu es au courant d'une clef?
+						\g Ich suche nach einem SchlÅssel.">>;
+				askList+=<<"A key to the door in the cavern.
+						\f Celle de la porte dans la grotte.
+						\g Es ist ein SchlÅssel zur TÅr in der Hîhle.", 
+						"No key in particular.
+						\f Aucune en particulier.
+						\g Ach, irgendein beliebiger SchlÅssel.">>;
+				askedSecondTime = true;
+			}
+
+ 
+			case "No key in particular.
+				\f Aucune en particulier.
+				\g Ach, irgendein beliebiger SchlÅssel."
+			{
+				bark("What a strange question. I have only two keys. One
+				to my door and one to my sea chest. My, ye are
+				a strange 'en.
+				\f Quelle estrange question, mon gars. J'ai seulement deux clefs.
+				Une pour ma porte et l'aultre pour mon coffre marin.
+				T'es ben bizarre, toy!
+				\g Das is' aber 'ne komische Frage. Ich hab' zwei SchlÅssel, 
+				einen zu meiner TÅr und den anderen zu meiner Seemannskiste. Du bis' 
+				echt seltsam.");
+				askList-=<<"A key to the door in the cavern.
+							\f Celle de la porte dans la grotte.
+							\g Es ist ein SchlÅssel zur TÅr in der Hîhle.", 
+							"No key in particular.
+							\f Aucune en particulier.
+							\g Ach, irgendein beliebiger SchlÅssel.">>;
+			}
+
+
+			case "A key to the door in the cavern.
+				\f Celle de la porte dans la grotte.
+				\g Es ist ein SchlÅssel zur TÅr in der Hîhle."
+			{
+				bark("A door in a cavern? Why would there be a door in a cavern?
+				\f Une porte dans la grotte? Et pourquoi y auroit-il une porte dans une grotte?
+				\g Eine TÅr in 'ner Hîhle? Und warum sollte es in 'ner Hîhle TÅren geben?");
+				askList-=<<"A key to the door in the cavern.
+						\f Celle de la porte dans la grotte.
+							\g Es ist ein SchlÅssel zur TÅr in der Hîhle.", 
+							"No key in particular.
+							\f Aucune en particulier.
+							\g Ach, irgendein beliebiger SchlÅssel.">>;
+				askList^=<<"It was built by trolls.
+							\f Elle a ÇtÇ construite par les trolls.
+							\g Die Trolle haben die TÅr gebaut.", 
+							"It leads to the Pit of Death.
+							\f Elle mäne au Puits de la Mort.
+							\g Sie fÅhrt zur Totengruft.", 
+							"John Blowhard's treasure is there.
+							\f Le trÇsor de Jean Sanchaud s'y trouve.
+							\g Dort liegt Stîrtebekers Piratenschatz.">>;
+			}
+
+ 
+			case "It was built by trolls.
+				\f Elle a ÇtÇ construite par les trolls.
+				\g Die Trolle haben die TÅr gebaut."
+			{
+				bark("Built by trolls? That is the silliest story I've
+				ever heard. Built by trolls, ha! Trolls don't know how to
+				build anything. I think ye've been taking a nip of ol'
+				Orlok's private stock there, mate.
+				\f C'est l'histoire la plus insensÇe qu'j'aie jamais entendue.
+				Les trolls ne savent rien construire de leurs mains! T'as dñ
+				abuser de la cervoise d'Orlok, mon gars!
+				\g Da lachen ja die Fische! Das ist die dÅmmste Geschichte, die ich 
+				seit langem gehîrt hab'. Ha! Seit wann kînnen Trolle denn bauen? 
+				Trolle kînnen Åberhaupt nichts au·er fressen. Ich glaub', du hast 
+				bei Orlok 'n bi·chen zu tief in den Becher geschaut, Kumpel!");
+				askList-=<<"It was built by trolls.
+							\f Elle a ÇtÇ construite par les trolls.
+							\g Die Trolle haben die TÅr gebaut.", 
+							"It leads to the Pit of Death.
+							\f Elle mäne au Puits de la Mort.
+							\g Sie fÅhrt zur Totengruft.", 
+							"John Blowhard's treasure is there.
+							\f Le trÇsor de Jean Sanchaud s'y trouve.
+							\g Dort liegt Stîrtebekers Piratenschatz.">>;
+				askList+=<<"You know Orlok?
+						\f Tu connois Orlok?
+						\g Ihr kennt Orlok?">>;
+			}
+
+
+			case "You know Orlok?
+				\f Tu connois Orlok?
+				\g Ihr kennt Orlok?"
+			{
+				bark("'Course I know him. That old windbag. His story's
+				are nothing but bunk.
+				\f Ben tiens! Ce vieux fourbe! Ses histoires n'sont qu'du vent!
+				\g Aber sicher kenn' ich den alten Knaben. Der lÅgt mit seinen 
+				MÑrchengeschichten das Blaue vom Himmel runter.");
+				askList-=<<"You know Orlok?
+							\f Tu connois Orlok?
+							\g Ihr kennt Orlok?">>;
+			}
+
+ 
+			case "It leads to the Pit of Death.
+				\f Elle mäne au Puits de la Mort.
+				\g Sie fÅhrt zur Totengruft."
+			{
+				bark("Does not. \f C'est point vrai! \g Stimmt ja gar nicht!");
+				askList^=<<"How do you know?
+							\f Et comment sais-tu cela?
+							\g Und woher wi·t Ihr das?">>;
+			}
+
+
+			case "How do you know?
+				\f Et comment sais-tu cela?
+				\g Und woher wi·t Ihr das?"
+			{
+				bark("I know because...because my daughter told me. She says
+				there is only one way to the Pit of Death and that is
+				through the Realm of Lithos.
+				\f Je sais parce que... parce que ma fillotte m'l'a dit. D'apräs elle,
+				il n'y a qu'un chemin qui mäne au Puits de la Mort, et c'est
+				par le Royaume de Lithos.
+				\g Ach, weil... weil meine Kleine mir das gesagt hat. Sie meint, 
+				es gibt nur einen Weg zur Totengruft und zwar durch Lithos' 
+				Reich.");
+				askList-=<<"How do you know?
+							\f Et comment sais-tu cela?
+							\g Und woher wi·t Ihr das?">>;
+				askList^=<<"You talk to your daughter?
+							\f Tu parles Ö ta fille?
+							\g Ihr sprecht mit Eurer Tochter?">>;
+			}
+
+ 
+			case "John Blowhard's treasure is there.
+				\f Le trÇsor de Jean Sanchaud s'y trouve.
+				\g Dort liegt Stîrtebekers Piratenschatz."
+			{
+				bark("No it isn't. \f C'est faux! \g Das is' nich' wahr!");
+				askList-=<<"John Blowhard's treasure is there.
+							\f Le trÇsor de Jean Sanchaud s'y trouve.
+							\g Dort liegt Stîrtebekers Piratenschatz.">>;
+				askList+=<<"Where is the treasure, then?
+						\f Et oó se trouve le trÇsor du pirate?
+						\g Wo ist der Schatz dann?">>;
+			}
+
+
+			case "Where is the treasure, then?
+				\f Et oó se trouve le trÇsor du pirate?
+				\g Wo ist der Schatz dann?"
+			{
+				bark("There is no treasure. Orlok's full of hot wind, he
+				is. Tells that tale to everyone, expecting them to believe
+				them. Why my daughter even knows that.
+				\f Il n'y a point de trÇsor! Orlok raconte des bobards. Il
+				raconte cette histoire Ö tout l'monde, et s'imagine qu'ils
+				vont le croire. Mesme ma fillotte sait áa.
+				\g Es gibt gar keinen Schatz. Orlok spinnt. Der erzÑhlt dir viel, 
+				wenn der Tag lang ist, und du glaubst ihm auch noch? Das wei· ja 
+				sogar meine Kleine, da· das MÑrchen sind.");
+				askList-=<<"Where is the treasure, then?
+						\f Et oó se trouve le trÇsor du pirate?
+						\g Wo ist der Schatz dann?">>;
+				askList^=<<"You talk to your daughter?
+							\f Tu parles Ö ta fille?
+							\g Ihr sprecht mit Eurer Tochter?">>;
+			}
+
+ 
+			case "You talk to your daughter?
+					\f Tu parles Ö ta fille?
+					\g Ihr sprecht mit Eurer Tochter?"
+			{
+				bark("Of course. I sit on her grave and talk with her
+				by the hour. She's a good listener, she is. Why nearly
+				as good as the fish. She gives good advice, too.
+				\f Bien sñr. Je passe des heures Ö m'asseoir sur sa tombe pour
+				luy causer. Elle escoute bien, d'ailleurs. Presque aussy bien
+				qu'les poissons. Elle donne aussy d'bons conseils.
+				\g Sicher. Ich sitze bei ihr auf'm Grab und rede stundenlang 
+				mit ihr. Sie hîrt gerne zu, fast so wie die Fische. Und 
+				sie gibt mir au·erdem immer guten Rat!");
+				askList-=<<"You talk to your daughter?
+							\f Tu parles Ö ta fille?
+							\g Ihr sprecht mit Eurer Tochter?">>;
+				askList^=<<"Good advice?
+			   			\f De bons conseils?	
+						\g Guten Rat?">>;
+			}
+
+
+			case "Good advice?
+				\f De bons conseils?
+				\g Guten Rat?"
+			{
+				bark("Certainly. She tells me when the fish will be running
+				and when there will be a storm. She even offered to guard my
+				house for me. 'Course I told her no. Didn't want no daughter
+				of mine doing lowly guard work!
+				\f Et comment. Elle me dit quand il y a du poisson et quand il
+				s'prÇpare un orage. Elle m'a mesme proposÇ de m'garder la maison.
+				J'luy ai bien sñr dit que nenny. C'est guäre un travail pour une p'tiote.
+				\g Sie sagt mir immer, wo viel zu fangen ist und wann ich mit 
+				'nem Sturm rechnen kann. Sie hat mir sogar angeboten, mein Haus 
+				zu bewachen. Hab' ich natÅrlich abgelehnt. Meine Tochter is' 
+				schlie·lich zu gut, um Wachdienst zu schieben!");
+				askList-=<<"Good advice?
+							\f De bons conseils?
+							\g Guten Rat?">>;
+			}
+
+
+			case "Tell me where the key is!
+				\f Dis-moy oó se trouve la clef!
+				\g Sagt mir, wo der SchlÅssel ist!"
+			{
+				bark("The key? Oh, that key! Why my daughter has it.
+					\f La clef? Ah, cette satanÇe clef! Eh bien, c'est ma fillotte qui l'a.
+					\g Der SchlÅssel? Ach, den SchlÅssel meinst du! Den hat meine 
+					Kleine.");
+				askList-=<<"Tell me where the key is!
+						\f Dis-moy oó se trouve la clef!
+						\g Sagt mir, wo der SchlÅssel ist!">>;
+				askList^=<<"Your daughter?!
+						\f Ta fille?!
+						\g Eure Tochter?!">>;
+			}
+
+
+			case "Your daughter?!
+				\f Ta fille?!
+				\g Eure Tochter?!"
+			{
+
+				bark("Yes, she said she would keep it safe for me. I figure
+				she keeps it with her. Can't get much safer than that!
+				\f Oui, elle m'a dit qu'elle la garderoit en lieu sñr pour moy.
+				Sans doute avec elle. Y a point plus sñr.
+				\g Ja, sie hat gesagt, bei ihr ist er sicher. Das denk' ich mir 
+				auch... viel sicherer als bei ihr kann er wohl nirgendwo 
+				sein!");
+				askList-=<<"Your daughter?!
+						\f Ta fille?!
+						\g Eure Tochter?">>;
+				toldAboutKey = true;
+			}
+
+			case "No \f Non \g Nein."
+			{
+				bark("Hmmm, I guess I need to get into town more. I'm a'feared
+				I don't recognize ye. Who's your mama?
+				
+				\f Hum, j'suppose qu'j'devrois m'balader plus souvent 
+				en ville.
+				J'te reconnois point. C'est qui, ta märe?
+				
+				\g Hmm, mu· wohl doch îfters mal in die Stadt. Kenn' dich leider nicht
+				mal. Wie hei·t deine Mama?");
+				askList-=<<"No \f Non \g Nein.", "Yes \f Oui \g Ja.">>;
+				askList=<<"Lady Mordea
+					\f Dame Mordea
+					\g Mordea.", 
+				"No one important
+					\f Personne d'important
+					\g Das ist nicht wichtig.",
+				"I'm not from Tenebrae.
+					\f Je ne suis point de Tenebrae.
+					\g Ich bin nicht aus Tenebrae.">>;
+			}
+
+			case "Tell me of the Sea of Rains.
+				\f Parle-moy de la Mer des Pluies.
+				\g ErzÑhlt mir mehr Åber das Regenmeer."
+			{
+				bark("Ah, the Sea of Rains. She is a temperamental lady,
+				she is. One day she will give ye enough of her bounty to
+				feed the entire city...then she'll forsake ye for weeks
+				and laugh while ye starve.
+				
+				\f Ah, la Mer des Pluies. Elle a un sale caractäre, la p'tite.
+				Un jour elle vous lÉche assez d'pitance pour nourrir
+				toute la ville... et puis apräs, elle vous oublie pendant plusieurs
+				semaines et s'marre devant nos visages affamÇs.
+				
+				\g Ach ja, das Regenmeer. Das is'n unberechenbares 
+				Wasser, kann ich dir sagen. Einen Tag gibt's genug, um die ganze
+				Stadt zu fÅttern... und dann gibt's wochenlang nichts und 
+				das Meer lacht, wÑhrend du vor Hunger verreckst.");
+				askList-=<<"Tell me of the Sea of Rains.
+					\f Parle-moy de la Mer des Pluies.
+					\g ErzÑhlt mir mehr Åber das Regenmeer.">>;
+				kilandraJob = true;
+			}
+
+			case "Tell me of Tenebrae.
+				\f Parle-moy de Tenebrae.
+				\g ErzÑhlt mir mehr Åber Tenebrae."
+			{
+				bark("I don't get into town much...and I likes it that
+				way. The city is no good.
+				
+				\f J'm'ballade guäre souvent en ville... et áa m'va bien
+				comme áa. La ville, elle est pourrie.
+				
+				\g Ich komm' nich' oft in die Stadt... is' mir auch recht so. Die Stadt
+				is' nichts wert.");
+				askList-=<<"Tell me of Tenebrae.
+					\f Parle-moy de Tenebrae.
+					\g ErzÑhlt mir mehr Åber Tenebrae.">>;
+				askList+=<<"Why is the city no good?
+					\f La ville est pourrie?
+					\g Weshalb ist die Stadt nichts wert?">>;
+			}
+
+			case "Lady Mordea 
+				\f Dame Mordea 
+				\g Mordea."
+			{
+				bark("Lady Mordea?! Ack, then I'll have none of ye! Get
+				out of my sight!
+				
+					\f Dame Mordea?! Pouah! Alors j'veux point d'toy icy!
+					Casse-toy!
+					
+					\g Die Herrin Mordea?! Pfui, dann will ich nichts mit 
+					dir zu tun haben! Hau ab!");
+				kilandraPissed=true;
+				exitConvo();
+				return;
+			}
+
+			case "No one important
+				\f Personne d'important
+				\g Das ist nicht wichtig."
+			{
+				bark("What does ye mean, no one important? Does ye'r mother
+				mean nothing to ye? Oh, ungrateful child! There is nothing
+				that tears my poor heart worse than an ungrateful child!
+				
+					\f Comment áa, personne d'important? Tu t'en fiches, de ta 
+					pov' märe? Oh, fils indigne! Y'a rien qui m'fait tristesse
+					plus qu'un morpion ingrat!
+					
+				\g Was soll das, nicht wichtig? Is' deine Mutter dir vielleicht
+				nicht wichtig? Undankbares Gîr! Nichts bricht mir das Herz mehr als
+				ein undankbares Kind!");
+				kilandraPissed=true;
+				exitConvo();
+				return;
+			}
+
+			case "I'm not from Tenebrae.
+					\f Je ne suis point de Tenebrae.
+					\g Ich bin nicht aus Tenebrae."
+			{
+				bark("What's that? Ye'r not from Tenebrae? Well, then ye
+				are more blessed than ye knows. 'Tis a bad place, Tenebrae.
+				
+					\f Quoi? T'es point d'Tenebrae? Alors t'as plus de veine que tu
+					l'crois. Sale coin, Tenebrae.
+					
+				\g Was? Bist also doch nicht aus Tenebrae? Na, da haste GlÅck, wenn du's 
+				auch nicht wei·t. Is'n bîser Ort, Tenebrae.");
+				askList+=<<"Why is Tenebrae bad?
+							\f Pourquoi est-ce un sale coin?
+							\g Weshalb ist Tenebrae schlecht?">>;
+				askList-=<<"I'm not from Tenebrae.
+							\f Je ne suis point de Tenebrae.
+							\g Ich bin nicht aus Tenebrae.",
+							 "Lady Mordea \f Dame Mordea \g Mordea.",
+							  "No one important 
+							  \f Personne d'important
+							  \g Das ist nicht wichtig.">>;
+			}
+
+			case "Why is Tenebrae bad?
+					\f Pourquoi est-ce un sale coin?
+					\g Weshalb ist Tenebrae schlecht?",
+					"Why is the city no good?
+					\f La ville est pourrie?
+					\g Weshalb ist die Stadt nichts wert?"
+			{
+				bark("The Tempest, that's why! Lady Mordea is a selfish, 
+				black-hearted woman. Why, taking a bath was more important 
+				to her than saving the life of an innocent child!
+				
+					\f Ben tiens! A cause de la Tempeste! Dame Mordea est une
+					sale garce sans coeur. Pour elle, prendre son bain, 
+					c'toit plus important que d'sauver une pauv'gosse.
+					
+					\g Wegen der GezeitenfÅrstin! Die Mordea ist eine
+					selbstsÅchtige Person mit 'ner schwarzen Seele. FÅr die
+					ist es wichtiger, zu baden, als ein unschuldiges Kind zu 
+					retten.");
+				askList-=<<"Why is Tenebrae bad?
+							\f Pourquoi est-ce un sale coin?
+							\g Weshalb ist die Stadt schlecht?",
+							 "Why is the city no good?
+								\f La ville est pourrie?
+								\g Weshalb ist die Stadt nichts wert?">>;
+
+				askList=<<"A bath was more important?!
+						\f Plus important?!
+						\g Ein Bad war ihr wichtiger?!">>;
+			}
+
+
+			case "A bath was more important?!
+				\f Plus important?!
+				\g Ein Bad war ihr wichtiger?!"
+			{
+				bark("The child was a little girl with hair of honey gold and
+				eyes the color of the Sea of Rains. She was a beautiful
+				child, but had taken very ill.
+				
+					\f C'estoit une p'tite mìme aux cheveux couleur
+					miel et aux yeux de la couleur de la Mer des Pluies.
+					C'estoit une p'tiote bien joliette, mais elle estoit
+					fort malade.
+					
+				\g Das Kind war ein kleines MÑdchen mit goldenen Haaren und Augen,
+				die so blau strahlten wie das Regenmeer. Sie war wunderschîn, aber 
+				sie war sehr krank.");
+
+				askList-=<<"A bath was more important?!
+							\f Plus important?!
+							\g Ein Bad war ihr wichtiger?!">>;
+				askList+=<<"What happened to the child?
+						\f Qu'est-il arrivÇ Ö l'enfant?
+						\g Was ist dem Kind zugesto·en?">>;
+			}
+			
+			case "What happened to the child?
+					\f Qu'est-il arrivÇ Ö l'enfant?
+					\g Was ist dem Kind zugesto·en?"
+			{
+				bark("Her mother carried her to the steps of the palace 
+				where she begged to see the Tempest. The Tempest has great
+				powers and if anyone could heal the girl, the Tempest could.
+				But that water rat named Salkind came out and told the 
+				mother that Lady Mordea was taking a bath and
+				could not be disturbed, especially to help a filthy 
+				gutter snipe.
+				
+				\f Sa märe l'a portÇe sur les marches du palais oó elle
+				a suppliÇ d'voir la Tempeste. La Tempeste a de ben
+				grands pouvoirs, et estoit la seule Ö pouvoir guÇrir la
+				p'tiote. Mais cette sale vermine de Salkind est v'nue dire
+				Ö la pov' märe que Dame Mordea estoit en train d'prend' son bain
+				et ne pouvoit point estre dÇrangÇe, surtout pour aider
+				une sale gnasse des rues.
+				
+				\g Die Mutter hat das Kind zum Palast getragen und darum
+				gefleht, die GezeitenfÅrstin zu sehen. Die GezeitenfÅrstin
+				ist sehr mÑchtig, und wenn es jemanden gibt, der 'n Kind
+				heilen kann, dann ist sie es. Aber dieser Salkind
+				kam raus und sagte der Mutter, da· die Herrin Mordea gerade
+				badet und nicht gestîrt werden darf. Und ganz besonders nicht,
+				um einer dreckigen Stra·enratte zu helfen.");
+				askList-=<<"What happened to the child?
+							\f Qu'est-il arrivÇ Ö l'enfant?
+						\g Was ist dem Kind zugesto·en?">>;
+				askList=<<"Did the child recover?
+					\f L'enfant s'est-elle remise?
+					\g Ist das Kind gesund geworden?",
+						 "filthy gutter snipe!?
+						 \f Une sale gnasse des rues!?
+						 \g Dreckige Stra·enratte!?">>;
+			}
+
+			case "filthy gutter snipe!?
+				\f Une sale gnasse des rues!?
+				\g Dreckige Stra·enratte!?"
+				{
+					bark("That's what he said. Can you believe that 
+					cold hearted weasel?
+					
+					\f C'est c'qu'il a dit. Tu t'rends compte, cet
+					enfoirÇ sans coeur?
+					
+					\g Genau das hat er gesagt. Kannst du das fassen? Er 
+					ist ein Verbrecher!");
+					askList-=<<"filthy gutter snipe!?
+							\f Une sale gnasse des rues!?
+							\g Dreckige Stra·enratte!?">>;
+				}
+
+			case "Did the child recover?
+					\f L'enfant s'est-elle remise?
+					\g Ist das Kind gesund geworden?"
+			{
+				bark("Her mother carried her back to the little shack they
+				shared and tried to doctor her as best she could...but
+				it was no use. The girl passed to Pit of Death that
+				night.
+				
+				\f Sa märe l'a remportÇe dans leur petite cahute qu'elles
+				partageoint et elle a essayÇ de la soigner d'son mieux...
+				mais c'toit inutile. La gamine est allÇe rejoindre le Puits de la
+				Mort la nuit mesme.
+				
+				\g Die Mutter hat das Kind zu der kleinen HÅtte zurÅckgetragen,
+				wo sie beide wohnten und hat versucht, sie selbst zu versorgen... 
+				aber es war zu spÑt. Die Kleine ist noch in derselben 
+				Nacht in die Totengruft geholt worden.");
+				askList-=<<"Did the child recover?
+							\f L'enfant s'est-elle remise?
+							\g Ist das Kind gesund geworden?">>;
+				askList^=<<"How do you know this?
+							\f Comment le sais-tu?
+							\g Woher wi·t Ihr das alles?">>;
+			}
+
+			case "How do you know this?
+					\f Comment le sais-tu?
+					\g Woher wi·t Ihr das alles?"
+			{
+				bark("I know this because that little girl was 
+				Elaina...my daughter.
+				
+				\f Je l'sais parce que la p'tiote estoit 
+				Elaina... ma fillotte.
+				
+				\g Das wei· ich, weil das kleine MÑdchen Elaina... meine
+				Tochter war.");
+				askList-=<<"How do you know this?
+							\f Comment le sais-tu?
+							\g Woher wi·t Ihr das alles?">>;
+				askList+=<<"I am so sorry. 
+							\f Je suis vraiment navrÇ.
+							\g Das tut mir sehr leid.">>;
+				if mordeaDead
+				{
+				askList+=<<"Lady Mordea is dead!
+						\f Dame Mordea est morte!
+						\g Die Herrin Mordea ist tot!">>;
+				}
+			}
+
+			case "I am so sorry.
+				 \f Je suis vraiment navrÇ.
+				 \g Das tut mir sehr leid."
+			{
+				bark("Well, I appreciate yer thoughts, but ye needn't
+				apologize for sumthin' that ain't yer fault. So, how
+				long are ye plannin' to stay around here?
+				
+				\f T'es ben gentil, mais c'est point ta faute Ö toy. Alors
+				combien d'temps tu penses traisner tes guestres icy?
+				
+				\g Das is' nett, aber du brauchst dich nicht entschuldigen. 
+				War ja nich' deine Schuld. Na, wie lang wirste hier bleiben?");
+				askList=<<"Not long \f Guäre longtemps \g Nicht lange.",
+				 "Several months, at least. 
+				 \f Au moins plusieurs mois.
+				 \g Mindestens mehrere Monate.">>;
+			}
+
+			case "Not long \f Guäre longtemps \g Nicht lange."
+			{
+				bark("Well, it's smart that ye are. I would leave too,
+				if it weren't for the Sea. Ah, since my little Elaina left
+				me, the Sea is my only love, the sea and all its little
+				critters. Fine companions, those critters are. They
+				mayen't say much, but they are good listeners.
+				
+				\f T'as ben raison. Sans la mer, j'partirois ben aussy. Depuis
+				qu'ma p'tiote Elaina m'a laissÇe, je n'ai plus qu'un seul amour, la mer.
+				La mer et ses p'tites bestioles. De bons compagnons. Y disent point grand
+				chose, mais ils escoutent bien.
+				
+				\g Das is' klug von dir. Wenn ich das Meer nicht hÑtte, wÅrd' 
+				ich auch gehen. Ach, seit meine kleine Elaina fort ist, ist das 
+				Meer meine einzige Liebe, das Meer und all die kleinen Lebewesen,
+				die dort wohnen. Sind gute Gesellschaft, die kleinen Dinger. Sagen
+				zwar nich' viel, aber sie hîren gern zu.");
+
+				askList-=<<"Not long \f Guäre longtemps \g Nicht lange.",
+				 "Several months, at least.
+				  \f Au moins plusieurs mois.
+				  \g Mindestens mehrere Monate.">>;
+				askList+=<<"Who are good listeners?
+						\f Qui escoute bien?
+						\g Wer hîrt gerne zu?">>;
+			}
+
+			case "Who are good listeners?
+					\f Qui escoute bien?
+					\g Wer hîrt gerne zu?"
+			{
+				bark("Why the fish, 'course. They're wise, they are. Would
+				do ye good to listen to them one day, seek their council.
+				
+				\f Ben, la poiscaille, bien sñr. Sont träs futÇs. Tu f'rois ben
+				d'les Çcouter un jour, d'leur d'mander conseil.
+				
+				\g Na, die Fische, wer sonst. Die sind klug, das sind sie. TÑt' dir
+				bestimmt gut, denen mal zuzuhîren und ihren Rat zu suchen.");
+				askList-=<<"Who are good listeners?
+							\f Qui escoute bien?
+							\g Wer hîrt gerne zu?">>;
+			}
+
+			case "Several months, at least.
+				 \f Au moins plusieurs mois.
+				 \g Mindestens mehrere Monate."
+			{
+				bark("Oh, might want to rethink that, ye might. I told ye,
+				Tenebrae is not a good place.
+				
+				\f Si j'tais toy, j'y r'penserois Ö deux fois. Comme j't'ai dit,
+				Tenebrae, c'est pourri.
+				
+				\g Das solltest du dir aber nochmal Åberlegen. Ich hab' dir doch
+				gesagt; Tenebrae, das is'n bîser Ort.");
+				askList-=<<"Several months, at least.
+						 \f Au moins plusieurs mois.
+						 \g Mindestens mehrere Monate.">>;
+			}
+
+			case "Lady Mordea is dead!
+					\f Dame Mordea est morte!
+					\g Die Herrin Mordea ist tot!"
+			{
+				bark("She is dead? Then who is the Tempest?
+					\f Elle est morte? Qui est Tempeste, maintenant?
+					\g Sie ist tot? Und wer ist jetzt GezeitenfÅrst?");
+				askList-=<<"Lady Mordea is dead!
+							\f Dame Mordea est morte!
+							\g Die Herrin Mordea ist tot!">>;
+				askList+=<<"Devon is Tempest. 
+							\f Devon est Tempeste.
+							\g Devon ist der GezeitenfÅrst.">>;
+			}
+
+			case "Devon is Tempest. 
+				\f Devon est Tempeste. 
+				\g Devon ist der GezeitenfÅrst."
+			{
+				bark("Devon? What great news is this? Devon is a kind and
+				fair man. He'll have no more of those bloody executions, I'm
+				sure!
+				
+				\f Devon? VoilÖ une bonne nouvelle. Devon est un brave gars. J'suis
+				sñre qu'on aura plus d'ces exÇcutions sanglantes!
+				
+				\g Devon? Das sind aber gute Nachrichten. Devon ist ein gerechter 
+				und freundlicher Mann. Dann gibt's sicher keine grausamen 
+				Hinrichtungen mehr.");
+				askList-=<<"Devon is Tempest. 
+							\f Devon est Tempeste.
+							\g Devon ist der GezeitenfÅrst.">>;
+			}
+
+			case "Hello, Kilandra.
+			\f Salut, Kilandra.
+			\g Seid gegrÅ·t, Kilandra."
+			{
+				if kilandraPissed
+				{
+					bark("YE! I thought I told ye to leave! Now I advise
+					ye do it, and do it quick. A'fore I cuts ye into 
+					fish bait.
+					
+					\f Ouaip! J'croyais t'avoir dit de te casser! Tu f'rais mieux
+					de t'grouiller avant qu'j'te sale comme une sardine.
+					
+					\g DU schon wieder! Ich hab' doch gesagt, du sollst 
+					abhauen! Hau ab, und mach' schnell, bevor ich dich
+					zu Fischfutter verarbeite.");
+					exitConvo();
+					return;
+				}
+				else
+				{
+					bark("Ah, so ye's returned. What can I do for you?
+						\f Ah, alors comme áa t'es rev'nu. Qu'est-ce que j'peux
+						faire pour toy?
+						\g Ach, du bist wieder hier? Was kann ich fÅr dich tun?");
+					askList-=<<"Hello, Kilandra. 
+						\f Salut, Kilandra.
+						\g Seid gegrÅ·t, Kilandra.">>;
+					askList=<<"Tell me about your daughter.
+						\f Parle-moy de ta fille.
+						\g ErzÑhlt mir von Eurer Tochter.",
+					"Tell me of the Sea of Rains.
+						\f Parle-moy de la Mer des Pluies.
+						\g ErzÑhlt mir mehr Åber das Regenmeer.">>;
+					if hydrosFree
+					{
+						askList+=<<"The weather is certainly bad.
+						\f Le temps est plutost mauvais.
+						\g Das Wetter ist wirklich schlecht.">>;
+					}
+				}
+			}
+
+			case "The weather is certainly bad.
+					\f Le temps est plutost mauvais.
+					\g Das Wetter ist wirklich schlecht."
+			{
+				bark("Ye'r telling me! Why I haven't seen rain like this
+				in all my days. I haven't been able to put out to sea
+				since it started. Why, even the fish didn't expect this, or
+				I'm sure they'd have said something to me about it. That
+				Tempest is certainly got a lot of explainin' to do!
+				
+				\f M'en parle point! J'ai jamais vu une telle pluie! J'ai point pu sortir
+				en mer depuis qu'áa a commencÇ. Mesme les poissons s'attendoient point
+				Ö áa, sinon ils m'en auroient causÇ. La Tempeste a intÇrest
+				Ö s'expliquer sur ces frasques!
+				
+				\g Das brauchst du mir nicht sagen, das seh' ich selbst. Ich hab'
+				noch nie solchen Regen gesehen. Seit das angefangen hat, kann ich
+				nicht mehr auf's Meer. Nicht mal die Fische haben sowas erwartet, 
+				sonst hÑtten sie's mir sicher gesagt. Da wird der GezeitenfÅrst 
+				aber einiges zu erklÑren haben.");
+				askList-=<<"The weather is certainly bad.
+					\f Le temps est plutost mauvais.
+					\g Das Wetter ist wirklich schlecht.">>;
+				askList=<<"The fish tell you of weather?
+					\f Les poissons prÇdisent le temps?
+					\g Die Fische erzÑhlen Euch vom Wetter?",
+				"I caused this weather.
+					\f C'est moy le responsable.
+					\g Ich bin fÅr das Wetter verantwortlich.">>;
+				if devonInRule
+				{
+					askList+=<<"It is not Devon's fault.
+							\f Ce n'est point la faute de Devon.
+							\g Es ist nicht Devons Schuld.">>;
+				}
+			}
+
+			case "I caused this weather.
+				\f C'est moy le responsable.
+				\g Ich bin fÅr das Wetter verantwortlich."
+			{
+				bark("Ye? Hmmm. No, I don't think I believe ye. Only the
+				Tempest can effect the weather. I don't believe you are the
+				Tempest.
+				
+				\f Ah ouais? Hummm. Non, j'te crois point. Seule la Tempeste peut
+				changer le temps. Et toy, t'es point une Tempeste.
+				
+				\g Du? Hmmm. Nein, das glaub' ich dir nicht. Sowas kann nur der
+				GezeitenfÅrst. Und ich glaub' nicht, da· du der GezeitenfÅrst bist.");
+				askList+=<<"I released Hydros.
+						\f J'ai libÇrÇ Hydros.
+						\g Ich habe Hydros befreit.">>;
+				askList-=<<"I caused this weather.
+						\f C'est moy le responsable.
+						\g Ich bin fÅr das Wetter verantwortlich.">>;
+			}
+
+			case "I released Hydros.
+					\f J'ai libÇrÇ Hydros.
+					\g Ich habe Hydros befreit."
+			{
+				bark("Ye say ye released Hydros, do ye? Well, sure ye did,
+				now lad, sure ye did. And this caused the rains, then? Well,
+				what else have ye done? Been to the Pit of Death? Seen
+				the Shrine of the Ancients? Har, har, har. Oh lad,
+				Ye need to get away, some place calm and quiet, maybe take
+				up fishing. This traveling life has really been a little
+				hard on ye, hasn't it?
+				
+				\f Tu dis qu't'as libÇrÇ Hydros? Ben tiens, mon gars, ben tiens!
+				Et c'est áa qu'a amenÇ la pluie, alors?
+				Qu'est-ce que t'as fait d'aultre? T'es allÇ au Puits de la Mort?
+				T'as vu le Temple des Anciens?*Ha, Ha, Ha. Tu f'rois mieux d'aller te
+				reposer au calme ou de t'met' Ö la pàche. C'te vie de voyageur te
+				monte un peu au ciboulot, mon gars, tu crois point?
+				
+				\g Du hast Hydros befreit? Ja sicher, mein Kleiner, das hast du
+				aber fein gemacht. Und deswegen regnet es. Na, was haste sonst noch
+				gemacht? Warst du in der Totengruft? Haste auch den Schrein
+				der Alten gesehen? Ha, Ha, Ha. Ach, mein Kleiner, ich glaube, du 
+				mu·t dich 'n bi·chen ausruhen, vielleicht ein bi·chen fischen. 
+				Dieses stÑndige Reisen hat dich 'n bi·chen angeschlagen, nich' wahr? ");
+				askList-=<<"I released Hydros.
+							\f J'ai libÇrÇ Hydros.
+							\g Ich habe Hydros befreit.">>;
+			}
+
+			case "It is not Devon's fault.
+					\f Ce n'est point la faute de Devon.
+					\g Es ist nicht Devons Schuld."
+			{
+				bark("Devon? Is that lad the Tempest then? Oh my. He is
+				a good lad. The fish knew there was something about him.
+				Whispered his name often, they did.
+				
+				\f Devon? C'est luy, la Tempeste maintenant? Eh ben, c'est un brave
+				gars. Les poissons savoient ben qu'il se tramoit quequ'chose avec luy.
+				Zont souvent chuchotÇ son nom.
+				
+				\g Devon? Ist der Junge jetzt der GezeitenfÅrst? Na, sowas. Das ist
+				ein guter Junge. Die Fische haben schon immer gesagt, da· er was
+				Besonderes ist. Haben mir oft seinen Namen zugeflÅstert, das haben sie.");
+				askList-=<<"It is not Devon's fault.
+							\f Ce n'est point la faute de Devon.
+							\g Es ist nicht Devons Schuld.">>;
+			}
+
+			case "The fish tell you of weather?
+					\f Les poissons prÇdisent le temps?
+					\g Die Fische erzÑhlen Euch vom Wetter?"
+			{
+				bark("Of course. They tell me lots of things. In fact, ye
+				ought to take the time out to talk to them yer'self!
+				
+				\f Ben tiens! Ils m'racontent des tonnes de trucs. D'ailleurs tu
+				devrois prend'le temps d'les escouter causer, toy aussy.
+				
+				\g Sicher. Die erzÑhlen mir viel. Du solltest es mal probieren und
+				selber mit denen reden.");
+				askList-=<<"The fish tell you of weather?
+							\f Les poissons prÇdisent le temps?
+							\g Die Fische erzÑhlen Euch vom Wetter?">>;
+			}
+
+			case "Tell me about your daughter.
+					\f Parle-moy de ta fille.
+					\g ErzÑhlt mir von Eurer Tochter."
+			{
+				bark("That's something I'ds rather not speak of. The pain is
+				very fresh.
+				
+				\f J'prÇfäre point en causer. La douleur est encore toute fraåche.
+				
+				\g Da rede ich lieber nicht drÅber. Das tut mir nur in der Seele weh.");
+				askList-=<<"Tell me about your daughter.
+					\f Parle-moy de ta fille.
+					\g ErzÑhlt mir von Eurer Tochter.">>;
+			}
+
+			case "Kilandra? \f Kilandra? \g Kilandra?"
+			{
+				bark("What? Are ye deaf? I want no part of ye! Get out of
+				my sight!
+				
+				\f Quoi? T'es sourd ou quoi! Je n'veux point te voir! Fiche le camp!
+				
+				\g Was? Biste taub? Ich will mit dir nichts zu tun haben! Scher' dich
+				weg!");
+				exitConvo();
+				return;
+			}
+
+			case "Pardon me.
+				\f Excuse-moy.
+				\g Verzeihung."
+			{
+				bark("I saw her. Oh by the Titans, I saw her! She was wet 
+				and covered with slime, and the fish had eaten half of her
+				beautiful face. Oh, how can I bear it? I ask you, how?!
+				
+				\f Je l'ai vue. Oh, par les Titans, je l'ai vue! Elle estoit
+				toute trempÇe et couverte de bave, et les poissons avoient
+				mangÇ la moitiÇ d'son beau visage. Comment veux-tu que
+				j'supporte áa, hein? Dis-moy comment?!
+				
+				\g Ich hab' sie gesehen. Oh, bei den Titanen, ich hab' sie gesehen.
+				Sie war na· und voller Algen, und die Fische hatten ihr das halbe
+				Gesicht weggefressen. Wie soll ich das nur aushalten? Wie, das
+				frag' ich dich?!");
+				exitConvo();
+				return;
+			}
+
+			case "bye \f Adieu \g Lebt wohl."
+			{
+				bark("Farewell. \f Adieu, va! \g Auf Wiedersehen.");
+				exitConvo();
+				return;
+			}
+		}
+	}
+
+	exitConvo();
+}
+

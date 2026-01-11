@@ -1,0 +1,1206 @@
+uses "flags";
+uses "free";
+uses "npc";
+
+
+npcclass Hrodny inherits Npc
+{
+	process look();
+	process use();
+	process schedule(currentTime : Long);
+	process enterFastArea();
+	process leaveFastArea();
+	process cast(ref : Referent);
+	process randomBarkAtHome();
+	process randomBarkAtWork();
+}
+
+
+process Hrodny::look()
+{
+	if hrodnyName and hrodnyJob
+	{
+		if Hrodny.isDead()
+		{
+			bark("Body of Hrodny the Inventor");
+			return;
+		}
+		else
+		{
+			bark("Hrodny, the Inventor");
+			return;
+		}
+	}
+
+	else if hrodnyName
+	{
+		if Hrodny.isDead()
+		{
+			bark("Hrodny's lifeless body");
+			return;
+		}
+		else
+		{
+			bark("Hrodny");
+			return;
+		}
+	}
+
+	else if hrodnyJob
+	{
+		if Hrodny.isDead()
+		{
+			bark("Inventor's lifeless body");
+			return;
+		}
+		else
+		{
+			bark("Inventor");
+			return;
+		}
+	}
+
+	else
+	{
+		if Hrodny.isDead()
+		{
+			bark("woman's body");
+			return;
+		}
+		else
+		{
+			bark("woman");
+			return;
+		}
+	}
+}
+
+
+process Hrodny::schedule(currentTime : Long)
+{
+	if isDead()
+	{
+		return;
+	}
+
+	point : WorldPoint;
+	map : MapNum;
+	sched : Number;
+
+	if (getPeriod() = daytide) // AT WORK
+	{
+		point.x = 17506;
+		point.y = 22354;
+		point.z = 64;
+		sched = at_work;
+	}
+	else // AT HOME
+	{
+		point.x = 17686;
+		point.y = 21806;
+		point.z = 64;
+		sched = in_home;
+	}
+
+		if canSafeTeleport(point, MapLostVale)
+		{
+			hrodnySchedule = sched;
+			safeTeleport(point, MapLostVale);
+		}
+}
+
+
+process Hrodny::enterFastArea()
+{
+	if Hrodny.isDead()
+	{
+		return;
+	}
+
+	resetRef(referent, PT_BARK);
+
+	if (hrodnySchedule = at_home)
+	{
+		cSetActivity(ACT_LOITER);
+		spawn randomBarkAtHome() -> return;
+	}
+	else if (hrodnySchedule = at_work)
+	{
+		cSetActivity(ACT_LOITER);
+		spawn randomBarkAtWork() -> return;
+	}
+}
+
+
+process Hrodny::leaveFastArea()
+{
+	killProcess(referent, PT_ACTIVITY);
+	resetRef(referent, PT_PATHFIND);
+	resetRef(referent, PT_ANIM);
+	resetRef(referent, PT_BARK);
+
+	if Hrodny.isDead()
+	{
+		teleport(urandom(10000), urandom(10000), 0, 0);
+	}
+}
+
+
+process Hrodny::cast(ref : Referent) // This is for calling the shades.
+{
+	count : Number;
+	count = 10;
+	while (not getTarget()) and (count)
+	{
+		wait(1);
+		count--;
+	}
+
+	ref = getTarget();
+
+	if ref = Avatar:Referent
+	{
+		spawn callTheShades() -> return;
+
+		if not isDead()
+		{
+			killProcess(referent, PT_ACTIVITY);
+			killProcess(referent, PT_BARK);
+			bark("Shades, you, I summon! Help!");
+		}
+	}
+}
+
+
+process Hrodny::randomBarkAtHome()
+{
+	[[PT_ACTIVITY, referent]];
+
+	avaP,torP : WorldPoint;
+	ran : Number;
+
+	avaP.x = Avatar.getX();
+	avaP.y = Avatar.getY();
+	avaP.z = Avatar.getZ();
+	torP.x = Hrodny.getX();
+	torP.y = Hrodny.getY();
+	torP.z = Hrodny.getZ();
+
+	ran = getDistance(avaP, torP);
+
+	if (ran < 200)
+	{
+		ran = urandom(8);
+
+		if ran = 1
+		{
+			turnToFace(getDirToItem(Avatar:Referent), false, 10);
+			bark("Hello?");
+			realDoAnim(AS_FIDGET, getDir());
+			wait(120);
+		}
+
+		if ran = 2
+		{
+			turnToFace(getDirToItem(Avatar:Referent), false, 10);
+			bark("Why here, are you?");
+			realDoAnim(AS_FIDGET, getDir());
+			wait(120);
+		}
+
+		if ran = 3
+		{
+			bark("Hungry, I am.");
+			wait(60);
+		}
+
+		if ran = 4
+		{
+			bark("Fools, they are! Help them, I could!");
+			wait(120);
+		}
+	}
+	else
+	{
+		ran = urandom(12);
+		turnToFace(urandom(7),0,10);
+
+		if ran = 1
+		{
+			bark("Work, it should...");
+			wait(60);
+		}
+
+		if ran = 2
+		{
+			bark("Understand it, I do not!");
+			realDoAnim(AS_FIDGET,getDir());
+			wait(60);
+		}
+
+		if ran = 3
+		{
+			bark("If only listen, they would!");
+		}
+
+		if ran = 4
+		{
+			bark("Starve, we need not!");
+			wait(60);
+		}
+
+		if ran = 5
+		{
+			bark("If help us, the gods will not,
+				help ourselves, we must!");
+		}
+
+		if ran = 6
+		{
+			bark("A way, there must be...");
+		}
+
+		if ran = 7
+		{
+			bark("From where, the water comes? More, there should be.");
+			wait(100);
+		}
+	}
+}
+
+
+process Hrodny::randomBarkAtWork()
+{
+	[[PT_ACTIVITY, referent]];
+
+	avaP,torP : WorldPoint;
+	ran : Number;
+
+	avaP.x = Avatar.getX();
+	avaP.y = Avatar.getY();
+	avaP.z = Avatar.getZ();
+	torP.x = Hrodny.getX();
+	torP.y = Hrodny.getY();
+	torP.z = Hrodny.getZ();
+
+	ran = getDistance(avaP, torP);
+
+	if (ran < 200)
+	{
+		ran = urandom(8);
+
+		if ran = 1
+		{
+			turnToFace(getDirToItem(Avatar:Referent), false, 10);
+			bark("In my way, you are!");
+			realDoAnim(AS_FIDGET, getDir());
+			wait(120);
+		}
+
+		if ran = 2
+		{
+			turnToFace(getDirToItem(Avatar:Referent), false, 10);
+			bark("Bother me, do not!");
+			realDoAnim(AS_FIDGET, getDir());
+			wait(120);
+		}
+
+		if ran = 3
+		{
+			bark("No sense, it makes!");
+			wait(60);
+		}
+
+		if ran = 4
+		{
+			bark("Working it was, last night!");
+			wait(120);
+		}
+	}
+	else
+	{
+		ran = urandom(12);
+		turnToFace(urandom(7), 0, 10);
+
+		if ran = 1
+		{
+			bark("Invite you here, I did not! Alone, leave me!");
+			wait(60);
+		}
+
+		if ran = 2
+		{
+			bark("Lost, my hammer is...");
+			realDoAnim(AS_FIDGET,getDir());
+			wait(60);
+		}
+
+		if ran = 3
+		{
+			bark("Broken, this was not! Now, make another, I must!");
+		}
+
+		if ran = 4
+		{
+			bark("Bring the water to the fields, I will!");
+			wait(60);
+		}
+
+		if ran = 5
+		{
+			bark("Show them, I will!");
+		}
+
+		if ran = 6
+		{
+			bark("Finished, it soon will be.");
+		}
+
+		if ran = 7
+		{
+			bark("Dust, let them eat! Control the water, I will!");
+			wait(100);
+		}
+	}
+}
+
+
+process Hrodny::use()
+{
+	ran : Number;
+
+	if hrodnyMet
+	{
+		ran = urandom(3);
+
+		if ran = 1
+		{
+			if hrodnyName
+			{
+				Avatar.bark("Hrodny?");
+			}
+			else
+			{
+				Avatar.bark("Hello again.");
+			}
+		}
+
+		if ran  = 2
+		{
+			if hrodnyName
+			{
+				Avatar.bark("Hail, Hrodny.");
+			}
+			else
+			{
+				Avatar.bark("Pardon me, miss.");
+			}
+		}
+	}
+	else
+	{
+		ran = urandom(4);
+
+		if ran = 1
+		{
+			Avatar.bark("Hail!");
+		}
+
+		if ran = 2
+		{
+			Avatar.bark("Hello, good lady.");
+		}
+
+		if ran = 3
+		{
+			Avatar.bark("A moment, miss.");
+		}
+	}
+
+	askList : String List;
+	answer : String;
+	bag, key : Item;
+	enterConvo();
+
+	if not hrodnyMet
+	{
+		askList ^= <<"What is your name?", "What do you do?">>;
+	}
+	else
+	{
+		if avatarPoisoned // avatar poisoned
+		{
+			if haveMark // poisoned and has mark
+			{
+				if toldCliffs // poisoned, has mark and heard of cliffs
+				{
+					askList ^= <<"Tell me more of the Cliffs.">>;
+				}
+				else // poisoned, has mark, but not told of cliffs
+				{
+					if ezrekalMet //send back to Ezrekal
+					{
+						askList ^= <<"I have spoken to Ezrekal.">>;
+					}
+					else  // send to Ezrekal
+					{
+						askList ^= <<"I have the Mark.">>;
+					}
+				}
+			}
+			else  // poisoned but no mark, send to Atli for mark
+			{
+				askList ^= <<"I have taken your Test.">>;
+			}
+		}
+		else // avatar not poisoned
+		{
+			if haveMark  // avatar healed
+			{
+				if templeOpen
+				{
+					if godsFree
+					{
+						askList ^= <<"I have freed the Ancient Ones!">>;
+					}
+					else // temple open, gods not free
+					{
+						askList ^= <<"I have opened the Temple.",
+									"I have found your Ancient Ones.">>;
+					}
+				}
+				else // healed, but temple not open
+				{
+					askList ^= <<"I have been healed!",
+								"The Shield of the Ancients is restored!">>;
+				}
+			}
+			else // not poisoned, no mark: send to Atli for test
+			{
+				if not spokeVale
+				{
+					askList ^= <<"What place is this?",
+								"I'd like to speak to you.">>;
+				}
+				else
+				{
+					askList ^= <<"I'd like to speak to you.">>;
+				}
+			}
+		}
+	}
+
+/*************************************************
+	if sentToAtli
+	{
+		askList ^= <<"Do you have the Passage Stone?">>;
+	}
+*************************************************/
+
+	while answer != "bye"
+	{
+		askList -= <<"bye">>;
+		askList += <<"bye">>;
+		answer = ask(askList);
+
+		switch answer
+		{
+			case "What is your name?"
+			{
+				askList -= <<"What is your name?">>;
+				bark("Hrodny, daughter of Ulnar, I am.");
+
+				hrodnyMet = true;
+				hrodnyName = true;
+			}
+
+			case "What do you do?"
+			{
+				askList -= <<"What do you do?">>;
+				bark("Work to better our life here, I do. Unless with my
+					inventions, here to help me, you are, leave, you should.
+					Have time to answer questions, I do not.");
+
+				hrodnyMet = true;
+				hrodnyJob = true;
+			}
+
+			case "What place is this?", "I'd like to speak to you."
+			{
+				if spokeOnce
+				{
+					askList -= <<"What place is this?",
+								"I'd like to speak to you.">>;
+					bark("Listen, talk to strangers, I cannot. Yourself,
+						out of here, take. See Atli, you should.");
+
+					askList += <<"Where is Atli?", "Who is Atli?">>;
+				}
+				else
+				{
+					askList -= <<"What place is this?",
+								"I'd like to speak to you.">>;
+					bark("This, the Zealan Vale, is. In my home and
+						work area, you are. And in the way, too.");
+					bark("Hmmm... Recognize you, I do not. Good, this
+						is not. Go away! Talk with you, I cannot.");
+
+					askList += <<"Zealan Vale?", "Work area?",
+								"Why can't you speak with me?">>;
+					spokeOnce = true;
+				}
+
+				spokeOfVale = true;
+			}
+
+			case "Zealan Vale?"
+			{
+				askList -= <<"Zealan Vale?">>;
+				bark("Zealan, I am. My home, this is. The home of my
+					ancestors, it is. A valley, this is. So Zealan Vale,
+					named, it is.");
+				bark("Zealan, you are not. Be here, you should not.
+					Leave, before trouble upon you falls. Anything
+					new, within this Vale, welcome is not. Be gone,
+					lest you, the shades find!");
+
+				askList -= <<"Anything new?", "Shades?">>;
+			}
+
+			case "Anything new?"
+			{
+				askList -= <<"Anything new?">>;
+				bark("People. Ideas. Whatever...");
+				bark("To the others, if tradition it is not, wrong it
+					must be. Sit and moan to the gods, they will. But help
+					themselves, they will not! If die, our people do, no
+					fault of mine, will it be!");
+			}
+
+			case "Shades?"
+			{
+				askList -= <<"Shades?">>;
+				bark("Ghosts... Spirits... Tied to the land, Zealans are.
+					When die, we do, stay to protect our kin, our spirits
+					do. And welcome a Pagan, they will not.");
+
+				askList ^= <<"Tied to the land?", "Pagan?">>;
+			}
+
+			case "Tied to the land?"
+			{
+				askList -= <<"Tied to the land?">>;
+				bark("Looking for strings, are you? Overly bright, you
+					are not.");
+				bark("A pact to protect this land, we have. Or so the
+					legends say. In life, nuture it, we must. In death,
+					feed the soil, our bodies do, and protect those
+					still living, our souls do.");
+				bark("Satisfied?");
+			}
+
+			case "Pagan?"
+			{
+				askList -= <<"Pagan?">>;
+				bark("YOU, thick-wit! Funny you look. Funny you speak.
+					Zealan, you are not. So Pagan, must you be. Figure
+					that out, any child could.");
+
+				askList ^= <<"But I'm not a Pagan!">>;
+			}
+
+			case "But I'm not a Pagan!"
+			{
+				askList -= <<"But I'm not a Pagan!">>;
+				bark("To your gods, go cry. Have time for this, I do not.
+					Care what you are, I do not. No Mark do I see. Pagan,
+					Ancient One... Whatever. In peace, leave me!");
+
+				exitConvo();
+				return;
+			}
+
+			case "Work area?"
+			{
+				askList -= <<"Work area?">>;
+				bark("Seeking a better way to bring water to our crops,
+					I am. Drink through a hollow reed, I can. To use
+					bigger reeds to transport water, possible, it should be.");
+				bark("Now, having enough trouble, I am. In the way, you are.
+					So... leave.");
+
+				exitConvo();
+				return;
+			}
+
+			case "Why can't you speak with me?"
+			{
+				askList -= <<"Why can't you speak with me?">>;
+				bark("Two reasons. First, makes my ears hurt, listening
+					to you does. Second, only to Zealans, speak, I may.
+					And Zealan, you are not. Now away, go!");
+
+				exitConvo();
+				return;
+			}
+
+			case "Who is Atli?"
+			{
+				askList -= <<"Who is Atli?">>;
+				bark("Atli? The Elder of Clan Gunnar, he is.");
+				bark("Now go find him, you should. Before in trouble,
+					I get.");
+
+				askList += <<"What is Clan Gunnar?",
+							"Why would you be in trouble?">>;
+			}
+
+
+			case "What is Clan Gunnar?"
+			{
+				askList -= <<"What is Clan Gunnar?">>;
+				bark("My kin, they are. Why claim Ingyald, I do, know,
+					I do not. Descendants of brave Gunnar, we are.
+					Vowed blood feud with the Hoskuld's, we have.");
+
+				askList ^= <<"Who is Ingyald?", "Who was Gunnar?",
+							"Why blood feud?">>;
+			}
+
+			case "Who is Ingyald?"
+			{
+				askList -= <<"Who is Ingyald?">>;
+				bark("Crippled, he is. So a scavenger, he is. A wicked
+					brew, with crop scraps he makes.");
+
+				askList ^= <<"A wicked brew?", "Crop scraps?">>;
+			}
+
+			case "A wicked brew?"
+			{
+				askList -= <<"A wicked brew?">>;
+				bark("Like fire, it burns, and like a Torax, it
+					kicks. Forget sore muscles, it helps. But sore
+					head, in the morning, it leaves!");
+			}
+
+			case "Crop scraps?"
+			{
+				askList -= <<"Crop scraps?">>;
+				bark("Ask me, do not. Lets them sit for days, he does.
+					Why rot, they do not, know, I do not. Then boils
+					them for days, he does. All that I know, that is.");
+				bark("Ask him, you could. But tell me, he will not,
+					and kin to him, I am.");
+			}
+
+			case "Who was Gunnar?"
+			{
+				askList -= <<"Who was Gunnar?">>;
+				bark("Son of the Elder, long ago, he was. So long ago
+					that filled with Zealans, this valley was.");
+
+				askList ^= <<"Why do you call Gunnar brave?",
+							"What was so special about Gunnar?">>;
+			}
+
+			case "Why do you call Gunnar brave?"
+			{
+				askList -= <<"Why do you call Gunnar brave?">>;
+				bark("Hunted the wild Toraxes with only a knife, he
+					did. Went after that hateful Hoskuld, he did.
+					Even climbed the cliffs after him, Gunnar did.
+					Never returned, he did.");
+
+				askList ^= <<"Hateful Hoskuld?">>;
+			}
+
+			case "Hateful Hoskuld?"
+			{
+				askList -= <<"Hateful Hoskuld?">>;
+				bark("Child from the other clan, he was. A wretched
+					thief, he was. Stole the shield of the Ancient
+					Ones, he did. And murdered brave Gunnar, he did.
+					Forgive the Hoskuld's, we never shall!");
+
+				askList ^= <<"The other clan?",
+							"Shield of the Ancient Ones?">>;
+			}
+
+			case "The other clan?"
+			{
+				askList -= <<"The other clan?">>;
+				bark("Across the Vale, they squat, like fats flies
+					upon a dead Torax. Kill all the game, they do.
+					Greedy, motherless thieves!");
+				bark("To them, go! Keep you, they can. Feed ourselves,
+					we cannot. Welcome here, you are not. To them, go,
+					and to my work, leave me!");
+
+				exitConvo();
+				return;
+			}
+
+			case "Shield of the Ancient Ones?"
+			{
+				askList -= <<"Shield of the Ancient Ones?">>;
+				bark("A tale for children, it is! Let the bearer speak
+					with the gods, told, was I. Ha! Like a fable from
+					out of Ingyald's brew, it sounds!");
+				bark("What was really stolen, who knows? Who cares?
+					Thieves, the Hoskuld's are. And murderers. Fantasy,
+					the rest is. No shield. No gods. Just misery...");
+				bark("Now, go, you must! No water to the crops, does
+					talking get.");
+
+				exitConvo();
+				return;
+			}
+
+			case "What was so special about Gunnar?"
+			{
+				askList -= <<"What was so special about Gunnar?">>;
+				bark("Kin, he was! Understand, you would not! Outsider,
+					you are! Belittle our pain, you do! Stay here, you
+					cannot! Leave!");
+
+				exitConvo();
+				return;
+			}
+
+			case "Why blood feud?"
+			{
+				askList -= <<"Why blood feud?">>;
+				bark("Brave Gunnar, Hoskuld murdered! So of them,
+					steer clear! If murder a Zealan, they will,
+					murder a Pagan they would, too.");
+				bark("Now, leave, before seen talking with you, I am.");
+
+				exitConvo();
+				return;
+			}
+
+			case "Why would you be in trouble?"
+			{
+				askList -= <<"Why would you be in trouble?">>;
+				bark("Stranger, you are. A Pagan, or a Hoskuld spy,
+					matter, it does not. Forbidden to speak with
+					those outside of my clan, I am. Now go. Enough
+					trouble, I have!");
+
+				exitConvo();
+				return;
+			}
+
+			case "Where is Atli?"
+			{
+// This will change!
+				if (getPeriod() = daytide) or (getPeriod() = firstebb)
+				{
+					bark("Tending the crops, he is!");
+				}
+
+				if (getPeriod() = lastebb)
+				{
+					bark("At home, he should be. If there, he is not, know,
+						I do not.");
+				}
+
+				bark("Now, leave! Trouble, you are. Trouble, need, I
+					do not!");
+
+				exitConvo();
+				return;
+			}
+
+			case "I have taken your Test."
+			{
+				askList -= <<"I have taken your Test.">>;
+				bark("Brave, you are. Or more foolish than I thought.
+					Find Atli, you should. Have the mark, you do not.
+					Without the Mark, speak to you, I cannot.");
+
+				askList ^= <<"Why more foolish?", "Where is Atli?">>;
+			}
+
+			case "Why more foolish?"
+			{
+				askList -= <<"Why more foolish?">>;
+				bark("Tell you, Atli did not? Cruel, that is...");
+				bark("Poisoned, you have been. No cure, have we now.
+					Sorry, I am.");
+
+				askList ^= <<"Poisoned?", "No cure?">>;
+				toldPoison = true;
+			}
+
+			case "Poisoned?"
+			{
+				askList -= <<"Poisoned?">>;
+				bark("To Zealans, poison the Passage Plant is. Perhaps
+					to you, it is not, know, I do not.");
+				bark("If like a Zealan, you are, make your heart beat
+					faster and faster, the spores will. Become weak,
+					you will. Eventually, give out, your heart will.");
+
+				askList ^= <<"How long do I have?">>;
+			}
+
+			case "How long do I have?"
+			{
+				askList -= <<"How long do I have?">>;
+
+				if not haveMark
+				{
+					bark("Know, I do not. Days... Weeks... Not long, sure,
+						I am. But to Atli go, and the Mark, get. For the
+						rest of your days, be a Zealan, you shall. And
+						honor you, we shall.");
+
+					exitConvo();
+					return;
+				}
+				else
+				{
+					bark("Know, I do not. Days... Weeks... Not long, sure,
+						I am. Know, crazy old Ezrekal, might. But for the
+						rest of your days, be a Zealan, you shall. And
+						honor you, we shall.");
+
+					askList ^= <<"Where do I find Ezrekal?">>;
+				}
+			}
+
+			case "No cure?"
+			{
+				askList -= <<"No cure?">>;
+				bark("Once, go to the High Priestess, you would. Now
+					only crazy old Ezrekal, do we have. No magic, she
+					has. But to Atli go, and the Mark, get. Maybe, if
+					take it to Ezrekal, you do, think of something,
+					she will.");
+
+				askList ^= <<"Where do I find Ezrekal?">>;
+			}
+
+			case "Where do I find Ezrekal?"
+			{
+				askList -= <<"Where do I find Ezrekal?">>;
+				bark("East from here, she lives. In a remote corner
+					of the Vale, find her you will. And much luck,
+					you, I wish. High Priestess, she is, in name
+					only. No gods are there. Just a crazy old lady,
+					in fables and dreams, living she is.");
+
+				exitConvo();
+				return;
+			}
+
+			case "I have the Mark."
+			{
+				askList -= <<"I have the Mark.">>;
+				bark("Speak with you now, I can. But not for long.");
+
+				if toldPoison
+				{
+					askList ^= <<"How can I be cured?">>;
+				}
+				else
+				{
+					askList ^= <<"Why not for long?">>;
+				}
+			}
+
+			case "How can I be cured?"
+			{
+			 	askList -= <<"How can I be cured?">>;
+				bark("No cure, have we now. Sorry, I am. Go to
+					crazy old Ezrekal, you could. Think of something,
+					she might. But hurry, I would. Looking very ill,
+					you are.");
+			}
+
+			case "Why not for long?"
+			{
+				askList -= <<"Why not for long?">>;
+				bark("Poisoned, you have been. No cure, have we now.
+					Sorry, I am.");
+
+				askList ^= <<"Poisoned?">>;
+				toldPoison = true;
+			}
+
+			case "I have spoken to Ezrekal."
+			{
+				askList -= <<"I have spoken to Ezrekal.">>;
+				bark("Crazy old coot, is she not? Tell you what,
+					did she? Nothing useful, wager, I will.");
+
+				if toldCliffs
+				{
+					askList ^= <<"She told me of the cliffs.">>;
+				}
+				if spokePoison
+				{
+					askList ^= <<"She told me of the poison.">>;
+				}
+				if spokeFuneral
+				{
+					askList ^= <<"She told me of my funeral.">>;
+				}
+				else
+				{
+					askList ^= <<"She can do nothing.">>;
+				}
+			}
+
+			case "She told me of the cliffs."
+			{
+				askList -= <<"She told me of the cliffs.">>;
+
+				if climbedCliffs
+				{
+					if not shieldFixed
+					{
+						bark("The great earthquake, did you feel? Frightened
+							Atli, it did. Scuttled to the Sacred Circle, he
+							did. Ask the shades what to do, he will. If do
+							anything, we can.");
+
+						askList ^= <<"Where is the Sacred Circle?">>;
+					}
+					else
+					{
+						bark("So, wrong, perhaps I was. Shield, there was.
+							Mean that gods there are, this does not! Humph!");
+
+						askList ^= <<"What should I do now?">>;
+					}
+				}
+				else
+				{
+					bark("Listen to her, only a fool would. A fool Hoskuld...
+						like Tyorvi.");
+
+					askList ^= <<"What about Tyorvi?">>;
+				}
+			}
+
+			case "Where is the Sacred Circle?"
+			{
+				askList -= <<"Where is the Sacred Circle?">>;
+				bark("North of here. Above the Temple, beyond the
+					Hoskuld shacks, it lies. Go there, you should.");
+
+				exitConvo();
+				return;
+			}
+
+			case "What should I do now?"
+			{
+				askList -= <<"What should I do now?">>;
+				bark("Look like an Oracle, I do? The shield did not
+					exist, I thought. But found it, you did. So why
+					asking me, are you? To Ezrekal, talk. Or at the
+					Temple, go pray. Perhaps answer you, the gods will.
+					Know nothing any more, do I!");
+
+				exitConvo();
+				return;
+			}
+
+			case "What about Tyorvi?"
+			{
+				askList -= <<"What about Tyorvi?">>;
+				bark("The last fool to try the cliffs, he was. And
+					killed his friend that with him went, it did.
+					To him, talk, if fool you are too.");
+
+				exitConvo();
+				return;
+			}
+
+			case "She told me of the poison."
+			{
+				askList -= <<"She told me of the poison.">>;
+				bark("From fools and crazy women, preserve me!");
+				bark("Why to me, come back? Do nothing for you, I can!
+					To Ezrekal, go back. Or the cliffs, go climb. For
+					the gods, look, if with what little time left,
+					nothing to do you have!");
+
+				exitConvo();
+				return;
+			}
+
+			case "She told me of my funeral."
+			{
+				askList -= <<"She told me of my funeral.">>;
+				bark("HA! Just like her, that is! Anything, the High
+					Priestess, to play. My advice, take, friend. The
+					old crone, cheat. The cliffs, go climb. Find the
+					gods, you might. If not, no body to bury, will she
+					have. To Tyorvi, go talk. Tell you about the
+					cliffs, he can.");
+
+				toldCliffs = true;
+				exitConvo();
+				return;
+			}
+
+			case "She can do nothing."
+			{
+				askList -= <<"She can do nothing.">>;
+				bark("Surprised, I am not. But to her, talk again, you
+					should. If grasping at straws, you are, in all the
+					old tales, a quest, everything solves. Fools, crazy
+					women, and quests... like an old tale, to me it sounds!");
+
+				exitConvo();
+				return;
+			}
+
+			case "Tell me more of the cliffs."
+			{
+				askList -= <<"Tell me more of the cliffs.">>;
+				bark("What more to tell, is there? Dangerous, they are.
+					In the old tales, forbidden to climb, they were.
+					For somewhere above the clouds, to the home of the
+					gods, they led. Few survive, who climb them, try.
+					Only Tyorvi, in my memory, stupid enough was.");
+
+				askList ^= <<"What about Tyorvi?">>;
+			}
+
+			case "I have been healed!"
+			{
+				askList -= <<"I have been healed!",
+							"The Shield of the Ancients is restored!">>;
+				bark("See, so I do! For you, good! Perhaps something to
+					these god stories, there is. So now, open the temple,
+					will you?");
+
+				askList ^= <<"How can I open the temple?">>;
+			}
+
+			case "How can I open the temple?"
+			{
+				if spokeTemple
+				{
+					askList -= <<"How can I open the temple?">>;
+// @@@ the next paragraph --las
+					bark("Told you, I have. Give you the potions, I
+						would. But gone, the key to the chest, is.
+						There one moment, it was. Then gone it was.
+						Perhaps grew legs and walk off, it did. Help
+						you, I cannot. Sorry, I am.");
+				}
+				else
+				{
+					askList -= <<"How can I open the temple?">>;
+					bark("Why me, these questions, you ask? Been to the city
+						of the gods, I have not!");
+// @@@ the next two paragraphs --las
+					bark("But wait! Perhaps, a way, there is... Potions, I
+						have, from generation to generation passed on, they
+						have been. For the moment of miracles, they are, or
+						so told, I was. Give them to you, I would. But gone,
+						the key to the chest is.");
+					bark("Under my pillow, the key was. Heard a noise, I did.
+						Looked for it then, I did. But gone, the key was.
+						Now give you the potions, I cannot. Understand it,
+						I do not.");
+
+					spokeTemple = true;
+
+					bag.create(TypeBag, 0);
+					key.create(TypeKey, 0);
+					key.setQuality(20);
+					key.pop(bag.referent);
+					bag.pop(19588, 23284, 64);
+				}
+				exitConvo();
+				return;
+			}
+
+			case "I have opened the temple.", "I have found the Ancient Ones."
+			{
+				askList -= <<"I have opened the temple.",
+							"I have found the Ancient Ones.">>;
+				bark("So? Wrong, was I. But stop working, I will not, until
+					green, the land is. Learn to pray, perhaps I shall. But
+					for now, no place at the temple for me, is there. For
+					your answers, the High Priestess, seek out. Believed,
+					she always has. For me, only work, has there been. Now
+					go. Think, I must.");
+
+				exitConvo();
+				return;
+			}
+
+			case "I have freed the Ancient Ones."
+			{
+				askList -= <<"I have freed the Ancient Ones.">>;
+				bark("To you, say what, can I? Thank you, so shallow,
+					seems. Changed our world, in a handful of time, you
+					have. Find new work, I must...");
+				bark("And to pray, learn, I must. The Ancient Ones, over
+					you watch, my friend. Our lives, you, we owe. Find
+					what you are seeking, you will, I hope. Thank you.");
+
+				exitConvo();
+				return;
+			}
+
+			case "Do you have the Passage Stone?"
+			{
+				askList -= <<"Do you have the Passage Stone?">>;
+				bark("No, have it, I do not. The thieving Hoskuld's,
+					responsible for it's loss, are! To them, talk,
+					not me!");
+
+				exitConvo();
+				return;
+			}
+
+			case ""
+			{
+				if godsFree
+				{
+					bark("God-struck, are you? When gathered your wits,
+						you have, come back.");
+				}
+				else
+				{
+					bark("Time for you to gather your wits, I have not!
+						Go to the Hoskuld's, you should. As scattered
+						as yours, their wits are.");
+				}
+
+				exitConvo();
+				return;
+			}
+
+			case"bye"
+			{
+				ran = urandom(4);
+
+				if ran = 1
+				{
+					bark("Farewell.");
+				}
+				if ran = 2
+				{
+					bark("Goodbye.");
+				}
+				if ran = 3
+				{
+					bark("Until later...");
+				}
+
+				exitConvo();
+				return;
+			}
+		}
+	}
+}

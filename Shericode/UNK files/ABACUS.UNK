@@ -1,0 +1,46 @@
+ 
+
+uses "item";
+
+typeclass TypeAbacus inherits Item
+{
+	process look();
+	process use();
+}
+
+process TypeAbacus::look()
+{
+	bark("abacus \f boulier \g Abakus");
+}
+
+process TypeAbacus::use()
+{
+	sum:Number = 0;
+	backpack,coin:Item;
+	backpack.referent = Avatar.getEquip(EQ_BACKPACK);
+	foreach recursive coin where type=TypeObsidianCoin within container backpack
+	{
+		sum += coin.getQuantity();
+	}
+	#if English {
+	str: String = "You have " + numToStr(sum);
+	str += " obsidian coin";
+	}
+	#if French {
+	str: String = "Tu as " + numToStr(sum);
+	str += "  obsidienne";
+	}
+	#if German {
+	str: String = "Ihr habt " + numToStr(sum);
+	str += " ObsidianmÅnze";
+	}
+
+	if sum != 1
+	{
+		str += "s \fs \gn";
+	}
+
+	
+	Avatar.bark(str);
+}
+

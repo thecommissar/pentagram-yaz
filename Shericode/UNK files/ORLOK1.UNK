@@ -1,0 +1,204 @@
+uses "flags";
+uses "free";
+uses "npc";
+
+npcclass Orlok inherits Npc {
+	process use();
+	process look();
+//	process cacheIn();
+//	process activity();
+
+	routine getDrink():String;
+}
+
+process Orlok::look() {
+	if orlokName {
+		spawn bark("Orlok") -> return;
+	}
+	else if orlokJob {
+		spawn bark("barkeep") -> return;
+	}
+	else {
+		spawn bark("man") -> return;
+	}
+}
+
+process Orlok::use() {
+	key, tempKey : String;
+	keyList, tempKeyList : String List;
+	keyList = <<"name","job","bye">>;
+
+// INITIAL GREETING
+
+	if not orlokMet {
+		bark("Greetin's, stranger. What can I do fer ya?");
+		
+		orlokMet = 1;
+	}
+
+// SUBSEQUENT GREETINGS
+	
+	else if not orlokAvaName {
+		ran : Number = random(2);
+		switch ran {
+			case 0 {
+				if whatDrink {
+					sentence : String = "Greetin's again, stranger. Will
+						ya be havin' another ";
+					sentence += getDrink();
+					sentence += "?";
+					
+					bark(sentence);
+					
+					keyList += <<"drink">>;
+				}
+				else {
+					bark("Greetin's again, stranger. What's yer poison?");
+
+					keyList += <<"poison">>;
+				}
+			}
+			case 1 {
+				bark("Hallo there, and what might'cha be here after?");
+			}
+		}
+	}
+	else {
+		ran = random(3);
+		switch ran {
+			case 0 {
+				bark("Greetin's, Avatar.");
+			}
+			case 1 {
+				bark("'Tis good ta see ya again, Avatar. How can I help ya?");
+			}
+			case 2 {
+				if whatDrink {
+					sentence = "Greetin's again, Avatar. Will ya be havin'
+						another ";
+					sentence += getDrink();
+					sentence += "?";
+					
+					bark(sentence);
+
+					keyList += <<"drink">>;
+				}
+				else {
+					bark("What's yer poison, Avatar?");
+
+					keyList += <<"poison">>;
+				}
+			}
+		}
+	}
+
+	while key != "bye" {
+		key = ask(keyList);
+
+		if key = "" {
+			if orlokAvaName {
+				bark("I do have other things ta do, Avatar.");
+			}
+			else {
+				bark("I do have other things ta do than wait upon yer
+					leisure, stranger.");
+
+				return;
+			}
+		}
+		if key = "name" {
+			if not orlokName {
+				orlokName = true;
+
+				bark("Well now. My name's Orlok. And what might be
+					yours, friend?");
+
+				tempKeyList = <<"Avatar","no name">>;
+				tempKey = ask(tempKeyList);
+
+				switch tempKey {
+					case "" {
+						bark("'Tis yer choice whether or not to give me yer
+							name. I'll not ask again, stranger.");
+					}
+					case "no name" {
+						bark("'Tis yer choice whether or not to give me yer
+							name. I'll not ask again, stranger.");
+					}
+					case "Avatar" {
+						orlokAvaName = true;
+
+						bark("Well met then, Avatar. 'Tis a fine name indeed.
+							sit a while and listen to me tales.");
+
+						keyList += <<"tales">>;
+					}
+				}
+			}
+			else {
+				if orlokName < 2 {
+					if orlokAvaName {
+						bark("As I've said once, I be Orlok.");
+					}
+					else {
+						bark("I told ya my name was Orlok and ya didn't even
+							have the decency to give me yers. Foreigners!");
+						
+						orlokName++;
+					}
+
+					orlokName++;
+				}
+				else if orlokName = 2 {
+					bark("Are yer ears full o' seaweed? Have ya gone daft of
+						a sudden, Avatar?");
+
+					orlokName++;
+				}
+				else {
+					orlokMad = true;
+					bark("Run along now child, I hear yer mother callin'.");
+					return;
+				}
+			}
+		}
+/*
+		if key = "job" {
+		}
+		if key = "poison" {
+		}
+		if key = "drink" {
+		}
+		if key = "bye" {
+		}
+*/
+	}
+}
+
+// process Orlok::cacheIn() {
+// }
+
+// process Orlok::activity() {
+// }
+
+
+routine Orlok::getDrink():String {
+	if whatDrink = 1 {
+		drink : String = "TenebreanAle";
+	}
+	if whatDrink = 2 {
+		drink = "BlackWine";
+	}
+	if whatDrink = 3 {
+		drink = "Hurricane";
+	}
+	if whatDrink = 4 {
+		drink = "Breath o' the Spirit";
+	}
+	if whatDrink = 5 {
+		drink = "ClovenHoof";
+	}
+
+	return drink;
+}
+

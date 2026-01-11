@@ -1,0 +1,67 @@
+uses "free";
+uses "item";
+uses "types";
+
+globalflag called:16;
+
+npcclass Avatar inherits Npc
+{
+	process look();
+	process use();
+	process areYouMyMother(t:Type,f:Frame);
+}
+
+process Avatar::areYouMyMother(t:Type,f:Frame)
+{
+	[[PT_ACTIVITY,Avatar.referent]];
+	item:Item;
+	dest:WorldPoint;
+	dest.x = Avatar.getX() + 100;
+	dest.y = Avatar.getY() + 100;
+	dest.z = Avatar.getZ()  + 100;
+
+	startup
+	{
+		if not item.legal_create(t,f,dest)
+		{
+			Avatar.bark("quack, quack");
+			return;
+		}
+	}
+
+	process
+	{
+		ran:Number;
+		dx:Number;
+		dy:Number;
+
+		dx = Avatar.getX() - item.getX();
+		dy = Avatar.getY() - item.getY();
+		dest.x = item.getX() + (dx/32);
+		dest.y = item.getY() + (dy/32);
+		dest.z = Avatar.getZ();
+
+		item.legal_move(dest,0,0);
+
+		ran = unrandom(4);
+		if ran = 1
+		{
+			spawn item.bark("Come back Shane!")-> return;
+		}
+
+		if ran = 2
+		{
+			spawn item.bark("Master? Master?") -> return;
+		}
+
+		if ran = 3
+		{
+			spawn item.bark("Don't leave me!") ->return;
+		}
+	}
+}
+process Avatar::use()
+{
+	spawn areYouMyMother(TypeSword2,0)-> return;
+	Avatar.bark("Leave me alone!");
+}

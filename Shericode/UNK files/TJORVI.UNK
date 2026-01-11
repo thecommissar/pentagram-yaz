@@ -1,0 +1,610 @@
+uses "flags";
+uses "free";
+uses "npc";
+
+npcclass Tjorvi inherits Npc
+{
+
+	process look();
+	process use();
+	process schedule(currentTime:Long);
+	process enterFastArea();
+	process leaveFastArea();
+
+//	process cast(ref:Referent);
+}
+
+
+process Tjorvi::look()
+{
+	if Tjorvi.isDead()
+	{
+		bark("Tjorvi's mortal remains");
+		return;
+	}
+
+	if tjorviName and tjorviJob
+	{
+		bark("Tjorvi, the Eldar's brother");
+		return;
+	}
+
+	else if tjorviName
+	{
+		bark("Tjorvi");
+		return;
+	}
+
+	else if TjorviJob
+	{
+		bark("Eldar's brother");
+		return;
+	}
+
+	else
+	{
+		bark("man");
+		return;
+	}
+}
+/****************************************
+process Tjorvi::schedule(currentTime:Long)
+{
+	point:WorldPoint;
+	map:MapNum;
+	sched:Number;
+
+	point.x = numberhere
+	point.y = numberhere
+	point.z = numberhere
+	sched = at_home;
+	map = MapNameHere
+
+	if canSafeTeleport(point,Map)
+	{
+		tjorviSchedule = sched;
+		safeTeleport(point,map);
+	}
+}
+
+process Tjorvi::enterFastArea()
+{
+	resetRef(referent,PT_ACTIVITY);
+	resetRef(referent,PT_PATHFIND);
+	resetRef(referent,PT_ANIM);
+	resetRef(referent,PT_BARK);
+
+	if (tjorviSchedule = at_home)
+	{
+		spawn atHome() -> return;
+	}
+}
+
+
+process Tjorvi::leaveFastArea()
+{
+	killProcess(referent,PT_ACTIVITY);
+	resetRef(referent,PT_PATHFIND);
+	resetRef(referent,PT_ANIM);
+	resetRef(referent,PT_BARK);
+
+	if isDead()
+	{
+		teleport(urandom(10000),urandom(10000),0,0);
+	}
+}
+***********************************************************/
+
+
+/**********************************************************
+  this is for calling the guard                   
+ WHAT ARE WE GOING TO DO ABOUT CALLING THE GUARD?!
+
+process Tjorvi::cast(ref:Referent)
+{
+	count:Number;
+	count = 10;
+	while(notgetTarget()) and (cou
+	{
+		wait(1);
+		count--:
+	}
+
+	ref=getTarget();
+	if ref = Avatar:Referent
+	{
+		spawn callTheGuards(NULL_REF) -> return;
+
+		if not isDead()
+		{
+			killProcess(referent,PT_ACTIVITY);
+			killProcess(referent,PT_BARK);
+			bark("Help! Help!");
+		}
+	}
+}
+***********************************************************/
+
+
+process Tjorvi:use()
+{
+
+	if tjorviMet
+	{
+		ran:Number;
+		ran = urandom(3);
+		if ran = 1
+		{
+			if tjorviName
+			{
+			Avatar.bark("Tjorvi?");
+			}
+			else
+			{
+				Avatar.bark("Hello again.");
+			}
+		}
+
+		if ran  = 2
+		{
+			if tjorviName
+			{
+				Avatar.bark("Hail, Tjorvi.");
+			}
+			else
+			{
+				Avatar.bark("Pardon me, friend.");
+			}
+		}
+	}
+	else
+	{
+		ran:Number;
+		ran = urandom(4);
+
+		if ran = 1
+		{
+			Avatar.bark("Hail!");
+		}
+
+		if ran = 2
+		{
+			Avatar.bark("Hello, good fellow.");
+		}
+
+		if ran = 3
+		{
+			Avatar.bark("A moment, sir.");
+		}
+	}
+
+
+
+	askList:String List;
+	answer:String;
+	enterConvo();
+
+	if tjorviMet
+	{
+		ran:Number;
+		ran = urandom(100)
+
+		if ran < 75 //he's not drunk
+		{
+			if avatarPoisoned
+			{
+				if haveMark
+				{
+					if toldCliffs
+					{
+						if haveShield //go to set scene
+						{
+						}
+						else // no shield? go to EZ
+						{
+						}
+					}
+					else
+					{
+						if ezrekalMet //send back to EZ
+						{
+							askList+=<<"I have spoken to Ezrekal.">>;
+						}
+						else  // send to EZ
+						{
+							askList+=<<"I have the Mark.">>;
+						}
+					}
+				}
+				else  // send to Thordis for mark
+				{
+					askList+=<<"I have taken your test.">>;
+				}
+			}
+			else // if pc not poisoned
+			{
+				if haveMark  // then he has been healed
+				{
+					if templeOpen
+					{
+						if godsFree //
+						{
+						}
+						else // temple open, gods not free
+						{
+						}
+					}
+					else // healed but not opened temple
+					{
+					}
+				}
+			else // not poisoned, not marked, NPC not friendly
+			// send to Thordis for test
+			{
+				if not spokeOfVail
+				{
+					askList+=<<"What place is this?", "I wish to speak
+					to you.">>;
+				}
+				else
+				{
+					askList^=<<"I wish to speak to you.">>;
+				}
+			}
+		}
+		else // he's drunk and tells rambling stories!
+		{
+			if spokeDrunk
+			{
+				if not spokeDrunkOne
+				{
+					askList^=<<"">>;
+				}
+				if spokeDrunkOne and not spokeDrunkTwo
+				{
+					askList^=<<"">>;
+				}
+				if spokeDrunkOne and spokeDrunkTwo
+				{
+					askList^=<<"">>;
+				}
+			}
+			else // tell first drunk story and set spokeDrunkOne
+			{
+			}
+		}
+	else //he's drunk the first time you meet him, regardless
+	{
+		//he's drunk, mean, belligerent, gives his name, that's all.
+		askList=<<"What is your name?", "What do you do?">>;
+	}
+
+
+
+
+	while answer!="bye"
+	{
+		askList-=<<"bye">>;
+		askList+=<<"bye">>;
+		answer=ask(askList);
+		switch answer
+		{
+
+			case "What is your name?"
+			{
+				tjorviMet = true;
+				tjorviName = true;
+				bark("What? Talking to me are you? Tjorvi I am and...
+				well. Well, well, well, what here we have? Now shomething,
+				you are. Kinda funny he dresshes, not he does? Sure he does.
+				Funny he talksh too. What are you, boy? A Pagan? Why bet I
+				would thash's what you are. A Pagan. So, Mishter Pagan, true
+				is it your kind Torax better than women likesh? Ha, ha, ha, ha
+				You know shomething, Pagan, take you out right now, where
+				you stand, I oughta, shure I should, and...and I
+				will...jusht as shoon as another drink I have. Another
+				drink, What I need that is.");
+				exitConvo();
+				return;
+			}
+
+			case "What do you do?"
+			{
+				tjorviMet = true;
+				tjorviName = true;
+				tjorviJob = true;
+				bark("What, Me? Tjorvi, I am. Thordis' brother and advishor...what?
+				by all the..., here what do we have? Now, something
+				arn't you? Take a look at the way dressed he is.
+				And talksh funny he does. Why, if not any better I knew
+				a Pagan I'd say he was. In fact, a filthy Pagan I bet
+				you are. So, Mishter Pagan, true ish it that breed with Torax
+				Pagans do? Yeah, that type you look, ha, ha, ha!");
+				exitConvo();
+				return;
+			}
+
+
+			case "What place is this?", "I'd like to speak to you."
+			{
+				if spokeOnce
+				{
+					bark("Listen, Pagan, I'd like to kill you where
+					you stand. But Thordis has ordered any strangers
+					be sent to her, and Ancients' forbid anyone disobey
+					the great Thordis. So, get outtaa here,
+					Go see Thordis.");
+					askList-=<<"What place is this?">>;
+					askList+=<<"Where is Thordis?", "Who is Thordis?">>;
+				}
+				else
+				{
+					bark("What? Why, by the Ancients', it's a Pagan!">>;
+					asklist-=<<"What place is this?">>;
+					askList+=<<"Where?", "I'm not a Pagan!">>;
+					spokeOnce = true;
+				}
+			}
+
+			case "Where?"
+			{
+				bark("YOU! You are a Pagan!");
+				askList-=<<"Where?">>;
+			}
+
+			case "I'm not a Pagan!"
+			{
+				bark("Well, you are not a Zealan. So you must be a Pagan.
+				By all rights I should kill you now. It is only because of
+				Thordis' orders that I stay my hand now.");
+				askList-=<<"I'm not a Pagan!", "Where?">>;
+				askList+=<<"Who is Thordis?", "What orders?">>;
+			}
+
+			case "Who is Thordis?"
+			{
+				bark("Thordis? She's the Eldar of Clan Snori. She's
+				also my sister. Now, you better go find her now, before I
+				lose my patience.");
+				askList-=<<"Who is Thordis?">>;
+			}
+
+			case "What orders?"
+			{
+				bark("By her order, we are forbidden to speak with anyone
+				not of this clan. Anyone not of this clan is to be sent
+				to her immediatly. This normally refers to anyone from Clan
+				Hoskuld, but technically it would refer to a Pagan as well.
+				So, get out of here, before I disobey her orders!");
+				askList-=<<"What orders?">>;
+				askList+=<<"Where is Thordis?", "Who are Clan Hoskuld?">>;
+			}
+
+			case "Who are Clan Hoskuld?"
+			{
+				bark("They live on the other side of the Vale. They
+				are theives and murderers. You should go there. They'd
+				like a murdering Pagan, I'm sure!");
+				askList-=<<"Who are Clan Hoskuld?">>;
+			}
+
+			case "Where is Thordis?"
+			{
+// this will change when she gets a schedule
+				if (getPeriod() = daytide) or (getPeriod() = firstebb)
+				{
+					bark("She's in the counting house, counting out
+					her money.");
+				}
+				if (getPeriod() = lastebb)
+				{
+					bark("She's in the parlor eating bread and honey.");
+				}
+				bark("Now, get out of here!");
+				exitConv();
+				return;
+			}
+
+			case "I have taken your test."
+			{
+				bark("Well, that's just dandy. Have you told
+				Thordis? Obviously not, you don't have the mark. Look
+				I really don't have the time for you, so just go find
+				Thordis, get your mark. Go on, get outta here before
+				you drop dead right in front of me.");
+				askList-=<<"I have taken your test.">>;
+				askList+=<<"Where is Thordis?", "Drop dead?">>;
+			}
+
+			case "Drop dead?"
+			{
+				bark("Yeah, dead. You've been poisoned, I can see it in
+				your eyes. There's no cure for it, you know. You're a walking
+				dead man. Just like the rest of us, so get outta here and
+				go get your mark.");
+				toldOfPoison = true;
+				askList-=<<"Drop dead?">>;
+				askList+=<<"No cure?", "Why are we all walking dead?">>;
+			}
+
+			case "Why are we all walking dead?", "Walking dead?"
+			{
+				bark("Arn't we all going sooner or later...or have you
+				found some secret immortality potion? Well, we'll find
+				out soon enough, when that poison takes ahold of you.");
+				askList-=<<"Why are we all walking dead?">>;
+			}
+
+			case "No cure?"
+			{
+				bark("No there's no cure. Not since the Ancients left us.
+				Used to be the High Priestess could cure anything...but not
+				any more. So, my friend, enjoy your last hours. You know,
+				you're really one of the lucky ones. You know your end is
+				coming. The rest of us are not so fortunate.");
+				askList-=<<"No cure?">>;
+				askList+=<<"Why are you not fortunate?">>;
+			}
+
+			case "Why are you not fortunate?"
+			{
+				bark("If you don't know when your time is, you just
+				stumble through life, wondering why you are here until
+				life is snatched away from you...Listen, I don't have
+				time for this. Get outta here.");
+				exitConvo();
+				return;
+			}
+
+			case "I have the Mark."
+			{
+				bark("So I see. Wonderful. I'm just thrilled for you. Now
+				go die someplace else.");
+				askList-=<<"I have the Mark.">>;
+				askList+=<<"Die someplace else?">>;
+			}
+
+			case "Die someplace else?"
+			{
+				if toldOfPoison
+				{
+					bark("Yeah, like I told you. There is no cure for that
+					poison, you are going to die. Just like that.");
+				}
+				else
+				{
+					bark("Didn't anyone tell you? Those spores on your
+					body are poisonous. You are going to die. There is
+					no cure. Welcome to the walking dead.");
+				}
+				askList-=<<"Die someplace else?">>;
+				askList+=<<"No cure?", "Walking dead?">>;
+			}
+
+			case "I have spoken to Ezrekal."
+			{
+				bark("So, you're still alive. Hmmmm, you're stronger than I
+				thought you were. What did she tell you?");
+				askList-=<<"I have spoken to Ezrekal.">>;
+				if spokeCliffs
+				{
+					askList+=<<"She told me of the cliffs.">>;
+				}
+				if spokePoison
+				{
+					askList+=<<"She told me of the poison.">>;
+				}
+				if spokeFuneral
+				{
+					askList+=<<"She told me of my funeral.">>;
+				}
+				else
+				{
+					askList+=<<"She had little to say.">>;
+				}
+			}
+
+			case "She told me of the cliffs."
+			{
+				bark("Did she? Well, will you attempt them?");
+				askList=<<"Yes", "No">>;
+				if climbedCliffs
+				{
+					askList+=<<"I already have.">>;
+				}
+			}
+
+			case "Yes"
+			{
+				bark("You are a foolish man. I kind of like that. So
+				try them you will. Perhaps I will accompany you. At
+				least then both our deaths won't be in vain.");
+				askList-=<<"Yes", "No", "I already have.">>;
+				askList+=<<"Yes, accompany me.", "No, don't accompany me.",
+				"Our deaths won't be in vain?">>;
+			}
+
+			case "Our deaths won't be in vain?"
+			{
+				bark("No one's death should be in vain. No one's. Those
+				cliffs claimed my best friend when they should have
+				claimed me...now, I'll give them one more chance.");
+				askList-=<<"Our deaths won't be in vain?">>;
+			}
+
+			case "Yes, accompany me."
+			{
+				bark("I will gather my climbing gear and meet you there.");
+				tjorviDrunk = true;
+				agreeToClimb = true;
+				exitConvo();
+				return;
+			}
+
+			case "No, don't accompany me."
+			{
+				bark("Why not?");
+				askList=<<"I do not wish it.", "It is too dangerous.",
+				"I do not trust you.">>;
+			}
+
+			case "I do not wish it."
+			{
+				bark("Ah, of course not, Pagan. You want all the glory
+				for yourself. Well, then you may have all the death
+				to yourself as well.");
+				exitConvo();
+				return;
+			}
+
+			case "It is too dangerous."
+			{
+				bark("Too dangerous? Ha! How well I know that. It claimed
+				my best friend and should have claimed me as well. But
+				no, I had to live on. Do you know I still hear his screams?
+				I do...in my dreams at night. I would give anything not
+				to dream at night.");
+				askList-=<<"It is too dangerous.", "I do not wish it.",
+				"I do not trust you.">>;
+				askList+=<<"
+
+
+
+			case"bye"
+			{
+				bark("");
+				exitConvo();
+			}
+		}
+	}
+
+
+
+
+
+/**********************
+
+GAME FLAGS USED
+(not necessarily in any
+particular order)
+
+
+askedTried
+testFromAtli
+testFromThordis
+mentionSheild
+templeOpen
+ezrekalJob
+ezrekalName
+ezrekalMet
+yelledAtAvatar
+avatarPoisoned
+spokeOfCataclysm
+haveSheild
+climbedCliffs
+askedAboutAncients
+talkedAboutBuddy1
+toldOfPoison
+tjorviDrunk
+agreeToClimb
+***********************/

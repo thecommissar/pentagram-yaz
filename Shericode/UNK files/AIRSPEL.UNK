@@ -1,0 +1,1323 @@
+uses "npc";
+uses "snddefs";
+uses "free";
+uses "flags";
+uses "door";
+
+
+
+
+// BETA - SUBTRACT MANA!
+
+// Air Spells
+// ----------
+process Npc::divination() {
+	map:Number = Avatar.getMap();
+	string:String;
+
+	unkCloseAllGumps();
+
+	if ((Avatar.getMana() - 3) < 0) or hasBreath {
+
+		realDoAnim(AS_ENTER_CAST,getDir());
+		safePlaySFX(SMOKPUF1,100);
+		realDoAnim(AS_EXIT_CAST,getDir());
+		return;
+	}
+
+	Avatar.setMana(Avatar.getMana() - 3);
+
+	realDoAnim(AS_ENTER_CAST,getDir());
+  	spawn safePlaySFX(MAGIC3,200) -> return;
+	spawn realDoAnim(AS_CAST1,getDir()) -> return;
+	timedBark(100,"In Wis");
+	AccumulateIntelligence(50);
+	realDoAnim(AS_EXIT_CAST,getDir());
+
+	spawn safePlaySFX( WIND4,100) -> return;
+
+	string = ("The focus reads that I am 
+				\f Le Substrat me signale que je suis 
+				\g Das Symbol sagt mir, daá ich");
+
+	switch map
+	{
+//		case MapProgPlayland 
+//		{
+//		string = string + "at Programmer's Playland! 
+//							\f complŠtement perdu!
+//							\g mich verirrt habe.";
+//		}
+
+		case MapDocks    
+		{
+		string = string + "by the docks of Tenebrae. 
+							\f prŠs des pontons de Tenebrae.
+							\g am Steg in Tenebrae bin.";
+		}
+
+		case MapFishermansReef   
+		{
+		string = string + "near Fishermans Reef. 
+							\f prŠs du R‚cif du Loup de Mer.
+							\g am Riff der Fischer bin.";
+		}
+
+		case MapShepherdValley
+		{
+		string = string + "at north of Tenebrae in the Valley. 
+						\f au Nord de Tenebrae, dans la Vall‚e.
+						\g n”rdlich von Tenebrae im Tal bin.";
+		}
+
+		case MapEastRoad
+		{
+
+		string = string + "on the East Road outside of Tenebrae.
+						\f sur la route Est de Tenebrae.
+						\g mich auf der Oststraáe auáerhalb Tenebraes befinde.";
+		}
+
+		case MapThePlateau    
+		{
+		string = string + "on the Plateau.
+							\f sur le Plateau.
+							\g auf dem Plateau bin.";
+		}
+
+		case MapDaemonsCrag   
+		{
+		string = string + "at the Daemon's Crag.
+							\f dans l'Antre des D‚mons.
+							\g an der D„monenklippe bin.";
+		}
+
+		case MapBrimstoneCliffs   
+		{
+		string = string + "at the Brimstone Cliffs.
+							\f … la SoufriŠre.
+							\g an den Schwefelklippen bin.";
+		}
+
+		case MapLavaRiverBefore 
+		{
+
+		string = string + "at the Lava River.
+						\f … la RiviŠre de Lave.
+						\g am Lavafluá bin.";
+		}
+
+		case MapLavaRiverAfter 
+		{
+ 
+		string = string + "at the Lava River.
+						\f … la RiviŠre de Lave.
+						\g am Lavafluá bin.";
+		}
+
+
+		case MapCarthaxLake   
+		{
+		string = string + "at Carthax Lake.
+							\f au Lac Carthax.
+							\g am Karthaxsee bin.";
+		}
+
+
+		case MapRoadTreasure
+		{
+		string = string + "at Treasure Cove.
+							\f … l'Anse du Tr‚sor.
+							\g an der Schatzbucht bin.";
+		}
+
+		case MapStoneCove
+		{
+		string = string + "at Stone Cove.
+							\f au Cirque Sacr‚.
+							\g an der Steinernen Bucht bin.";
+		}
+
+		case MapObsidianFortress  
+		{
+		string = string + "in the Obsidian Fortress.
+							\f dans la Forteresse d'Obsidienne.
+							\g in der Obsidianfestung bin.";
+		}
+
+		case MapCarthaxII  
+		{
+		string = string + "at Carthax Lake.
+							\f au Lac Carthax.
+							\g am Karthaxsee bin.";
+		}
+
+		case MapCARTHAXbreakingground  
+		{
+		string = string + "at Carthax Lake.
+								\f au Lac Carthax.
+								\g am Karthaxsee bin.";
+		}
+
+		case MapHallOfTheMountainKing  
+		{
+		string = string + "in the Hall of the Mountain King.
+							\f dans la Halle du Roy Montagne.
+							\g in der Halle des Bergk”nigs bin.";
+		}
+
+		case MapArgentrockIsle  
+		{
+		string = string + "on Argentrock Isle.
+							\f Sur l'Isle du Roc d'Argent.
+							\g auf der Insel Silberfels bin.";
+		}
+
+		case MapWestTenebrae    
+		{
+		string = string + "in West Tenebrae.
+						\f dans la partie Ouest de Tenebrae.
+						\g in West Tenebrae bin.";
+		}
+
+		case MapCentralTenebrae  
+		{
+		string = string + "in central Tenebrae.
+							\f au Centre de Tenebrae.
+							\g in der Ortsmitte Tenebraes bin.";
+		}
+
+		case MapEastTenebrae  
+		{
+		string = string + "in east Tenebrae.
+							\f dans la partie Est de Tenebrae.
+							\g in Ost-Tenebrae bin.";
+		}
+
+		case MapPlaneOfFire  
+		{
+		string = string + "on the Plain of Fire.
+							\f Sur la Plaine du Feu.
+							\g auf der Feuerebene bin.";
+		}
+
+		case MapPlaneOfWater  
+		{
+		string = string + "on the Plain of Water.
+							\f Sur la Plaine de l'Eau.
+							\g auf der Wasserebene bin.";
+		}
+
+		case MapPlaneOfAir  
+		{
+		string = string + "on the Plain of Air.
+							\f sur la Plaine de l'Air.
+							\g auf der Luftebene bin.";
+		}
+
+		case MapPlaneOfEarth47
+		{
+		string = string + "on the Plain of Earth.
+							\f sur la Plaine de la Terre.
+							\g auf der Erdebene bin.";
+		}
+
+		case MapUpperCatacombsII   
+		{
+		string = string + "in the Upper Catacombs.
+								\f dans les Catacombes Sup‚rieures.
+								\g in den Oberen Katakomben bin.";
+		}
+
+		case MapUpperCatacombsIII   
+		{
+		string = string + "in the Upper Catacombs.
+								\f dans les Catacombes Sup‚rieures.
+								\g in den Oberen Katakomben bin.";
+		}
+
+		case MapAncientNecs   
+		{
+		string = string + "in the Upper Catacombs.
+								\f dans les Catacombes Sup‚rieures.
+								\g in den Oberen Katakomben bin.";
+		}
+
+		case MapLowerCatacombsI   
+		{
+
+		string = string + "in the Lower Catacombs.
+						\f dans les Catacombes Inf‚rieures.
+						\g in den Unteren Katakomben bin.";
+		}
+
+		case MapLowerCatacombsII   
+		{
+ 
+		string = string + "in the Pit of the Dead.
+						\f dans le Puits de la Mort.
+						\g in der Totengruft bin.";
+		}
+
+
+		case MapShrine
+		{
+		string = string + "in the Shrine of the Ancient Ones.
+							\f dans le Sanctuaire des Anciens.
+							\g im Schrein der Alten bin. ";
+		}
+
+		default
+		{
+		string = string + "totally lost! 
+							\f complŠtement perdu!
+							\g mich v”llig verirrt habe!";
+		}
+	}
+
+	bark(string);
+	string = "Also it reads that the hour is currently 
+				\f Il m'indique aussy qu'il est exactement  
+				\g Es ist jetzt";
+	switch getPeriod()
+	{
+		case bloodwatch 
+		{
+		string = string +  " Bloodwatch, \f Auburne, \g Blutwache. ";
+		}
+		case firstebb
+		{
+		string = string + " Firstebb, \f Midurne, \g Erste Flut. ";
+		}
+		case daytide
+		{
+		string = string + " Daytide, \f Maturne, \g Mittagswende. ";
+		}
+		case threemoons
+		{
+		string = string + " Threemoons, \f Amidurne, \g Drei Monde. ";
+		}
+		case lastebb
+		{
+		string = string + " Lastebb, \f Minurne, \g Letzte Flut. ";
+		}
+		case eventide
+		{
+		string = string + " Eventide, \f Vespurne, \g Nachtwende. ";
+		}
+		default
+		{
+		string = string + " very late, \f trŠs tard, \g sehr sp„t.";
+		}
+	}
+
+	day:Number = (TimeInGameHours() / 24);
+	dayofweek:Number = day modulo 6;
+		
+	string = string + " the day is \f aujourd'huy, c'est \g Heute ist";
+	switch dayofweek
+	{
+		case guarday  
+		{
+		string = string +  " Guarday, \f Gardius, \g Wachtag, ";
+		}
+		case earthday  
+		{
+		string = string +  " Earthday, \f Terdius, \g Erdtag, ";
+		}
+		case waterday  
+		{
+		string = string +  " Waterday, \f Eaudius, \g Wassertag, ";
+		}													  
+		case airday 
+		{
+		string = string +  " Airday, \f Airdius, \g Lufttag, ";
+		}
+		case fireday  
+		{
+		string = string +  " Fireday, \f Feudius, \g Feuertag ";
+		}
+		case blackday  
+		{
+		string = string +  " Blackday, \f Noirdius, \g Schwarztag, ";
+		}
+		default
+		{
+		string = string + " GuardDay, \f Gardius, \g Wachtag, ";
+		}
+	}
+
+	dayofmonth:Number = (day modulo 45) + 1;
+
+
+
+	#if English 
+	{
+		string += "the " + numToStr(dayofmonth) +" day of the month of ";
+	}
+
+	#if French 
+	{
+
+		string += "le jour " + numToStr(dayofmonth) +" du mois de";
+	}
+
+	#if German 
+	{
+
+		string += "der " + numToStr(dayofmonth) +"te Tag im Monat";
+	}
+
+
+	month:Number = (day / 45) modulo 6;
+
+	switch month
+	{
+		case stonemark
+		{
+		string = string + "Stonemark. \f Pierrux. \g Steinmarke.";
+		}
+		case skyrock
+		{
+		string = string + "Skyrock. \f Cielux. \g Himmelstein.";
+		}
+		case windbreak
+		{
+		string = string + "Windbreak. \f Ventux. \g Windbruch.";
+		}
+		case stormpeak
+		{
+		string = string + "Stormpeak. \f Oragux. \g Sturmh”he.";
+		}
+		case firefall
+		{
+		string = string + "Firefall. \f Feugux. \g Feuerfall.";
+		}
+		case darkflame
+		{
+		string = string + "DarkFlame. \f Sombrux. \g Schwarzflamme.";
+		}
+		default
+		{
+		string = string + "StoneMark. \f Pierrux. \g Steinmarke.";
+		}
+	}
+
+	bark(string);
+
+	if day > 1
+	{
+		#if English 
+		{
+			bark("I have been in Pagan for roughly " + numToStr(day) + " days.");
+		}
+	
+		#if French 
+		{
+	
+			bark("Cela doit faire " + numToStr(day) + " jours que je suis … Pagan.");
+		}
+	
+		#if German 
+		{
+	
+			bark("Ich bin seit ungef„hr " + numToStr(day) + " Tagen in Pagan.");
+		}
+	}
+}
+
+process Npc::healingTouch(ref:Referent) {
+	item,magic,magic2 : Item;
+	n : Npc;
+	num:Number;
+
+	if not ref {
+		return;
+	}
+
+	unkCloseAllGumps();
+
+	if referent = Avatar:Referent {
+		if ((Avatar.getMana() - 5) < 0) or (hasBreath)
+		{
+
+			realDoAnim(AS_ENTER_CAST,getDir());
+			safePlaySFX(SMOKPUF1,100);
+			realDoAnim(AS_EXIT_CAST,getDir());
+			return;
+		}
+
+		[[PT_DEFAULT, NULL_REF]];
+
+		item.referent = target();
+		if (item.referent=0)		// didn't select a target.
+		{
+			realDoAnim(AS_ENTER_CAST,getDir());
+			safePlaySFX(SMOKPUF1,100);
+			realDoAnim(AS_EXIT_CAST,getDir());
+			return;
+		}
+		if item.referent != Avatar:Referent {
+			Avatar.turnToFace(Avatar.getDirToItem(item.referent),false,5);
+		}
+	}
+	else {
+		item.referent = ref;
+	}
+
+
+	setMana(Avatar.getMana() - 5);
+	realDoAnim(AS_ENTER_CAST,getDir());
+	spawn safePlaySFX(MAGIC3,200) -> return;
+	spawn realDoAnim(AS_CAST1,getDir()) -> return;
+	timedBark(100,"In Mani");
+	AccumulateIntelligence(50);
+
+
+	// Heal the damn Torax;
+
+	if (item.getType() = TypeWoundedTorax) and (item.getFrame() < 3) 
+	{
+
+		if getDistance(Avatar:Referent,item.referent) > 550
+		{
+
+			Avatar.bark("The animal must be closer!
+						\f Il faut que l'animal approche encore!
+						\g Das Tier muá noch n„herkommen!");
+			realDoAnim(AS_EXIT_CAST,getDir());
+			return;			 
+		}
+
+		magic.create(TypeMagicSparkle,0);
+		magic.pop(item.getX() + 10,item.getY() + 10,item.getZ() + 30);
+
+		for num = 6 to 11 {
+			item.setFrame(num);
+			if num = 10 {
+		  		safePlaySFX(MONSTER9,200);
+			}
+			wait(25);
+		}
+
+		magic.destroy();
+		for num = 0 to 5 {
+			item.setFrame(12);
+			wait(20);
+			item.setFrame(11);
+			wait(15);
+		}
+
+	  	safePlaySFX(TELEPORT,200);
+		magic2.create(TypeMagicYellowCircle,0);
+		magic2.pop(item.getX() + 110,item.getY() + 110,item.getZ() + 5);
+		for num = 0 to 13 {
+			magic2.setFrame(num);
+			wait(10);
+			if num = 5 {
+				item.destroy();
+			}
+		}
+	
+		if Avatar.getMap() = MapArgentrockIsle
+		{
+			passedThirdTest = true;
+			AccumulateIntelligence(50);
+		}
+
+		magic2.destroy();
+		return;			 
+	}
+
+	// Heal anybody else.
+	
+	if item.isNpc() {
+
+		n.referent = item.referent;
+	  	heal:Number = urandom(8) + 8;
+	
+	  	if (heal + n.getHp()) > (n.getStr() * 2) {
+	  		n.setHp( n.getStr() * 2); 
+	  	}
+
+		else {
+			n.setHp(heal + n.getHp());
+		}
+
+		magic.create(TypeMagicSparkle,0);
+		magic.pop(item.getX() + 5,item.getY() + 10,item.getZ() + 30);
+		for num = 0 to 9 {
+			magic.setFrame(num);
+			wait(3);
+		}
+		for num = 0 to 9 {
+			magic.setFrame(num);
+			wait(3);
+		}
+		magic.destroy();
+	}
+	else {
+		safePlaySFX(MAGIC2,200);
+	}
+
+	realDoAnim(AS_EXIT_CAST,getDir());
+	safePlaySFX( WIND4,100);
+}
+
+
+
+process Npc::aerialServant() {
+	item,item2,magic,magic2:Item;
+	xcoord,ycoord,zcoord:Number;
+
+	unkCloseAllGumps();
+
+	if ((Avatar.getMana() - 5) < 0) or (hasBreath) {
+
+		realDoAnim(AS_ENTER_CAST,getDir());
+		safePlaySFX(SMOKPUF1,100);
+		realDoAnim(AS_EXIT_CAST,getDir());
+		return;
+	}
+
+	Avatar.setMana(Avatar.getMana() - 5);
+
+	[[PT_DEFAULT, NULL_REF]];
+
+	item.referent = target();
+	if (item.referent=0)		// didn't select a target.
+	{
+		realDoAnim(AS_ENTER_CAST,getDir());
+		safePlaySFX(SMOKPUF1,100);
+		realDoAnim(AS_EXIT_CAST,getDir());
+		return;
+	}
+	Avatar.turnToFace(getDirToCoords(item.getX(),item.getY()),0,10);
+	Avatar.realDoAnim(AS_ENTER_CAST,getDir());
+	spawn safePlaySFX(MAGIC1,200) -> return;
+	spawn realDoAnim(AS_CAST2,getDir()) -> return;
+	timedBark(100,"Kal Ort Xen");
+	AccumulateIntelligence(50);
+
+	if item.getType() = TypeMagArmor
+	{
+		killProcess(item.referent,PT_ANIM);
+		orStatus(OWNED);
+	}
+
+
+	if (item.getType() = TypeDoorNS) or (item.getType() = TypeDoorEW) or
+		(item.getType() = TypeTallDoorNS) or (item.getType() = TypeTallDoorEW)
+		or (item.getType() = TypeLever) or (item.getType() = TypeWallSwitch) 
+		or (item.getType() = TypeBarrel) {
+
+//BETA - ADD more usables here!
+
+		magic.create(TypeMiniAirTitan,0);
+		realDoAnim(AS_CAST2,getDir());
+		magic.pop(Avatar.getX(),Avatar.getY(),Avatar.getZ() + 45);
+		levitateAvatar = true;
+		spawn magic.look() -> return;
+		magic.moveItemTo(item.getX(),item.getY(),item.getZ() + 10,10);
+		magic2.create(TypeMagicSparkle,20);
+		magic2.pop(item.getX(),item.getY(),item.getZ() + 20);
+		wait(45);
+
+		if (item.getType() = TypeDoorNS) or (item.getType() = TypeDoorEW) or
+			(item.getType() = TypeTallDoorNS) or (item.getType() = TypeTallDoorEW) {
+
+			door : Door;
+			door.referent = item.referent;
+			
+			spawn door.doorDriver(referent)-> return;
+		}
+		else {
+			spawn item.use() -> return;
+		}
+
+		wait(45);
+		levitateAvatar = false;
+		magic2.destroy();
+		wait(35);
+		magic.destroy();
+		Avatar.realDoAnim(AS_EXIT_CAST,getDir());
+		safePlaySFX( WIND4,100);
+		return;
+	}
+
+	numb:Number = item.getWeight();
+
+	if ((item.getType() = TypeFireItem) and (item.getFrame() = 20)) or
+	   (numb = 0)
+	{
+		safePlaySFX(SMOKPUF1,100);
+		realDoAnim(AS_EXIT_CAST,getDir());
+		safePlaySFX( WIND4,100);
+		return;
+	}
+
+	if (not item.isNpc()) and (not item.getTypeFlag(FIXED_TYPE))
+	{
+		realDoAnim(AS_CAST1,getDir());
+		playSFX(MAGIC1,200);
+		magic.create(TypeMiniAirTitan,0);
+		magic.pop(Avatar.getX(),Avatar.getY(),Avatar.getZ() + 45);
+		levitateAvatar = true;
+		spawn magic.look() -> return;
+		magic.moveItemTo(item.getX(),item.getY(),item.getZ() + 10,10);
+		magic2.create(TypeMagicSparkle,0);
+		magic2.pop(item.getX(),item.getY(),item.getZ() + 30);
+		item2.referent = target();
+		if (item2.referent=0)		// didn't select a target.
+		{
+			item2.referent = item.referent;
+		}
+
+		if (item.referent = item2.referent) and	(item.getFamily() = CONTAINER_FAMILY) 
+		{
+			magic2.setFrame(magic2.getFrame() + 20);
+			wait(45);
+			spawn item.use() -> return;
+			levitateAvatar = false;
+			magic2.destroy();
+			wait(35);
+			magic.destroy();
+			Avatar.realDoAnim(AS_EXIT_CAST,getDir());
+			safePlaySFX( WIND4,100);
+			return;
+		}
+
+		if item2.referent = Avatar:Referent
+		{
+			x2,y2,z2:Number;
+			x2 = item2.getX();
+			y2 = item2.getY();
+			z2 = item2.getZ();
+			backpack:Item;
+			backpack.referent = Avatar.getEquip(EQ_BACKPACK);
+
+			if backpack.referent
+			{
+				if item.legal_move(backpack.referent,0)
+				{
+					item2.move(x2,y2,z2);
+					safePlaySFX(MAGIC3,200);
+					Avatar.realDoAnim(AS_EXIT_CAST,getDir());
+					Avatar.realDoAnim(AS_ENTER_CAST,getDir());
+					magic2.destroy();
+					item2.legal_move(backpack.referent,0);
+					magic.moveItemTo(Avatar.getX(),Avatar.getY(),Avatar.getZ() + 10,10);
+					magic2.create(TypeMagicSparkle,0);
+					magic2.pop(item2.getX(),item2.getY(),item2.getZ() + 30);
+					wait(30);
+					safePlaySFX(MAGIC2,200);
+					wait(45);
+					levitateAvatar = false;
+					magic2.destroy();
+					wait(35);
+					magic.destroy();
+					Avatar.realDoAnim(AS_EXIT_CAST,getDir());
+					safePlaySFX( WIND4,100);
+					return;
+				}
+				else
+				{
+					safePlaySFX(SMOKPUF1,100);
+					magic2.destroy();
+					magic.destroy();
+					levitateAvatar = false;
+					realDoAnim(AS_EXIT_CAST,getDir());
+
+					safePlaySFX( WIND4,100);
+					Avatar.bark("I am carrying too much!
+						\f Je porte trop de choses!
+						\g Meine Last ist zu schwer!");
+					return;
+				}
+			}
+			else
+			{
+
+				safePlaySFX( WIND4,100);
+				Avatar.bark("I have no backpack!
+					\f Je n'ai point de besace!
+					\g Ich habe keinen Rucksack!");
+			}
+		}
+
+
+		if item2.referent != item.referent {
+			x,y,z:Word;
+			item2.getFootpad(x,y,z);
+			z= z * 8 + item2.getZ();
+			if canExistAt(item.getType(),item2.getX(),item2.getY(),z,1,0,0)
+			   and item2.getTypeFlag(LAND_SURFACE_TYPE) {
+				safePlaySFX(MAGIC3,200);
+				Avatar.realDoAnim(AS_EXIT_CAST,getDir());
+				Avatar.turnToFace(getDirToCoords(item2.getX(),item2.getY()),0,10);
+				Avatar.realDoAnim(AS_ENTER_CAST,getDir());
+				magic2.destroy();
+				item.push();
+				magic.moveItemTo(item2.getX(),item2.getY(),z,10);
+				magic2.create(TypeMagicSparkle,0);
+				magic2.pop(item2.getX(),item2.getY(),item2.getZ() + 30);
+				wait(30);
+				item.pop(item2.getX(),item2.getY(),z);
+				item.fall();
+				safePlaySFX(MAGIC2,200);
+				wait(45);
+				levitateAvatar = false;
+				magic2.destroy();
+				wait(35);
+				magic.destroy();
+				Avatar.realDoAnim(AS_EXIT_CAST,getDir());
+				safePlaySFX( WIND4,100);
+				return;
+			}
+		}
+
+		magic2.setFrame(magic2.getFrame() + 10);
+		safePlaySFX(MAGIC2,200);
+		wait(60);
+		levitateAvatar = false;
+		magic2.destroy();
+		wait(35);
+		magic.destroy();
+		safePlaySFX(WIND4,100);
+		Avatar.realDoAnim(AS_EXIT_CAST,getDir());
+		safePlaySFX( WIND4,100);
+	}
+	else
+	{
+		safePlaySFX(SMOKPUF1,100);
+		realDoAnim(AS_EXIT_CAST,getDir());
+		safePlaySFX( WIND4,100);
+		return;
+	}
+}
+
+process Npc::restoration(ref:Referent) {
+
+	item,magic,magic2,magic3 : Item;
+	n : Npc;
+	num:Number;
+	
+
+	if not ref 
+	{
+		return;
+	}
+
+	unkCloseAllGumps();
+
+	if referent = Avatar:Referent {
+		if ((Avatar.getMana() - 15) < 0) or (hasBreath) {
+
+			realDoAnim(AS_ENTER_CAST,getDir());
+			safePlaySFX(SMOKPUF1,100);
+			realDoAnim(AS_EXIT_CAST,getDir());
+			return;
+		}
+
+	Avatar.setMana(Avatar.getMana() - 15);
+
+		item.referent = target();
+		if (item.referent=0)		// didn't select a target.
+		{
+			realDoAnim(AS_ENTER_CAST,getDir());
+			safePlaySFX(SMOKPUF1,100);
+			realDoAnim(AS_EXIT_CAST,getDir());
+			return;
+		}
+		if item.referent != Avatar:Referent {
+			Avatar.turnToFace(Avatar.getDirToItem(item.referent),false,5);
+		}
+	}
+	else {
+		item.referent = ref;
+	}
+	
+	realDoAnim(AS_ENTER_CAST,getDir());
+  	spawn safePlaySFX(MAGIC3,200) -> return;
+	spawn realDoAnim(AS_CAST1,getDir()) -> return;
+	timedBark(100,"Vas In Mani");
+	AccumulateIntelligence(50);
+
+	if (item.getType() = TypeWoundedTorax) and (item.getFrame() < 3) 
+	{
+
+		realDoAnim(AS_CAST2,getDir());
+
+		if getDistance(Avatar:Referent,item.referent) > 550
+		{
+
+			Avatar.bark("The animal must be closer!
+						\f Il faut que l'animal approche encore!
+						\g Das Tier muá noch n„herkommen!");
+			realDoAnim(AS_EXIT_CAST,getDir());
+			safePlaySFX( WIND4,100);
+			return;			 
+		}
+
+		magic.create(TypeMagicSparkle,0);
+		magic.pop(item.getX() + 10,item.getY() + 10,item.getZ() + 30);
+
+		for num = 6 to 11 {
+			item.setFrame(num);
+			if num = 10 {
+		  		safePlaySFX(MONSTER9,200);
+			}
+			wait(25);
+		}
+
+		magic.destroy();
+		for num = 0 to 5 {
+			item.setFrame(12);
+			wait(15);
+			item.setFrame(11);
+			wait(15);
+		}
+
+	  	safePlaySFX(TELEPORT,200);
+		magic2.create(TypeMagicYellowCircle,0);
+		magic2.pop(item.getX() + 110,item.getY() + 110,item.getZ() + 5);
+		for num = 0 to 13 {
+			magic2.setFrame(num);
+			wait(10);
+			if num = 5 {
+				item.destroy();
+			}
+		}
+	
+		if Avatar.getMap() = MapArgentrockIsle
+		{
+			passedThirdTest = true;
+			AccumulateIntelligence(50);
+		}
+		magic2.destroy();
+		return;			 
+	}
+
+
+
+
+	   if item.isNpc() = TRUE  
+	   {
+	      n.referent = item.referent;
+
+		  n.setHp( n.getStr() * 2); 
+		  magic.create(TypeMagicSparkle,10);
+		  magic.pop(item.getX() + 7,item.getY() + 10,item.getZ() + 20);
+		  wait(20);
+
+		  safePlaySFX(MAGIC9,200);
+		  realDoAnim(AS_CAST1,getDir());
+		  magic2.create(TypeMagicSparkle,0);
+		  magic2.pop(item.getX() + 30,item.getY() + 10,item.getZ() + 35);
+		  wait(20);
+
+		  safePlaySFX(MAGIC1,200);
+		  realDoAnim(AS_CAST3,getDir());
+		  magic3.create(TypeMagicSparkle,20);
+		  magic3.pop(item.getX() - 30,item.getY() + 10,item.getZ() + 30);
+		  wait(20);
+
+		  magic.destroy();
+		  wait(20);
+		  magic2.destroy();
+		  wait(20);
+		  magic3.destroy();
+	   }
+	   else {
+	   		safePlaySFX(MAGIC2,200);
+	   }
+
+	killProcess(referent,PT_ANIM);
+	realDoAnim(AS_EXIT_CAST,getDir());
+	safePlaySFX( WIND4,100);
+}
+
+
+process Npc::fadeFromSight() {
+
+
+	startup
+	{
+
+	unkCloseAllGumps();
+
+
+	if ((Avatar.getMana() - 5) < 0) or (hasBreath) 
+	{
+		realDoAnim(AS_ENTER_CAST,getDir());
+		safePlaySFX(SMOKPUF1,100);
+		realDoAnim(AS_EXIT_CAST,getDir());
+		return;
+	}
+
+ 	Avatar.setMana(Avatar.getMana() - 5);
+
+
+	counter,limit:Number;
+	realDoAnim(AS_ENTER_CAST,getDir());
+	spawn safePlaySFX(MAGIC3,200) -> return;
+	spawn realDoAnim(AS_CAST3,getDir()) -> return;
+
+	timedBark(100,"Quas An Lor"); 
+	AccumulateIntelligence(50);
+
+	realDoAnim(AS_CAST1,getDir()); 
+	realDoAnim(AS_EXIT_CAST,getDir());
+	safePlaySFX( WIND4,100);
+
+	[[PT_DEFAULT, NULL_REF]];
+
+	if Avatar.getStatus() & OWNED
+	{
+		// detect if avatar is owned... 
+	}
+	else
+	{
+		Avatar.toggleStatus(OWNED);
+	}
+
+	Avatar.toggleStatus(INVISIBLE);
+
+	Avatar.setFrame(Avatar.getFrame());
+	safePlaySFX( WIND4,100);
+
+	if Avatar.getStatus() & INVISIBLE {
+		limit=(getInt()*20);
+	}
+	else {
+		return;
+		}
+	}
+	process {
+	if Avatar.getStatus() & INVISIBLE {
+		wait(10);
+		counter++;
+		if counter > limit {
+			Avatar.toggleStatus(INVISIBLE);
+		   	safePlaySFX(MAGIC2,200);
+			Avatar.setFrame(Avatar.getFrame());
+			return;
+			}
+		}
+	else {
+		safePlaySFX(MAGIC2,200);
+		return;
+		}
+	}
+}
+
+
+
+
+process Npc::airWalk() {
+
+	ball,item2:Item;
+
+	startup 
+	{
+
+	   unkCloseAllGumps();
+
+	   if getAirWalkEnabled() = true 
+	   {
+		   Avatar.setAirWalkEnabled(false);
+
+		   Avatar.realDoAnim(AS_ENTER_CAST,Avatar.getDir());
+		   Avatar.realDoAnim(AS_CAST2,Avatar.getDir());
+		   Avatar.timedBark(100,"An Vas Hur Por");
+	   	   safePlaySFX(MAGIC2,100);
+		   Avatar.realDoAnim(AS_EXIT_CAST,Avatar.getDir());
+
+
+
+		   foreach item2 where type = TypeMagicSparkle within 10 cells of Avatar
+		   {
+				safePlaySFX(MAGIC2,100);
+		   		item2.destroy();
+		   }
+		   return;
+	   }
+
+
+		if ((Avatar.getMana() - 15) < 0) 
+		{
+			realDoAnim(AS_ENTER_CAST,getDir());
+			safePlaySFX(SMOKPUF1,100);
+			realDoAnim(AS_EXIT_CAST,getDir());
+			return;
+		}
+
+
+	   Avatar.setMana(Avatar.getMana() - 15);
+
+	   duration : DWord = TimeInMinutes() + 1;
+	   counter,offX,offY,fram:Number;
+
+
+	   realDoAnim(AS_ENTER_CAST,getDir());
+	   spawn safePlaySFX(MAGIC1,200) -> return;
+	   spawn realDoAnim(AS_CAST2,getDir()) -> return;
+	   timedBark(100,"Vas Hur Por");
+
+
+	   ball.create(TypeMagicSparkle,0);
+	   ball.orStatus(VIRTUAL);
+	   ball.pop (Avatar.getX(), Avatar.getY() - 10, Avatar.getZ() + 10);
+	   [[PT_DEFAULT, ball.referent]];
+
+	   AccumulateIntelligence(50);
+
+	   spawn realDoAnim(AS_EXIT_CAST,getDir()) -> return;
+	   Avatar.setAirWalkEnabled(true);
+
+	   spawn safePlaySFX( WIND4,100) -> return;
+	   }
+
+
+	process 
+		{
+
+			if Avatar.getAirWalkEnabled() = false 
+			{
+			   safePlaySFX(MAGIC2,100);
+//			   destroy();
+			   foreach item2 where type = TypeMagicSparkle within 10 cells of Avatar
+			   {
+					safePlaySFX(MAGIC2,100);
+			   		item2.destroy();
+			   }
+		   return;
+
+			   return;
+			}
+
+		   while TimeInMinutes() < duration  
+		   {
+	
+				counter++;
+	
+				if counter > 14 { counter = 0; 
+				}
+	
+					switch counter 
+					{
+			
+						case 0 {offX = 0;offY = -10;}
+			
+						case 1 {offX = 4;offY = -9;}
+			
+						case 2 {offX = 7;offY = -7;}
+			
+						case 3 {offX = 9;offY = -4;}
+			
+						case 4 {offX = 10;offY = 0;}
+			
+						case 5 {offX = 9;offY = 4;}
+			
+						case 6 {offX = 7;offY = 7;}
+			
+						case 7 {offX = 4;offY = 9;}
+		
+						case 7 {offX = 0;offY = 10;}
+		
+						case 8 {offX = -4;offY = 9;}
+		
+						case 9 {offX = -7;offY = 7;}
+		
+						case 10 {offX = -9;offY = 4;}
+		
+						case 11 {offX = -10;offY = 0;}
+			
+						case 12 {offX = -9;offY = -4;}
+		
+						case 13 {offX = -7;offY = -7;}
+		
+						case 14 {offX = -4;offY = -9;}
+			   	}
+				if Avatar.isDead()
+				{
+					return;
+				}
+
+				ball.move(Avatar.getX() + (offX * 10), Avatar.getY() + (offY * 10), Avatar.getZ() + 20);
+				wait(1);
+			    suspend;
+		   }
+
+	   		Avatar.setAirWalkEnabled(false);
+	   }
+}
+
+
+
+
+
+process Npc::hearTruth() {
+
+	startup 
+	{
+		unkCloseAllGumps();
+
+		if ((Avatar.getMana() - 3) < 0) or (hasBreath) {
+	
+			realDoAnim(AS_ENTER_CAST,getDir());
+			safePlaySFX(SMOKPUF1,100);
+			realDoAnim(AS_EXIT_CAST,getDir());
+			return;
+		}
+
+	   Avatar.setMana(Avatar.getMana() - 3);
+	   [[PT_DEFAULT, NULL_REF]];
+
+	   duration : DWord = TimeInMinutes() + 2;
+	   counter,offX,offY,fram:Number;
+	   ball:Item;
+	   counter = 14;
+
+	   realDoAnim(AS_ENTER_CAST,getDir());
+	   spawn safePlaySFX(MAGIC1,200) -> return;
+	   spawn realDoAnim(AS_CAST3,getDir()) -> return;
+	   timedBark(100,"An Quas Lor");
+	   AccumulateIntelligence(50);
+
+	   realDoAnim(AS_EXIT_CAST,getDir());
+	   safePlaySFX( WIND4,100);
+
+
+	   hearTruthActive = true;
+	   }
+
+	process
+	{
+	   [[PT_DEFAULT, NULL_REF]];
+
+		if (hearTruthActive = false) or (TimeInMinutes() > duration) 
+		{
+			hearTruthActive = false;
+			safePlaySFX(MAGIC9,100);
+			return;
+		}
+	
+		safePlaySFX(SPELLGO4,50);
+		wait(100 + urandom(60));
+		suspend;
+	}
+}
+
+
+
+
+process Npc::intervention() {
+
+	startup
+	{
+
+	unkCloseAllGumps();
+
+	if ((Avatar.getMana() - 15) < 0) or (hasBreath) {
+
+		realDoAnim(AS_ENTER_CAST,getDir());
+		safePlaySFX(SMOKPUF1,100);
+		realDoAnim(AS_EXIT_CAST,getDir());
+		return;
+	}
+
+ 	Avatar.setMana(Avatar.getMana() - 15);
+
+	counter,limit:Number;
+
+
+	realDoAnim(AS_ENTER_CAST,getDir());
+	spawn safePlaySFX(MAGIC3,200) -> return;
+	spawn realDoAnim(AS_CAST3,getDir()) -> return;
+	timedBark(100,"In Sanct An Jux");
+	AccumulateIntelligence(50);
+	 
+	realDoAnim(AS_CAST2,getDir()); 
+	realDoAnim(AS_EXIT_CAST,getDir());
+	safePlaySFX( WIND3,100);
+
+	[[PT_DEFAULT, NULL_REF]];
+
+	Avatar.setImmortal();
+	limit=(getInt()*20);
+}
+
+	process {
+
+	wait(10);
+	counter++;
+	if counter > limit {
+		Avatar.clrImmortal();
+	   	safePlaySFX(MAGIC2,200);
+		return;
+		}
+	}
+}
+
+
+
+process Npc::resurrection(ref:Referent) {
+	unkCloseAllGumps();
+}
+
+
+
+process Npc::reveal() {
+
+		unkCloseAllGumps();
+
+		if ((Avatar.getMana() - 5) < 0) or (hasBreath) {
+	
+			realDoAnim(AS_ENTER_CAST,getDir());
+			safePlaySFX(SMOKPUF1,100);
+			realDoAnim(AS_EXIT_CAST,getDir());
+			return;
+		}
+
+	   Avatar.setMana(Avatar.getMana() - 5);
+
+	   	item,magic:Item;
+		num,x,y,z:Number;
+
+		realDoAnim(AS_ENTER_CAST,getDir());
+		spawn safePlaySFX(MAGIC3,200) -> return;
+		spawn realDoAnim(AS_CAST1,getDir()) -> return;
+		timedBark(100,"Ort Lor");
+		AccumulateIntelligence(50);
+
+
+	   	[[PT_DEFAULT, NULL_REF]];
+
+		foreach item within 40 cells of Avatar {
+			if item.getStatus() & INVISIBLE {
+				magic.create(TypeMagicSparkle,0);
+				magic.pop(item.getX() + 5,item.getY() + 10,item.getZ() + 10);
+				safePlaySFX(MAGIC2,200);
+				for num = 0 to 9 {
+					magic.setFrame(num);
+					wait(3);
+				}
+				x=item.getX();
+				y=item.getY();
+				z=item.getZ();
+				item.push();
+				item.toggleStatus(INVISIBLE);
+				item.pop(x,y,z);
+				item.setFrame(item.getFrame());
+				item.touch();
+				magic.destroy();
+				}
+		   }
+
+		realDoAnim(AS_EXIT_CAST,getDir());
+		safePlaySFX( WIND4,100);
+}
+
+
+

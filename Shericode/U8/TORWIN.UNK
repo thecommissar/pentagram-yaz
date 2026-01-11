@@ -1,0 +1,1494 @@
+uses "flags";
+uses "free";
+uses "npc";
+uses "snddefs";
+
+
+npcclass Torwin inherits Npc
+{
+	process use();
+	process look();
+	process enterFastArea();
+	process leaveFastArea();
+	process schedule(currentTime:Long);
+	process AvatarStoleSomething(ref:Referent);
+	process cast(ref:Referent);
+
+	process torwinRun();
+	process avatarRun();
+	process cleanPoint();
+
+	process atMonastery(); 
+	process atHome(); 
+	process randomBarkAtHome(); 
+	process randomBarkAtMonastery(); 
+}
+
+process Torwin::look() 
+{
+	if isDead()
+	{
+		bark("Torwin the ex-monk \f Torwin, l'ancien moine
+			\g Der verstorbene Mînch Torwin");
+		return;
+	}
+
+	if torwinName and torwinJob
+	{
+		bark("Torwin the monk \f Torwin le moine \g Der Mînch Torwin");
+	}
+	else if torwinName
+	{
+		bark("Torwin");
+	}
+	else if torwinJob 
+	{
+		bark("monk \f moine \g Mînch");
+	}
+	else 
+	{
+		bark("man \f homme \g Mann");
+	}
+}
+
+
+process Torwin::schedule(currentTime:Long)
+{
+	if Torwin.isDead()
+	{
+		return;
+	}
+
+	point : WorldPoint;
+	map : MapNum = MapArgentrockIsle;
+	sched:Number;
+
+
+// If time to go to work, head for the Monastery
+	if (getPeriod() = bloodwatch) or (getPeriod() = eventide)
+	{
+		point.x = 17858;
+		point.y = 18470;
+		point.z = 104;
+		sched = at_monastery; 
+	}
+
+
+// Head for the shack!
+	if (getPeriod() = firstebb) or (getPeriod() = daytide) or (getPeriod() = threemoons)
+	{
+		point.x = 17503;
+		point.y = 20223;
+		point.z = 56;
+		sched = at_home;
+	}
+
+
+	// it's time to die.
+
+	if torwinGottaJump
+	{
+		point.x = 13585;
+		point.y = 18950;
+		point.z = 112;
+		sched = 0;
+	}
+
+	if canSafeTeleport(point,map)
+	{
+		torwinSchedule = sched;
+		safeTeleport(point,map);
+
+	}
+}
+
+
+
+process Torwin::enterFastArea()
+{
+
+	if isDead()
+	{
+		teleport(urandom(10000),urandom(10000),0,0);
+		return;
+	}
+
+	killProcess(referent,PT_ACTIVITY);
+	killProcess(referent,PT_PATHFIND);
+	killProcess(referent,PT_ANIM);
+	killProcess(referent,PT_BARK);
+
+
+	if (torwinSchedule = at_home) 
+	{
+		spawn atHome() -> return;
+	}
+	
+	else if (torwinSchedule = at_monastery) 
+	{
+		spawn atMonastery() -> return;
+	}
+
+	else if (torwinSchedule = 0) 
+	{
+	  	realDoAnim(AS_STAND,7);
+	}
+
+}
+
+
+
+
+process Torwin::leaveFastArea()
+{
+
+	killProcess(referent,PT_ACTIVITY);
+	killProcess(referent,PT_PATHFIND);
+	killProcess(referent,PT_ANIM);
+	killProcess(referent,PT_BARK);
+}
+
+
+
+
+
+process Torwin::AvatarStoleSomething(ref:Referent)
+{
+	item,stolenItem:Item;
+	item.referent = ref;
+
+
+	if torwinSchedule != at_home
+	{
+		return;
+	}
+
+	resetRef(referent,PT_ACTIVITY);
+	resetRef(referent,PT_PATHFIND);
+	resetRef(referent,PT_BARK);
+	resetRef(referent,PT_ANIM);
+
+
+	foreach recursive stolenItem within container Avatar 
+	{
+		if stolenItem.referent = item.referent
+		{
+			cSetActivity(ACT_COMBAT);
+		}
+	}
+
+	turnToFace(getDirToItem(Avatar:Referent),false,10);
+	bark("What are you doing there...?
+		\f Eh! Qu'est-ce que tu trafiques, lÖ-bas...?
+		\g Was macht Ihr denn da...?");
+	wait(120);
+	enterFastArea();
+	return;
+}
+
+
+
+
+process Torwin::cast(ref:Referent)
+{
+
+	count:Number;
+	count = 10;
+
+	// TEST TO MAKE SURE THAT THE NPC HAS A TARGET
+	// -------------------------------------------
+	while (not getTarget()) and (count) {
+		wait(1);
+		count--;
+	}
+
+	ref = getTarget();
+
+
+	if ref = Avatar:Referent
+	{
+		spawn safePlaySFX(MAGIC3,200) -> return;
+		bark("Stratos! Preserve me!
+					\f Stratos! Espargne-moy!
+					\g Stratos! Rette mich!");
+		toggleStatus(INVISIBLE);
+		setFrame(getFrame());
+		clrImmortal();
+		setDead();
+		safePlaySFX( WIND4,100);
+		teleport(urandom(10000),urandom(10000),0,0);
+	}
+}
+
+
+
+process Torwin::atMonastery()
+{
+
+	[[PT_ACTIVITY, referent]];
+
+	startup 
+	{
+		pathEgg:Item;
+		counter,dir,ran:Number;
+	}
+
+	process
+	{
+
+		for counter = 0 to 31 
+		{
+			foreach	pathEgg where (type = TypePathMarker) and (frame = counter)
+				and (quality = 2) within 50 cells of Torwin 
+			{
+				if pathfind(pathEgg.referent,10)
+				{
+					if not somebodyTalking
+					{
+						randomBarkAtMonastery();
+						wait(30);
+					}
+					else
+					{
+						realDoAnim(AS_FIDGET,getDir());
+						wait(30);
+					}
+				}
+				else
+				{
+					wait(500);
+				}
+			}
+		}
+	}
+}
+
+
+process Torwin::randomBarkAtMonastery()
+{
+	[[PT_ACTIVITY, referent]];
+
+	ran:Number;
+
+
+	ran = getDistance(Avatar:Referent, Torwin:Referent);
+
+	if (ran < 200) and ((Avatar.getStatus() & INVISIBLE) = false) 
+	{
+
+		ran = urandom(8);
+
+		if ran = 1 
+		{
+			turnToFace(getDirToItem(Avatar:Referent),false,10);
+			spawn bark("Excuse me?
+					\f Excuse-moy?
+					\g Verzeihung?") -> return;
+			realDoAnim(AS_FIDGET,getDir());
+			wait(120);
+		}
+		if ran = 2 
+		{
+			turnToFace(getDirToItem(Avatar:Referent),false,10);
+			realDoAnim(AS_ENTER_CAST,getDir());
+			spawn bark("Can I help you?
+					\f Je peux t'aider?
+					\g Kann ich Euch behilflich sein?") -> return;
+			realDoAnim(AS_CAST1,getDir());
+			realDoAnim(AS_CAST1,getDir());
+			wait(60);
+			realDoAnim(AS_EXIT_CAST,getDir());
+			wait(120);
+		}
+		if ran = 3 
+		{
+			spawn bark("Ask if you need something!
+					\f Demande, si tu as besoin de quelque chose!
+					\g Fragt mich ruhig, wenn Ihr etwas braucht!") -> return;
+			realDoAnim(AS_FIDGET,getDir());
+			wait(120);
+		}
+		if ran = 4 
+		{
+			turnToFace(getDirToItem(Avatar:Referent),false,10);
+			spawn bark("What do you want?
+					\f Que veux-tu?
+					\g Was wollt Ihr?") -> return;
+			realDoAnim(AS_ENTER_CAST,getDir());
+			realDoAnim(AS_CAST1,getDir());
+			realDoAnim(AS_EXIT_CAST,getDir());
+			wait(120);
+		}
+	}
+
+	else
+	{
+		ran = urandom(12);
+		turnToFace(urandom(7),0,10);
+
+		if ran = 1 
+		{
+			bark("Where is that old man? 
+				\f Oó peut bien estre ce vieillard?
+				\g Wo kann der alte Mann nur sein?");
+			realDoAnim(AS_FIDGET,getDir());
+		}
+		if ran = 2 
+		{
+			realDoAnim(AS_ENTER_CAST,getDir());
+			realDoAnim(AS_CAST1,getDir());
+			bark("hmmmm... \f Hmmmm... \g Hmmmm...");
+			realDoAnim(AS_EXIT_CAST,getDir());
+			wait(60);
+		}
+		if ran = 3 
+		{
+			bark("Studying is such a waste of my time.
+				\f Quelle perte de temps, ces estudes!
+				\g Die Studiererei ist eine solche Zeitverschwendung.");
+		}
+		if ran = 4 
+		{
+			bark("Where is that book...?
+				\f Oó peut bien estre ce manuscript...?
+				\g Wo ist das Buch nur hingekommen...?");
+			realDoAnim(AS_ENTER_CAST,getDir());
+			realDoAnim(AS_CAST1,getDir());
+			realDoAnim(AS_CAST1,getDir());
+			realDoAnim(AS_EXIT_CAST,getDir());
+			wait(60);
+		}
+		if ran = 5 
+		{
+			bark("I know it is here somewhere...
+					\f Il doit bien estre quelque part...
+					\g Es mu· hier irgendwo sein...");
+		}
+		if ran = 6 
+		{
+			bark("I need to sit down...
+				\f Il faut que je m'assoie...
+				\g Ich mu· mich setzen...");
+		}
+		if ran = 7 
+		{
+			bark("I don't know why I put up with this.
+				\f Je me demande bien pourquoi j'endure tout cela. 
+					\g Manchmal frage ich mich, warum ich mich damit abfinde.");
+			realDoAnim(AS_ENTER_CAST,getDir());
+			realDoAnim(AS_EXIT_CAST,getDir());
+			realDoAnim(AS_FIDGET,getDir());
+			wait(100);
+		}
+	}
+}
+
+
+
+process Torwin::atHome()
+{
+
+	[[PT_ACTIVITY, referent]];
+
+	startup 
+	{
+		pathEgg:Item;
+		counter,dir,ran:Number;
+		if getLastAnimSet() = AS_SIT_DOWN 
+		{
+			realDoAnim(AS_SIT_UP,getDir());
+		}
+	}
+
+	process
+	{
+
+		counter = urandom(7);
+		foreach	pathEgg where (type = TypePathMarker) and (frame = counter)
+		 	and (quality = 1) within 20 cells of Torwin {
+			 
+			if pathfind(pathEgg.referent,5)
+			{
+				if counter = 0
+				{
+					turnToFace(2,0,10);
+					spawn bark("I must meditate!
+							\f Il faut que je mÇdite!
+							\g Ich mu· meditieren!") -> return;
+					realDoAnim(AS_SIT_DOWN,getDir());
+					wait(400);
+					realDoAnim(AS_SIT_UP,getDir());
+					spawn bark("I can't concentrate!
+							\f Impossible de me concentrer!
+							\g Ich kann mich nicht konzentrieren!") -> return;
+					realDoAnim(AS_FIDGET,getDir());
+				}
+				else
+				{
+						if not somebodyTalking {
+							randomBarkAtHome();
+							wait(30);
+						}
+						else {
+							realDoAnim(AS_FIDGET,getDir());
+							wait(30);
+						}
+				}
+
+				wait(60 + urandom(100));
+			}
+			else
+			{
+				wait(500);
+			}
+		}
+	}
+}
+
+
+process Torwin::randomBarkAtHome()
+{
+	[[PT_ACTIVITY, referent]];
+
+	ran:Number;
+
+
+	ran = getDistance(Avatar:Referent, Torwin:Referent);
+
+	if (ran < 200) and ((Avatar.getStatus() & INVISIBLE) = false) 
+	{
+
+		ran = urandom(8);
+
+		if ran = 1 
+		{
+			turnToFace(getDirToItem(Avatar:Referent),false,10);
+			bark("Excuse me! \f Pardon! \g Verzeihung!");
+			realDoAnim(AS_FIDGET,getDir());
+			realDoAnim(AS_FIDGET,getDir());
+			wait(120);
+		}
+		if ran = 2 
+		{
+			turnToFace(getDirToItem(Avatar:Referent),false,10);
+			realDoAnim(AS_ENTER_CAST,getDir());
+			bark("Yes? \f Oui? \g Ja?");
+			realDoAnim(AS_CAST1,getDir());
+			realDoAnim(AS_CAST1,getDir());
+			wait(60);
+			realDoAnim(AS_EXIT_CAST,getDir());
+			wait(120);
+		}
+		if ran = 3 
+		{
+			bark("Humph. Some people...!
+					\f Pfui! Il y a des gens, vraiment...
+					\g Also wirklich, manche Leute sind einfach...!");
+			wait(100);
+		}
+		if ran = 4 
+		{
+			turnToFace(getDirToItem(Avatar:Referent),false,10);
+			bark("Do you mind?
+					\f Äa t'ennuie?
+					\g Macht es Euch etwas aus?");
+			realDoAnim(AS_ENTER_CAST,getDir());
+			realDoAnim(AS_CAST1,getDir());
+			realDoAnim(AS_EXIT_CAST,getDir());
+			wait(120);
+		}
+	}
+
+	else
+	{
+		ran = urandom(12);
+		turnToFace(urandom(7),0,10);
+
+		if ran = 1 
+		{
+			bark("I must speak with Cyrrus.
+				\f Il faut que je parle Ö Cyrrus.
+				\g Ich mu· mit Cyrrus sprechen.");
+		}
+		if ran = 2 
+		{
+			realDoAnim(AS_ENTER_CAST,getDir());
+			realDoAnim(AS_CAST1,getDir());
+			bark("hmmmm...  \f Hmmmm... \g Hmmmm...");
+			realDoAnim(AS_EXIT_CAST,getDir());
+			realDoAnim(AS_FIDGET,getDir());
+			wait(60);
+		}
+		if ran = 3 
+		{
+			bark("heh, heh...
+				\f hÇ, hÇ...
+				\g HÑ, hÑ...");
+		}
+		if ran = 4 
+		{
+			bark("Where is that focus?
+				\f Oó peut bien estre ce Substrat?
+				\g Wo kann dieses Heilsymbol nur sein?");
+			realDoAnim(AS_ENTER_CAST,getDir());
+			realDoAnim(AS_CAST1,getDir());
+			realDoAnim(AS_CAST1,getDir());
+			realDoAnim(AS_EXIT_CAST,getDir());
+			wait(60);
+		}
+		if ran = 5 
+		{
+			bark("Damn...
+				\f Bon sang...
+				\g Verflucht...");
+			realDoAnim(AS_FIDGET,getDir());
+		}
+		if ran = 6 
+		{
+			bark("I feel tired.
+				\f Je me sens bien las.
+				\g Ich bin mÅde.");
+		}
+		if ran = 7 
+		{
+			bark("I should take a walk.
+				\f Je devrois aller faire un tour.
+				\g Ich sollte ein bi·chen spazierengehen.");
+			realDoAnim(AS_ENTER_CAST,getDir());
+			realDoAnim(AS_EXIT_CAST,getDir());
+			wait(60);
+		}
+	}
+}
+
+
+process Torwin::use()
+{
+	askList:String List;
+	answer,sentence, nameStr, avaNam:String;
+	heal:Number;
+	pathEgg:Item;
+
+	#if English
+	{
+		avaNam = "I am "+getName()+".";
+		nameStr = "My name is "+getName()+".";
+	}
+	#if French
+	{
+		avaNam = " Je suis "+getName()+".";
+		nameStr = " Mon nom est "+getName()+".";
+	}
+	#if German
+	{
+		avaNam = "Ich bin "+getName()+".";
+		nameStr = "Ich hei·e "+getName()+".";
+	}
+
+	if not torwinGottaJump 
+	{
+
+		spawn Avatar.bark("Excuse me \f Excuse-moy \g Verzeihung.") -> return;
+
+		if getLastAnimSet() = AS_SIT_DOWN 
+		{
+			enterConvo2();
+		}
+		else 
+		{
+			enterConvo();
+		}
+
+		killProcess(Avatar:Referent,PT_BARK);
+
+
+		if torwinMet
+		{
+			if torwinPissed
+			{
+				bark("Will you be wasting more of my time?
+					\f Vas-tu encore me faire perdre mon temps?
+					\g Habt Ihr vor, noch mehr meiner kostbaren Zeit zu
+					vergeuden?");
+			}
+			else
+			{
+				ran:Number = urandom(10);
+
+				if ran < 5
+				{ 
+					bark("What do you want this time?
+						\f Que me veux-tu, cette fois?
+						\g Was wollt Ihr diesmal?");
+				}
+				else
+				{
+					bark("I haven't much time. What do you need?
+						\f Je suis pressÇ. Que veux-tu?
+						\g Ich habe nicht viel Zeit. Was wollt Ihr?");
+				}
+			}
+			if torwinName
+			{
+				askList^=<<"Hello, Torwin. \f Salut, Torwin. \g Seid gegrÅ·t, Torwin.">>;
+			}
+			else
+			{
+				askList^=<<"Is your name not Torwin?
+					\f Ne te nommes-tu point Torwin?
+					\g Hei·t Ihr nicht Torwin?">>;
+			}
+
+			if (Avatar.getHp() < (Avatar.getStr() * 2)) and torwinJob
+			{
+				askList^=<<"I need healing 
+					\f J'ai besoin de guÇrison.
+					\g Ich brauche einen Heiler.">>;
+			}
+			if passedTests
+			{
+				askList^=<<"I have completed the Tests.
+				\f J'ai rÇussi les Tests.
+				\g Ich habe die PrÅfungen bestanden.">>;
+			}
+		}
+
+		else
+		{
+			bark("Have I met you before? \f On s'est dÇjÖ rencontrÇs?
+				\g Sind wir uns schon einmal begegnet?");
+			torwinMet = true;
+			askList^=<<"I don't believe we have met.
+				\f Il ne me semble point te connoistre.
+				\g Ich glaube nicht, da· wir uns kennen.">>;
+		}
+	}
+
+	else
+	{
+
+		setAvatarInStasis(true);
+		resetRef(referent,PT_ACTIVITY);
+		resetRef(referent,PT_PATHFIND);
+		resetRef(referent,PT_ANIM);
+		resetRef(referent,PT_BARK);
+
+		killProcess(Avatar:Referent,PT_ANIM);
+
+		spawn realDoAnim(AS_EXIT_CAST,7) -> return;
+		wait(10);
+
+		spawn cleanPoint() -> return;
+		spawn Avatar.bark("Torwin!") -> return;
+
+		foreach	pathEgg where (type = TypePathMarker) and (frame = 0) within 30 cells of Avatar
+		{
+			Avatar.pathfind(pathEgg.referent,10);
+			Avatar.teleport(pathEgg.getX(),pathEgg.getY(),pathEgg.getZ(),Avatar.getMap());
+			break;
+		}
+
+		Avatar.turnToFace(6,false,10);
+		turnToFace(2,0,10);
+		killProcess(Avatar:Referent,PT_BARK);
+
+		spawn realDoAnim(AS_ENTER_CAST,2) ->
+			spawn realDoAnim(AS_EXIT_CAST,2) -> return;
+		bark("Go away, leave me alone!
+			\f Va t'en, fiche-moy la paix!
+			\g Schert Euch weg! La·t mich in Frieden!");
+
+
+		askList=<<"Someone's Focus is missing.
+				\f Quelqu'un a ÇgarÇ son Substrat.
+				\g Jemand hat sein Heilsymbol verloren.">>;
+	}
+
+	while answer!="bye \f bon vent \g Lebt wohl."
+	{
+		answer=ask(askList);
+		if not torwinGottaJump
+		{
+			askList-=<<"bye \f bon vent \g Lebt wohl.">>;
+			askList+=<<"bye \f bon vent \g Lebt wohl.">>;
+		}
+
+		switch answer
+		{
+
+			case "Hello, Torwin. \f Salut, Torwin. \g Seid gegrÅ·t, Torwin."
+			{
+				torwinName = true;
+				bark("Oh, I'm very bad with names. What was yours again?
+					\f J'ai une mauvaise mÇmoire des noms. Peux-tu
+					me rappeler le tien?
+					\g Ich habe ein sehr schlechtes GedÑchtnis, wenn
+					es um Namen geht. Wie hei·t Ihr nochmal?");
+				askList-=<<"Hello, Torwin. \f Salut, Torwin. \g Seid gegrÅ·t, Torwin.">>;
+				askList^=<<nameStr,
+						"You don't need to know.
+						\f Cela ne te regarde point.
+						\g Das geht Euch Åberhaupt nichts an.">>;
+			}
+
+			case "Is your name not Torwin?
+				\f Ne te nommes-tu point Torwin?
+				\g Hei·t Ihr nicht Torwin?"
+			{
+				torwinName = true;
+				torwinMet = true;
+
+				bark("Yes, my name is Torwin. I'm very bad with names.
+				What was yours again?
+
+				\f Oui, mon nom est Torwin. J'ai une mauvaise mÇmoire
+				des noms. Peux-tu me rappeler le tien?
+
+				\g Ja, ich hei·e Torwin. Ich habe ein sehr schlechtes
+				GedÑchtnis, wenn es um Namen geht. Wie hei·t Ihr nochmal?");
+
+				askList^=<<nameStr, 
+						"You don't need to know.
+						\f Cela ne te regarde point.
+						\g Das geht Euch Åberhaupt nichts an.">>;
+			
+				askList-=<<"Is your name not Torwin?
+					\f Ne te nommes-tu point Torwin?
+					\g Hei·t Ihr nicht Torwin?">>;
+		}
+
+			case nameStr 
+			{
+				bark("Yes, well, I probably won't remember it next time
+				I see you. What do you want?
+				
+				\f Oui, eh bien j'essaieroi de m'en souvenir. Que me veux-tu?
+			
+				\g Nun ja, wenn wir uns das nÑchste Mal begegnen, werde
+					ich es wahrscheinlich schon wieder vergessen haben. Was wollt Ihr?");
+			
+	
+				askList-=<<nameStr,
+				"You don't need to know.
+				\f Cela ne te regarde point.
+				\g Das geht Euch Åberhaupt nichts an.">>;
+	
+				askList+=<<"What do you do here? 
+					\f Que fais-tu icy?
+					\g Was macht Ihr hier?">>;
+
+				if spokenAboutFoci
+				{
+					askList+=<<"Someone's focus is missing. 
+					\f Quelqu'un a ÇgarÇ son Substrat.
+					\g Jemand hat sein Heilsymbol verloren.">>;
+				}
+			}
+
+			case "I don't believe we have met.
+				\f Il ne me semble point te connoistre.
+				\g Ich glaube nicht, da· wir uns kennen."
+			{
+				torwinName = true;
+				torwinMet = true;
+				bark("My name is Torwin. And yours?
+					\f Je m'appelle Torwin. Et toy?
+					\g Ich hei·e Torwin. Und wer seid Ihr?");
+				askList-=<<"I don't believe we have met.
+					\f Il ne me semble point te connoistre.
+					\g Ich glaube nicht, da· wir uns kennen.">>;
+
+				askList^=<<avaNam,
+					"You don't need to know.
+					\f Cela ne te regarde point.
+					\g Das geht Euch Åberhaupt nichts an.">>;
+			}
+
+			case avaNam
+			{
+				torwinPissed = false;
+				#if English
+				{
+				bark("Well, anyway, hello, "+getName()+". What brings you here?");
+				}
+				#if French
+				{
+				bark("Salut, "+getName()+".  Qu'est-ce qui t'amäne?");
+				}
+				#if German
+				{
+				bark("Ja, ja, seid gegrÅ·t, "+getName()+". Was bringt Euch hierher?");
+				}
+				askList^=<<"What do you do here? 
+					\f Que fais-tu icy?
+					\g Was macht Ihr hier?">>;
+	
+				if spokenAboutFoci
+				{
+					askList^=<<"Someone's Focus is missing.
+						\f Quelqu'un a ÇgarÇ son Substrat.
+						\g Jemand hat sein Heilsymbol verloren.">>;
+				}
+				askList-=<<avaNam,
+				"You don't need to know. 
+					\f Cela ne te regarde point.
+					\g Das geht Euch Åberhaupt nichts an.">>;
+			}
+
+		 	case "What do you do here?
+				\f Que fais-tu icy?
+				\g Was macht Ihr hier?"
+			{
+				torwinJob = true;
+				bark("For now I am only a healer. But that is just because they
+				have not recognized my superior abilities, but they will.
+				Believe me, they will.
+				
+					\f Pour l'heur, je ne suis qu'un guÇrisseur. Mais c'est
+					seulement parce qu'ils n'ont point encore pris conscience de mes 
+					incroyables compÇtences, mais ils finiront par le faire, crois moy.
+					
+					\g Im Augenblick bin ich nur ein einfacher Heiler. Sie haben 
+					meine Åberlegenen FÑhigkeiten eben noch nicht erkannt.
+					Aber das werden sie. Glaubt mir, das werden sie.");
+				askList-=<<"What do you do here?
+					\f Que fais-tu icy?
+					\g Was macht Ihr hier?">>;
+				askList^=<<"You are a healer?
+					\f Tu es un guÇrisseur?
+					\g Ihr seid ein Heiler?",
+				"What superior abilities?
+					\f Quelles compÇtences supÇrieures?
+					\g Welche Åberlegenen FÑhigkeiten?", 
+				"Who will recognize your abilities?
+					\f Qui va reconnoistre tes compÇtences?
+					\g Wer wird Eure Åberlegenen FÑhigkeiten erkennen?">>;
+			}
+	
+			case "What superior abilities?
+				\f Quelles compÇtences supÇrieures?
+				\g Welche Åberlegenen FÑhigkeiten?"
+			{
+				bark("Why, my talent for magic, of course. I've passed 
+				all the tests, faster than anyone ever has before...and
+				anyone ever will, I'm sure.
+	
+				\f Eh bien mes talents pour la magie, pour sñr. J'ai rÇussi tous
+				les tests, plus vite que quiconque.
+				
+				\g Mein Talent fÅr die Magie selbstverstÑndlich. Ich habe die erforderlichen  
+				PrÅfungen in kÅrzester Zeit abgeschlossen, schneller als je ein SchÅler vor
+				mir... und mit Sicherheit auch schneller als alle zukÅnftigen SchÅler.");
+				askList-=<<"What superior abilities?
+					\f Quelles compÇtences supÇrieures?
+					\g Welche Åberlegenen FÑhigkeiten?">>;
+			}
+	
+			case "Who will recognize your abilities?
+				\f Qui va reconnoistre tes compÇtences?
+				\g Wer wird Eure Åberlegenen FÑhigkeiten erkennen?"
+			{
+				bark("Everyone, of course. I never make an error when I
+				am casting the magic. I even constructed my foci correctly
+				on the very first try. And it is the finest of all the foci,
+				I might add.
+	
+					\f Tout le monde, bien sñr. Je ne fais jamais d'erreur
+					quand je jette un sort. J'ai mesme construit mon Substrat
+					du premier coup. J'ajouteroi volontiers que c'est le meilleur de tous.
+	
+					\g Alle, selbstverstÑndlich. Ich mache nie einen Fehler, wenn ich
+					die Magie ausÅbe. Selbst meine Symbole habe ich gleich beim ersten 
+					Versuch richtig konstruiert. Und ich darf hinzufÅgen, da· es die
+					allerbesten Symbole sind.");
+				askList-=<<"Who will recognize your abilities?
+					\f Qui va reconnoistre tes compÇtences?
+					\g Wer wird Eure Åberlegenen FÑhigkeiten erkennen?">>;
+				askList+=<<"What is a Focus? 
+					\f Un Substrat?
+					\g Was ist ein Symbol?">>;
+			}
+	
+			case "What is a Focus? 
+				\f Un Substrat?
+				\g Was ist ein Symbol?"
+			{
+				bark("Oh, I could explain it, but I doubt you would 
+				understand. It's very complicated, magic and all.
+					\f Oh, je pourrois t'expliquer de quoi il s'agit, mais tu n'y comprendrois
+					que couac. C'est fort compliquÇ, car c'est de la magie.
+					\g Oh, ich kînnte es Euch zwar erklÑren, aber ich bezweifle, da· Ihr
+					es verstehen wÅrdet. Die Magie, mit der ich mich befasse, ist sehr kompliziert.");
+				askList-=<<"What is a Focus? 
+					\f Un Substrat?
+					\g Was ist ein Symbol?">>;
+			}
+	
+			case "You are a healer? 
+					\f Tu es un guÇrisseur? 
+					\g Ihr seid ein Heiler?"
+			{
+				bark("Yes, why else would I be here? Anyway, are you in
+				need of healing?
+					\f Oui, sinon pourquoi serois-je lÖ? A propos, as-tu besoin
+					de soins?
+					\g Ja. Weswegen wÑre ich denn sonst wohl hier? Warum, braucht Ihr 
+					einen Heiler?");
+				askList-=<<"You are a healer? 
+						\f Tu es un guÇrisseur? 
+						\g Ihr seid ein Heiler?">>;
+				askList^=<<"aye \f Certes. \g Ja.", "nay \f Non point. \g Nein.">>;
+			}
+	
+			case "You don't need to know.
+				\f Cela ne te regarde point.
+				\g Das geht Euch Åberhaupt nichts an."
+			{
+				bark("If you are going to be rude, then I shall not take the
+				time to assist you.
+					\f Si tu as l'intention d'estre grossier, je ne perdrois point
+					mon temps pour t'aider.
+					\g Werdet nicht unverschÑmt, sonst nehme ich mir nicht die Zeit, 
+					Euch zu helfen.");
+				torwinPissed = true;
+				exitConvo();
+				return;
+			}
+	
+			case "aye \f Certes. \g Ja.", 
+				"I need healing 
+					\f J'ai besoin de guÇrison.
+					\g Ich brauche einen Heiler."
+			{
+				bark("What? You look healthy enough to me!
+				Begone! I do not have the time nor the patience for
+				hangnails and paper cuts!
+					\f Quoi? Tu m'as l'air en pleine forme!
+					Fiche le camp! Je n'ai point de temps Ö perdre avec
+					tes petits bobos!
+					\g Was? Ich finde, Ihr seht ganz gesund aus! Schert Euch weg!
+					Ich habe weder die Zeit noch Geduld fÅr Lappalien wie kleine Kratzer
+					und eingerissene NÑgel!");
+				torwinPissed = true;
+				exitConvo();
+				spawn bark("Wimp! \f Mauviette!	\g Weichling!") -> return;
+				return;
+			}
+
+			case "nay \f Non point. \g Nein."
+			{
+				bark("Actually, I'm relieved, for I do not wish to take 
+				precious time away from my studies. No one here has the 
+				raw talent and ability I have. And, I will suffer no one to
+				surpass me. I -must- be the best, I -will- be the best! Now, if 
+				you will excuse me.
+					\f Äa tombe bien car je n'ai point envie de perdre mon temps.
+					Je dois retourner estudier. Nul ne possäde ni mon talent, ni ma compÇtence.
+					Et je ne supporteroi point qu'on me surpasse. Je -dois- estre
+					le meilleur! Laisse-moy, j'ai Ö faire.
+					\g Eigentlich bin ich sehr erleichtert, denn ich will keine
+					wertvolle Zeit vergeuden, die ich besser mit meinen Studien
+					verbringen kînnte. Keiner hier besitzt meine FÑhigkeiten oder 
+					ist so ein Naturtalent wie ich. Und ich werde es nie zulassen, da· mich
+					jemand Åbertrifft. Ich will und mu· einfach der Beste sein! Und 
+					jetzt entschuldigt mich bitte.");
+				exitConvo();
+				return;
+			}
+	
+			case "I have completed the Tests.
+				\f J'ai rÇussi les Tests.
+				\g Ich habe die PrÅfungen bestanden."
+			{
+				bark("What?! That is not possible! No one has ever completed
+				the tests faster than I! I will not stand for this!
+					\f Quoi? C'est impossible! Personne n'a jamais rÇussi les
+					tests plus rapidement que MOY. C'est inadmissible!
+					\g Was?! Das ist nicht mîglich! Keiner hat jemals die PrÅfungen
+					schneller bestanden als ICH! Ich werde das nicht zulassen!");
+				exitConvo();
+				return;
+			}
+	
+			case "Someone's Focus is missing.
+				\f Quelqu'un a ÇgarÇ son Substrat.
+				\g Jemand hat sein Heilsymbol verloren."
+			{
+				bark("A missing focus? I know nothing about this matter.
+					\f Il y a un Substrat qui manque? Je ne suis point au courant.
+					\g Ein Heilsymbol fehlt? Davon wei· ich nichts.");
+				askList-=<<"Someone's Focus is missing.
+					\f Quelqu'un a ÇgarÇ son Substrat.
+					\g Jemand hat sein Heilsymbol verloren.">>;
+				askList^=<<"I believe you do. 
+					\f Je crois que si.
+					\g Ich glaube, Ihr wi·t doch etwas.">>;
+			}
+	
+			case "I believe you do. 
+				\f Je crois que si. 
+				\g Ich glaube, Ihr wi·t doch etwas."
+			{
+				bark("I know nothing, I tell you. Why I haven't even been
+				near Brother Xavier!
+					\f Je t'assure, je ne sais rien. Je n'ai mesme point ÇtÇ
+					präs de Fräre Xavier!
+					\g Ich wei· Åberhaupt nichts, das kann ich Euch versichern. Ich bin nicht 
+					einmal in Bruder Xaviers NÑhe gewesen.");
+				askList-=<<"I believe you do. 
+						\f Je crois que si.
+						\g Ich glaube, Ihr wi·t doch etwas.">>;
+				askList^=<<"But you knew it was Brother Xavier.
+					\f Comment sais-tu qu'il s'agit de Fräre Xavier?
+					\g Ihr wi·t also, da· es Bruder Xavier gehîrt?">>;
+			}
+	
+			case "But you knew it was Brother Xavier.
+					\f Comment sais-tu qu'il s'agit de Fräre Xavier?
+					\g Ihr wi·t also, da· es Bruder Xavier gehîrt?"
+			{
+				bark("Well, I didn't steal it. I only meant to borrow it.
+					\f Eh bien, je ne voulois point le voler. Seulement l'emprunter.
+					\g Ich habe es nicht gestohlen. Ich wollte es mir nur ausleihen.");
+				askList-=<<"But you knew it was Brother Xavier.
+							\f Comment sais-tu qu'il s'agit de Fräre Xavier?
+							\g Ihr wi·t also, da· es Bruder Xavier gehîrt?">>;
+				askList^=<<"Did not steal it?
+						\f Point volÇ?
+						\g Ihr habt es nicht gestohlen?",
+						 "Only borrowed it?
+						 \f Seulement empruntÇ?
+						 \g Ihr wolltet es nur ausleihen?">>;
+			}
+
+			case "Did not steal it?
+					\f Point volÇ?
+					\g Ihr habt es nicht gestohlen?"
+			{
+				bark("I told you, I'm not a thief!
+					\f Je t'ai bien dit que je n'estois point un voleur!
+					\g Ich habe Euch doch gesagt, da· ich kein Dieb bin!");
+				askList-=<<"Did not steal it?
+							\f Point volÇ?
+							\g Ihr habt es nicht gestohlen?">>;
+			}
+
+			case "Only borrowed it?
+				\f Seulement empruntÇ?
+				\g Ihr wolltet es nur ausleihen?"
+			{
+				bark("I needed the magic in it for my father.
+					\f J'avois besoin de sa magie pour mon päre.
+					\g Ich benîtigte die Magie des Heilsymbols fÅr meinen Vater.");
+				askList-=<<"Only borrowed it?
+						\f Seulement empruntÇ?
+						\g Ihr wolltet es nur ausleihen?",
+						"Did not steal it?
+						\f Point volÇ?
+						\g Ihr habt es nicht gestohlen?">>;
+				askList=<<"the magic in it?
+							\f De sa magie?
+							\g Die Magie des Heilsymbols?",
+							"your father?
+							\f Pour ton päre?
+							\g Euer Vater?">>;
+			}
+
+			case "the magic in it?
+					\f De sa magie?
+					\g Die Magie des Heilsymbols?"
+			{
+				bark("Foci are very strong lines to the great Stratos. I
+				thought that perhaps with two, I might be able to draw
+				twice as much power from the great Air Titan.
+				
+				\f Les Substrats permettent de communiquer avec
+				Stratos. Je pensois qu'en en utilisant deux, je pourrois
+				tirer deux fois plus de pouvoir du grand Titan de l'Air.
+				
+				\g Die Symbole der Theurgisten sind starke Verbindungen zu der mÑchtigen Stratos. Ich dachte, da·
+				ich vielleicht mit zwei Symbolen auch die doppelte Energie von der Titanin der 
+				LÅfte erhalten kînnte.");
+				askList-=<<"the magic in it?
+					\f De sa magie?
+					\g Die Magie des Heilsymbols?">>;
+			}
+
+			case "your father?
+				\f Pour ton päre?
+				\g Euer Vater?"
+			{
+				bark("Yes, my father. His name is....er,..was Toran. He
+				lived in Tenebrae, my home town. He's dead now, killed 
+				by that evil Mordea.
+					\f Oui, mon päre. Son nom est... euh... estoit Toran.
+					Il vivoit Ö Tenebrae, mon pays natal. Mais il est mort, tuÇ
+					par cette diabolique Mordea.
+					\g Ja, mein Vater. Sein Name ist... ich meine war... Toran. Er lebte in
+					Tenebrae, meiner Heimatstadt. Jetzt ist er tot, ermordet von dieser 
+					Hexe Mordea.");
+				askList-=<<"your father?
+					\f Pour ton päre?
+					\g Euer Vater?">>;
+				askList^=<<"Toran was your father?
+					\f Toran estoit ton päre?
+					\g Toran war Euer Vater?",
+
+				"Why did Mordea kill him?
+					\f Pourquoi Mordea l'a-t-elle tuÇ?
+					\g Weshalb hat Mordea ihn ermordet?">>;
+			}
+
+			case "Toran was your father?
+					\f Toran estoit ton päre?
+					\g Toran war Euer Vater?"
+			{
+
+				bark("Yes. He was a good man, not afraid to speak out
+				for what he believed...and he was killed for it.
+					\f Oui. C'estoit un homme bon, ne craignant point
+					de dÇfendre son opinion...  C'est pour cela qu'on l'a dÇcapitÇ.
+					\g Ja. Er war ein guter Mann, und er fÅrchtete sich nicht,
+					fÅr das zu kÑmpfen, woran er glaubte... und dafÅr wurde er getîtet.");
+				askList-=<<"Toran was your father?
+					\f Toran estoit ton päre?
+					\g Toran war Euer Vater?">>;
+			}
+
+ 
+			case "Why did Mordea kill him?
+				\f Pourquoi Mordea l'a-t-elle tuÇ?
+				\g Weshalb hat Mordea ihn ermordet?"
+			{
+				bark("That murdering bitch! She had him executed for simply
+				speaking his mind. Is that right? Can a man's life be
+				snuffed out for mere words? Is that right, I ask you!?
+					\f Cette infasme sorciäre! Elle l'a fait exÇcuter pour
+					simplement avoir dit ce qu'il pensoit. Est-ce justice?
+					Peut-on prendre la vie d'un homme pour de simples mots?
+					
+					\g Diese mîrderische Hexe! Sie lie· ihn hinrichten, weil er 
+					îffentlich seine Meinung Åber ihre tyrannische 
+					Herrschaft geÑu·ert hat. Ist das gerecht? Darf man das Leben eines
+					Mannes ausschalten, weil er das ausspricht, was er denkt? Ist das gerecht, 
+					frage ich Euch!?");
+				askList-=<<"Why did Mordea kill him?
+					\f Pourquoi Mordea l'a-t-elle tuÇ?
+					\g Weshalb hat Mordea ihn ermordet?">>;
+ 
+				askList^=<<"I saw his execution.
+							\f J'ai assistÇ Ö son exÇcution.
+							\g Ich war bei seiner Hinrichtung dabei.">>;
+				if mordeaDead
+				{
+					askList^=<<"Mordea is dead.
+							\f Mordea est morte.
+							\g Mordea ist tot.">>;
+				}
+			}
+
+ 
+			case "I saw his execution.
+				\f J'ai assistÇ Ö son exÇcution.
+				\g Ich war bei seiner Hinrichtung dabei."
+			{
+				bark("Then you saw as his head was severed from his body
+				with the single swing of the executioner's ax. In that
+				instant, the most important man in my life was taken from
+				me, and I could do nothing about it... not then anyway.
+				
+					\f Exact. Sa teste a ÇtÇ sÇparÇe de son corps par
+					le simple geste du bourreau. On m'a ainsy privÇ de l'homme
+					qui m'estoit le plus prÇcieux au monde, et je n'ai rien
+					pu faire. Du moins, point Ö cette espoque...
+					
+					\g Dann habt Ihr auch gesehen, wie er durch einem einzigen Axtstreich der
+					Henkerin enthauptet wurde. In diesem Augenblick wurde mir der wichtigste Mann
+					in meinem Leben entrissen, und ich war machtlos... damals
+					zumindest noch.");
+
+				askList-=<<"I saw his execution.
+						\f J'ai assistÇ Ö son exÇcution.
+						\g Ich war bei seiner Hinrichtung dabei.">>;
+				if mordeaDead
+				{
+					askList+=<<"You could do nothing?
+						\f Tu n'as point pu rÇagir?
+						\g Und Ihr konntet nichts dagegen tun?">>;
+				}
+				else
+				{
+					askList+=<<"You could do nothing about it?
+						\f Tu n'as rien pu faire?
+						\g Ihr fÅhlt Euch machtlos?">>;
+				}
+			}
+
+			case "You could do nothing?
+			\f Tu n'as point pu rÇagir?
+			\g Und Ihr konntet nichts dagegen tun?"
+			{
+				bark("I could do nothing, just as I could do nothing
+				to stop you surpassing my deeds here at Argentrock. Until
+				you arrived, I was the quickest learner and the most
+				clever with the magic. You stole that from me, but I will
+				still have my revenge. No, that is mine and mine alone.
+				Do you hear me?
+				
+				\f Je n'ai point pu rÇagir, comme je n'ai rien pu faire quand tu
+				as surpassÇ mes talents icy, Ö Roc d'Argent. Jusqu'Ö ton arrivÇe,
+				j'estois celuy qui apprenoit le plus prestement. J'estois aussy le
+				plus douÇ dans l'art de la magie. Tu m'as pris tout cela, mais j'auroi ma vengeance.
+				Celle-cy n'appartient qu'Ö moy seul. Tu m'entends?
+				
+				\g Ich war nicht in der Lage, es zu verhindern. Und ich war ebenso 
+				machtlos, als Ihr nach Silberfels kamt und es Euch gelang, mich in 
+				allem zu Åbertreffen. Vor Euch war ich der beste SchÅler und der 
+				geschickteste Magier, aber das habt Ihr mir genommen. Jetzt bleibt mir nur 
+				noch meine Rache, und sie gehîrt mir allein. Versteht Ihr?");
+				askList-=<<"You could do nothing?
+					\f Tu n'as point pu rÇagir?
+					\g Und Ihr konntet nichts dagegen tun?">>;
+				askList+=<<"revenge \f Vengeance? \g Rache?">>;
+			}
+
+			case "Mordea is dead.
+				\f Mordea est morte.
+				\g Mordea ist tot."
+			{
+				bark("She is dead? This can not be! I was to kill her!
+				~You have stolen from me every thing. I was the best student
+				here until you arrived. ~I was the quickest learner and the
+				cleverest with the magic. ~You stole that from me, and now
+				you have stolen my revenge!
+				
+				\f Elle est morte? C'est impossible! C'estoit Ö moy de
+				la tuer!
+				~Tu m'as tout dÇrobÇ. J'estois le meilleur estudiant icy, jusqu'Ö
+				ce que tu arrives. ~J'estois celuy qui apprenoit le plus prestement. J'estois
+				aussy le plus douÇ dans l'art de la magie. ~Tu m'as pris tout cela et voilÖ
+				que tu me retires aussy ma vengeance!
+				\g Sie ist tot? Das ist unmîglich! Ich wollte sie tîten!
+				~Ihr habt mir alles genommen. Vor Eurer Ankunft war ich der
+				beste SchÅler. ~Ich hatte die schnellste Auffassungsgabe und
+				konnte am geschicktesten mit der Magie umgehen. ~Und jetzt 
+				habt Ihr mir auch noch meine Rache gestohlen!");
+				askList-=<<"Mordea is dead. 
+					\f Mordea est morte.
+					\g Mordea ist tot.">>;
+				askList^=<<"revenge \f Vengeance? \g Rache?">>;
+			}
+
+			case "revenge \f Vengeance? \g Rache?"
+			{
+
+				bark("I will still have my revenge! I will bring my father
+				back to life! I will bring him back from the Pit of Death!
+				\f J'auroi tout de mesme ma revanche. Je ramäneroi mon päre
+				Ö la vie! Je le ramäneroi du Puits de la Mort!
+				\g Ihr werdet schon noch sehen, ich werde mich rÑchen! 
+				Ich werde meinen Vater wieder zum 
+				Leben erwecken! Ich werde ihn aus der Stadt der Toten 
+				zurÅckholen!");
+				askList-=<<"revenge \f Vengeance? \g Rache?">>;
+				askList+=<<"Your father is with the Lurker.
+						\f Ton päre se trouve chez La Glauque.
+						\g Die Lauernde hat Euren Vater bei sich.">>;
+			}
+
+			case "Your father is with the Lurker.
+				\f Ton päre se trouve chez La Glauque.
+				\g Die Lauernde hat Euren Vater bei sich."
+			{
+				bark("YOU LIE! He is in the Pit of Death and I
+				SHALL BRING HIM BACK! Do you hear? I shall! And I
+				shall do it now!
+				\f TU MENS! il se trouve au Puits de la Mort et
+				JE LE RAMENEROI! Tu m'entends! Je le feroi! Et je
+				vais mesme le faire immÇdiatement!
+				\g IHR LöGT! Er ist in der Stadt der Toten und ICH WERDE 
+				IHN ZURöCKHOLEN! Habt Ihr verstanden? Ich werde ihn jetzt 
+				auf der Stelle zurÅckholen!");
+
+				bark("Why, I don't need this extra focus at all!
+					\f Je n'ai nul besoin de ce Substrat!
+					\g Und dazu brauche ich nicht einmal dieses zusÑtzliche Heilsymbol!");
+				killProcess(Torwin:Referent,PT_ANIM);
+				realDoAnim(AS_CLIMB_5,2);
+
+				foci:Item;
+				x,y,z:Number;
+				x=getX() + 32;
+				y=getY();
+				z=getZ() + 24;
+
+				foci.create(TypeAirFocus,9);
+				foci.setQuality(1);
+				foci.pop(x,y,z);
+				spawn foci.hurl(15,-30,0,3) -> return;
+
+				x=getX() + 32;
+				y=getY();
+				z=getZ() + 24;
+
+				foci.create(TypeTorwinsRing,0);
+				foci.pop(x,y,z);
+				spawn foci.hurl(15,-30,5,2) -> return;
+				realDoAnim(AS_CLIMB_4,2);
+
+				wait(30);
+
+				bark ("I am strong enough to do it on my own...
+				\f Je suis assez fort pour me dÇbrouiller tout seul...
+				\g Ich bin stark genug, um es alleine zu vollbringen...");
+				bark ("And I will! I'm coming for you, father!!
+					\f Et je le feroi! Päre! Je viens te chercher!!
+					\g Und es wird mir gelingen! Vater, ich hole dich zurÅck!!");
+				torwinJumped = true;
+				solvedMystery = true;
+				hasXavierFoci = true;
+				spawn torwinRun() -> return;
+				spawn Avatar.bark("Torwin, wait! 
+							\f Torwin, attends!
+							\g Torwin, wartet!") -> return;
+				spawn avatarRun() -> return;
+				return;
+			}
+
+			case "You could do nothing about it?
+					\f Tu n'as rien pu faire?
+					\g Ihr fÅhlt Euch machtlos?"
+			{
+				bark("Not then, but with what I have learned here, I will
+				be able to make things right again!
+				\f Non, Ö cette espoque cela m'estoit impossible. 
+				Mais avec ce que j'ai appris
+				icy, je vais pouvoir tout arranger.
+				\g Noch vor wenigen Wochen fÅhlte ich mich machtlos. Aber jetzt nicht mehr. 
+				Mit dem, was ich hier gelernt habe, kann ich alles wieder in Ordnung bringen.");
+				askList-=<<"You could do nothing about it?
+							\f Tu n'as rien pu faire?
+							\g Ihr fÅhlt Euch machtlos?">>;
+				askList+=<<"How will you make things right?
+						\f Comment vas-tu tout arranger?
+						\g Wie werdet Ihr alles in Ordnung bringen?">>;
+			}
+
+			case "How will you make things right?
+				\f Comment vas-tu tout arranger?
+				\g Wie werdet Ihr alles in Ordnung bringen?"
+			{
+
+				bark("I will use the magic from Stratos to bring my
+				father back to life. I will have my revenge!
+				\f Je vais me servir de la magie de Stratos pour ramener mon
+				päre Ö la vie. J'auroi ma vengeance!
+				\g Ich werde Stratos' Magie nutzen, um meinen Vater zurÅckzuholen und 
+				mich zu rÑchen!");
+				askList-=<<"How will you make things right?
+							\f Comment vas-tu tout arranger?
+							\g Wie werdet Ihr alles in Ordnung bringen?">>;
+				askList+=<<"revenge \f Vengeance? \g Rache?">>;
+			}
+
+			case "bye \f bon vent \g Lebt wohl."
+			{
+				bark("Goodbye. \f Adieu. \g Auf Wiedersehen.");
+				exitConvo();
+				return;
+			}
+		}
+	}
+}
+
+
+process Torwin::cleanPoint()
+{
+
+[[PT_DEFAULT, referent]];
+
+	item,barrel:Item;
+	inpc:Npc;
+	x,y:Number;
+	point:WorldPoint;
+
+	point.x = 18080;
+	point.y = 20426;
+	point.z = 56;
+
+	barrel.referent = createNear(point,TypeBarrel,0,0,1);
+
+	if barrel.referent 
+	{
+		item.create(TypeMorefood,15);
+		item.pop(barrel.referent);
+		item.create(TypeMorefood,16);
+		item.pop(barrel.referent);
+
+		foreach item within 50 cells of Torwin {
+			if (item.getZ() >= 112) {
+				x = item.getX();
+				y = item.getY();
+	
+				if (x > 12895) and (x < 14335) and (y > 18430) and (y < 19360) {
+					if 	(item.getType() = TypeStalagmytes) or
+						(item.getType() = TypeBlackStag) or
+						(item.getType() = TypeUnkEgg) or
+						(item.getType() = TypePathMarker) {
+						// legal stuff!
+					}
+					else {
+						if item.isNpc() {
+						// don't do anything!
+						}
+						else {
+							item.push();
+							item.pop(barrel.referent);
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+
+
+process Torwin::torwinRun()
+{
+		[[PT_DEFAULT, NULL_REF]];
+
+		killProcess(Torwin:Referent,PT_ANIM);
+		turnToFace(6,0,1);
+		realDoAnim(AS_CLIMB_2,6);
+		realDoAnim(AS_CLIMB_2,6);
+		playSFX(FALSCRM1,200);
+		realDoAnim(AS_CLIMB_3,6);
+		return;
+}
+
+process Torwin::avatarRun() {
+
+		[[PT_DEFAULT, NULL_REF]];
+		counter:Number;
+
+		wait(100);
+//		resetRef(Avatar:Referent,PT_BARK);
+		Avatar.turnToFace(6,0,5);
+		Avatar.realDoAnim(AS_WALK,6);
+
+		for counter = 1 to 4
+		{
+			Avatar.realDoAnim(AS_RUN,6);
+
+			if getDistance(Avatar:Referent, Torwin:Referent) < 100
+			{
+				wait(15);
+			}
+		}
+
+		Avatar.realDoAnim(AS_STAND,6);
+
+		setAvatarInStasis(false);
+		return;
+}

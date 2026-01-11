@@ -1,0 +1,111 @@
+uses "snddefs";
+uses "free";
+uses "flags";
+uses "item";
+uses "npc";
+
+globalflag pedZeroDone;
+globalflag pedOneDone;
+globalflag pedTwoDone;
+
+process crumble();
+process drop();
+
+typeclass TypePedestals inherits Item
+{
+	process gotHit(r:Referent, vel:Word);
+}
+
+process TypePedestals::gotHit(r:Referent, vel:Word)
+{
+
+[[PT_GOT_HIT, referent]]; 
+
+logo : Item;
+logo.referent = r;
+
+pedestal : Item;
+
+
+	if (logo.getType() != TypeEaLogo) or ((pedZeroDone = true) and (pedOneDone = true) and (pedTwoDone = true))
+	{
+		return;
+	}
+
+    if (logo.getFrame() = 1) and (getQuality() = 0)
+	{
+		playSFX(MAGIC1,200);
+		pedZeroDone = true;
+	}
+
+	else if (logo.getFrame() =0) and (getQuality() = 1)
+	{
+		playSFX(MAGIC1,200);
+		pedOneDone = true;
+	}
+
+
+	else if	(logo.getFrame() = 2) and (getQuality() = 2)
+	{
+		playSFX(MAGIC1,200);
+		pedTwoDone = true;
+	}
+
+	else
+	{
+		spawn drop() -> return;
+	}
+
+	if pedZeroDone and pedOneDone and pedTwoDone = true
+	{
+		spawn crumble() -> return;
+   	}
+}
+
+
+process drop()
+{
+
+	[[PT_DEFAULT, NULL_REF]];
+	
+	Camera::startQuake(1);
+	playSFX(QUAKE3,200);
+	wait(60);
+	
+	stalag : Item;
+	stalag.create(TypeStalagtite,0);
+	stalag.pop(Avatar.getX(),Avatar.getY(),235);
+	stalag.orStatus(DISPOSABLE);
+	Camera::stopQuake();
+	stalag.hurl(0,0,0,DEFAULT_GRAVITY);
+}
+
+process crumble()
+{
+[[PT_DEFAULT, NULL_REF]];
+
+wall : Item;
+
+  	foreach wall where type = TypeMagicWallNS within 140 cells of Avatar
+	{
+		Counter:Number;
+
+//		spawn safePlaySFX(QUAKE3,100,wall.referent) -> return;
+   		playSFX(QUAKE3,200);
+   		wait(60);
+
+		for Counter = 0 to 14
+		{
+			wall.setFrame(Counter);
+			wait(5);
+		}
+		
+	    wall.destroy ();
+		
+		wall.create(TypeMagicWall2NS, 0);
+		wall.pop (1951,17151,120);
+
+		magicWallDone = true;
+	}
+}
+

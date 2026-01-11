@@ -1,0 +1,143 @@
+
+uses "free";
+uses "item";
+uses "egg";
+
+
+
+eggclass EggCandleTrick inherits Egg
+{
+	process hatch();
+}
+
+
+process EggCandleTrick::hatch()
+{
+
+	startup
+	{
+		if monolithSucks = false
+		{
+			return;
+		}
+
+	}
+
+
+	process
+	{
+
+		candle:Item;
+
+		foreach candle where (type = TypeMagicCandle) within 50 cells of referent
+		{
+			if candle.getQuality() = 1
+			{
+				if candle.getFrame() =0
+
+				{
+					candleOne = false;
+				}
+				else
+				{
+					candleOne = true;
+				}
+			}
+
+			if candle.getQuality() = 2
+			{
+				if candle.getFrame() = 0
+				{
+					candleTwo = false;
+				}
+				else
+				{
+					candleTwo = true;
+				}
+			}
+
+			if candle.getQuality() = 3
+			{
+				if candle.getFrame() = 0
+				{
+					candleThree = false;
+				}
+				else
+				{
+					candleThree = true;
+				}
+
+			}
+
+			if candle.getQuality() = 4
+			{
+				if candle.getFrame() = 0
+				{				
+					candleFour = false;
+				}
+				else
+				{
+					candleFour = true;
+				}
+			}
+
+			if candle.getQuality() = 5
+			{
+				if candle.getFrame() = 0
+				{
+					candleFive = false;
+				}
+				else
+				{
+					candleFive = true;
+				}
+			}
+			if candle.getQuality() = 6
+			{
+				if candle.getFrame() = 0
+				{
+					candleSix = false;
+				}
+				else
+				{
+					candleSix = true;
+				}
+			}
+		}
+
+
+		if (candleOne = false) and (candleTwo = true)
+		{
+			if (candleThree = false) and (candleFour = false)
+			{
+				if (candleFive = false) and (candleSix = true)
+				{
+					candlesCorrect = true;
+					monolithSucks = false;
+				}
+				else
+				{
+					candlesCorrect = false;
+				}
+			}
+			else
+			{
+				candlesCorrect = false;
+			}
+		}
+		
+ 		else
+		{
+			candlesCorrect = false;
+		}
+	}
+}
+					
+
+
+
+
+
+
+
+

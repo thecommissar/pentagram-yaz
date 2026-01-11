@@ -1,0 +1,3124 @@
+// @@@ ready to translate french   7-25
+
+// @@@ CHANGE F G major plot changes, sorry guys! 8-22
+
+uses "flags";
+uses "free";
+uses "npc";
+
+npcclass Ezrekal inherits Npc
+{
+
+	process look();
+	process use();
+	process schedule(currentTime:Long);
+	process enterFastArea();
+	process leaveFastArea();
+
+   process cast(ref:Referent);
+}
+
+
+process Ezrekal::look()
+{
+	if Ezrekal.isDead()
+	{
+		bark("Ezrekal's lifeless body
+			\f
+			\g Ezrekals lebloser Kîrper");
+		return;
+	}
+
+	if ezrekalName and ezrekalJob
+	{
+		bark("Ezrekal the High Priestess
+			\f
+			\g Ezrekal, die Hohepriesterin");
+		return;
+	}
+
+	else if ezrekalName
+	{
+		bark("Ezrekal");
+		return;
+	}
+
+	else if ezrekalJob
+	{
+		bark("High Priestess \g Hohepriesterin");
+		return;
+	}
+
+	else
+	{
+		bark("old woman \g alte Frau");
+		return;
+	}
+}
+
+process Ezrekal::schedule(currentTime:Long)
+{
+
+	if inShadeScene = true
+	{
+		return;
+	}
+
+	point : WorldPoint;
+	map : MapNum = 10;
+
+
+	//inside
+
+	if (getPeriod() = daytide) or (getPeriod() = eventide)
+	or (getPeriod() = bloodwatch) or (getPeriod() = threemoons)
+	{
+		point.x = 19327;
+		point.y = 29439;
+		point.z = 64;
+	}
+
+
+
+	// outside
+
+	if (getPeriod() = firstebb) or (getPeriod() = lastebb)
+	{
+		point.x = 18431;
+		point.y = 29311;
+		point.z = 64;
+	}
+
+
+
+	safeTeleport(point,map);
+}
+
+process Ezrekal::enterFastArea()
+{
+
+  	if isDead()
+	{
+		return;
+	}
+
+	if inShadeScene = true
+	{
+		killProcess(referent, PT_ACTIVITY);
+		return;
+	}
+
+	cSetActivity(ACT_LOITER);
+}
+
+
+process Ezrekal::leaveFastArea()
+{
+
+	justGotRoot = false;
+	resetRef(referent,PT_ACTIVITY);
+	resetRef(referent,PT_PATHFIND);
+	resetRef(referent,PT_ANIM);
+	resetRef(referent,PT_BARK);
+}
+
+
+process Ezrekal::cast(ref:Referent)
+{
+	count:Number;
+	count = 10;
+	while (not getTarget()) and (count)
+	{
+		wait(1);
+		count--;
+	}
+
+	ref=getTarget();
+	if ref = Avatar:Referent
+	{
+		spawn callTheGuards(NULL_REF) -> return;
+
+		if not isDead()
+		{
+			killProcess(referent,PT_ACTIVITY);
+			killProcess(referent,PT_BARK);
+			bark("Help! Help! \g Hilfe! Hilfe!");
+		}
+	}
+}
+
+
+process Ezrekal::use()
+{
+	ran:Number;
+	if not ezrekalMet
+	{
+		if not zealanMark
+		{
+			Avatar.bark("Greetings! \g Seid gegrÅ·t!");
+			yelledAtAvatar = true;
+			ran = urandom(6);
+			if ran = 1
+			{
+				bark("Eh? What? A Pagan! A Pagan here? NO! Get gone,
+				you foul creature of the dark! Leave me or call
+				upon the Ancient Ones I will and blast you from my sight
+				they will!
+				\g Wie? Ein Pagane! Hier? Nein! Scher dich fort, du
+				Untier! Wenn du mich nicht augenblicklich in Ruhe lÑ·t, 
+				werde ich die Alten herbeirufen,
+				fÅrwahr, das werde ich! Sie werden dich vor meinen Augen
+				mit ihrer vernichtenden Macht zerschmettern, fÅrwahr, das
+				werden sie!");
+				exitConvo();
+				return;
+			}
+
+			if ran = 2
+			{
+				bark("A Pagan? In my home? Begone, you filth! Fouls my home
+				your evil presence does! BEGONE!
+				\g Ein Pagane? In meinem Haus? Scher dich fort, du Abschaum!
+				Du befleckst mein Haus mit deiner Gegenwart, fÅrwahr, das
+				tust du! Scher dich fort!");
+				exitConvo();
+				return;
+			}
+
+			if ran = 3
+			{
+				bark("EEEEEEEHHH!!! A PAGAN!! Come to finish what
+				your grandfathers started have you? Tolerate this I will
+				not! Leave my sight, or call the powers of the Ancient Ones
+				to destroy you I shall!
+				\g AAAAAAAAAHHH!!! EIN PAGANE!! Du bist wohl gekommen, um zu beenden,
+				was deine Vorfahren begonnen haben?! Das werde ich
+				nicht zulassen, fÅrwahr! Wenn du mir nicht sofort aus den
+				Augen gehst, werde ich die Macht der Alten anrufen, fÅrwahr,
+				das werde ich! Sie werden dich vernichten!");
+				exitConvo();
+				return;
+			}
+
+			if ran = 4
+			{
+				bark("What is this? Why a horrid Pagan I believe it is!
+				NO! Tolerate it I shall not! Leave me, you vile wretch!
+				LEAVE!
+				\g Was sehe ich da? Ich traue meinen Augen nicht! FÅrwahr,
+				das ist tatsÑchlich ein scheu·licher Pagane, der da vor mir
+				steht! Wahrlich, das kann ich nicht zulassen! Geh mir aus
+				den Augen, du elender Schurke! VERSCHWINDE!!");
+				exitConvo();
+				return;
+			}
+
+			if ran  = 5
+			{
+				bark("Believe what I see, I can not! A PAGAN it is! Filth!
+				Wretch! Slime! Away with you! Darken not my door! AWAY!
+				\g FÅrwahr, ich traue meinen Augen nicht! Ein PAGANE! 
+				Abschaum! Widerlicher Schurke! Verbrecher! Weg mit dir! 
+				Du bringst Verderben Åber mein Haus, fÅrwahr, das tust du! 
+				Scher dich fort!!");
+				exitConvo();
+				return;
+			}
+		}
+		else
+		{
+//if not met ezrekal, but have the mark
+			Avatar.bark("Hail! \g Seid mir gegrÅ·t!");
+			bark("Hello \g Hallo!");
+		}
+	}
+
+	else
+	{
+		ran = urandom(6);
+		if ran = 1
+		{
+		Avatar.bark("Greetings, Ezrekal! \g Seid gegrÅ·t, Ezrekal!");
+		}
+
+		if ran = 2
+		{
+			Avatar.bark("Hello again, Ezrekal. 
+					\g Schîn, Euch wiederzusehen, Ezrekal.");
+		}
+
+		if ran = 3
+		{
+			Avatar.bark("Hail, Ezrekal! \g Seid gegrÅ·t, Ezrekal!");
+		}
+
+		if ran = 4
+		{
+			Avatar.bark("Well met, Ezrekal. \g Ich hoffe, es geht Euch gut, Ezrkal.");
+		}
+
+		if ran = 5
+		{
+			Avatar.bark("Good to see you, Ezrekal. \g Schîn, Euch zu sehen, Ezrekal.");
+		}
+
+		if (climbedCliffs=true) and (spokeOfAwaken =true) and (shieldFixed = false)
+		{
+			bark("Go on. Return to the Cloud City and continue
+			your search! 
+			\g Nun geh schon. Du mu·t zur Wolkenstadt zurÅckkehren und deine 
+			Suche fortsetzen, fÅrwahr, das mu·t du!");
+			exitConvo();
+			return;
+		}
+
+		if (spokeOfOpenTemple = true) and (godsFree=false)
+		{
+			bark("Hurry, we must go to the temple!
+				\g Beeile dich, wir mÅssen zum Tempel gehen, fÅrwahr, das mÅssen wir!");
+			exitConvo();
+			return;
+		}
+
+	}
+
+	askList:String List;
+	answer:String;
+	CliffKey,item:Item;
+	shield:Item;
+	myMan:WorldPoint;
+	enterConvo();
+
+	if not ezrekalMet
+	{
+		askList=<<"May I know your name?
+				\g Wie hei·t Ihr?">>;
+	}
+
+	else
+	{
+		if avatarPoisoned
+		{
+			if shieldFixed
+			{
+				askList+=<<"Please heal me.
+						\g Bitte heilt mich.">>;
+			}
+			else
+			{
+				if climbedCliffs
+				{
+					askList+=<<"I climbed the cliffs!
+							\g Ich habe die Klippen erklommen!">>;
+				}
+				else
+				{
+					askList+=<<"Can you help me?
+							\g Kînnt Ihr mir helfen?">>;
+				}
+			}
+		}
+		else
+		{
+			if templeOpen
+			{
+				if godsFree
+				{
+					askList+=<<"I have freed your gods!
+							\g Ich habe Eure Gîtter befreit!">>;
+				}
+				else
+				{
+					askList+=<<"I have opened your temple!
+							\g Ich habe Euren Tempel geîffnet!">>;
+				}
+			}
+			else
+			{
+				askList+=<<"Tell me of the Vale.
+						\g ErzÑhlt mir mehr Åber das Tal.">>;
+			}
+		}
+		if (mentionShield = true) and (shieldFixed = false)
+		{
+			askList+=<<"Tell me again of the Shield.
+					\g ErzÑhlt mir noch mehr Åber den Schild.">>;
+		}
+
+		if spokeOfCataclysm
+		{
+			askList^=<<"Tell me more of the Cataclysm.
+					\g ErzÑhlt mir mehr Åber die Schlacht.">>;
+		}
+
+
+// @@@ CHANGE F G
+		if (tyorviDreams = true) and (hasRoot = false)
+		{
+			askList+=<<"I would speak to you of Tyorvi.">>;
+		}
+
+		foreach recursive item where (type = TypeWeedz) and (frame = 9)
+		within container Avatar
+		{
+// @@@ CHANGE F G
+			if (tyorviDreams = true)
+			{
+				askList^=<<"I have found the root.">>;
+			}
+		}
+
+// @@@ CHANGE F G
+		if (givenRoot = true) and (justGotRoot = true)
+		{
+			askList+=<<"Is Tyorvi's elixar ready?">>;
+		}
+
+
+// @@@ CHANGE F G
+		if (justGotRoot = false) and (givenTea = false)
+		{
+			askList+=<<"Have you made the elixar?">>;
+		}
+
+	}
+
+	while answer!="bye \g Lebt wohl."
+	{
+		askList-=<<"bye \g Lebt wohl.">>;
+		askList+=<<"bye \g Lebt wohl.">>;
+		answer=ask(askList);
+		switch answer
+		{
+
+			case "May I know your name?
+				\g Wie hei·t Ihr?"
+			{
+				
+				if yelledAtAvatar
+				{
+					bark("Ezrekal my name is. Sorry I am, acted so rudely
+					before I did. See the mark of the Zeleans upon you I
+					did not. Funny, not like a Zelean you look. Different you look,
+					different you speak. If not a Pagan you are, what are you?
+
+					\g Ich hei·e Ezrekal. Es tut mir wahrlich leid, da· ich dich 
+					vorher so unhîflich behandelt habe, fÅrwahr, das tut es mir. Ich 
+					konnte das Zeichen der Zealanen nicht an dir entdecken. Du siehst 
+					fremdartig aus, und du sprichst auch anders als wir, fÅrwahr, das 
+					tust du. Wenn du kein Pagane bist, wahrlich, woher kommst du 
+					dann?");
+					askList+=<<"I am from Britannia.
+							\g Ich komme aus Britannia.">>;
+					yelledAtAvatar = false;
+					ezrekalName = true;
+				}
+				else
+				{
+					bark("Ezrekal my name is. The mark of the Zeleans upon you
+					I see. Funny, not like a Zelean you look. Different
+					you look, different you speak. If not a Pagan you are,
+					what are you?
+					\g Ich hei·e Ezrekal. Ich kann das Zeichen der Zealanen an 
+					dir erkennen, fÅrwahr, das kann ich. Und doch siehst du nicht 
+					aus wie ein Zealane. Dein Erscheinen und deine Sprache sind 
+					fremdartig, fÅrwahr, das sind sie. Wenn du kein Pagane bist, 
+					woher kommst du dann?");
+					ezrekalName = true;
+				}
+				askList-=<<"May I know your name?
+							\g Wie hei·t Ihr?">>;
+				askList+=<<"I am from Britannia.
+							\g Ich komme aus Britannia.", 
+							"What do you do?
+							\g Was ist Euer Beruf?">>;
+				ezrekalName = true;
+				ezrekalMet = true;
+				if avatarPoisoned
+				{
+					askList^=<<"Can you help me?
+								\g Kînnt Ihr mir helfen?">>;
+				}
+				if templeOpen
+				{
+					askList^=<<"I have opened your temple!
+							\g Ich habe Euren Tempel geîffnet!">>;
+				}
+			}
+
+			case "What do you do?
+				\g Was ist Euer Beruf?"
+			{
+				bark("The High Priestess I am...or I was.
+
+					\g Ich bin... oder besser gesagt, war die Hohepriesterin, fÅrwahr, 
+					das war ich.");
+				askList-=<<"What do you do?
+							\g Was ist Euer Beruf?", 
+							"I am from Britannia.
+							\g Ich komme aus Britannia.">>;
+				askList+=<<"High Priestess of what?
+							\g Hohepriesterin? WofÅr?">>;
+				ezrekalJob = true;
+			}
+
+			case "High Priestess of what?
+				\g Hohepriesterin? WofÅr?"
+			{
+				bark("Of what you ask? Why of the Ancient Ones!
+
+					\g WofÅr, willst du wissen? Nun, fÅr die Alten selbstverstÑndlich. 
+					Ich diene den Alten, fÅrwahr, das tue ich.");
+				askList-=<<"High Priestess of what?
+							\g Hohepriesterin? WofÅr?">>;
+				askList+=<<"What does the High Priestess do?
+						\g Welche Aufgaben habt Ihr als Hohepriesterin?">>;
+			}
+
+			case "What does the High Priestess do?
+				\g Welche Aufgaben habt Ihr als Hohepriesterin?"
+			{
+				bark("Hmmmm, obvious it is from your dress and your
+				speech that not from here you are. The mouth piece of the
+				Ancient Ones the High Priestess is. On special days
+				through me to their followers they speak.
+
+				\g Hmmmm, ich kann an deiner Kleidung und an deinem fremdartigen 
+				Dialekt erkennen, da· du nicht von hier bist. Die Hohepriesterin dient 
+				als Vermittlerin zwischen den Alten und dem Volk, fÅrwahr, das tut sie. 
+				An besonderen Tagen sprachen die Alten durch die Hohepriester mit ihren 
+				GlÑubigen, fÅrwahr, das taten sie.");
+				askList-=<<"What does the High Priestess do?
+							\g Welche Aufgaben habt Ihr als Hohepriesterin?">>;
+				askList+=<<"How do they speak through you?
+							\g Wie sprachen sie durch die Hohepriester?", 
+							"When are the special days?
+							\g An besonderen Tagen?">>;
+			}
+
+			case "When are the special days?
+				\g An besonderen Tagen?"
+			{
+				bark("Very sacred the special days were. Ruled by the great
+				ball of fire in the sky they were. Knew the
+				days the ball of fire would light the skies for the longest
+				time and the shortest time, the High Priestess did. Held on
+				these days the ceremonies were. Sad I am no more
+				special days there are.
+
+				\g Diese besonderen Tage waren uns heilig, fÅrwahr, das waren sie. 
+				Wir richteten uns nach dem Feuerball am Himmel. Die Hohepriester 
+				wu·ten, an welchen Tagen das Feuer am lÑngsten und am kÅrzesten am 
+				Himmel stand, fÅrwahr, das wu·ten sie. An diesen Tagen 
+				veranstalteten wir die Zeremonien. Ich bin traurig, da· es keine 
+				solchen Feiertage mehr gibt, fÅrwahr, das bin ich!");
+				askList-=<<"When are the special days?
+							\g An besonderen Tagen?">>;
+				askList+=<<"Why are there no more special days?
+							\g Weshalb gibt es keine Feiertage mehr?", 
+							"Ball of fire in the sky?
+							\g Feuerball am Himmel?">>;
+			}
+
+			case "Ball of fire in the sky?
+				\g Feuerball am Himmel?"
+			{
+				bark("Said it is that lit the skies for
+				many hours each day the great ball of fire did.
+				So great its power was,	kept the great mushrooms from
+				growing the heat did. Great plants with brilliant
+				colors grew and blue the sky was!
+
+				\g Angeblich stand dieser Feuerball einmal jeden Tag 
+				viele Stunden lang am Himmel, fÅrwahr, das tat er. Die 
+				Hitze, die von ihm ausging, soll so gro· gewesen sein, 
+				da· nicht einmal unsere riesigen Pilze wachsen konnten. 
+				Die Pflanzen schillerten in allen Farben und der Himmel 
+				Åber uns war blau, wahrlich, blau soll er gewesen sein!");
+
+				askList-=<<"Ball of fire in the sky?
+							\g Feuerball am Himmel?">>;
+				askList+=<<"What happened to the ball of fire?
+							\g Was ist mit dem Feuerball geschehen?">>;
+			}
+
+			case "What happened to the ball of fire?
+				\g Was ist mit dem Feuerball geschehen?"
+			{
+				if spokeOfCataclysm
+				{
+					bark("Again, destroyed in the great Cataclysm it was.
+					You see, related to all the troubles of this world
+					the Titans are. Curse them, and the terrible
+					damage during the Great Cataclysm they wrought.
+
+					\g Das habe ich dir doch schon erzÑhlt. 
+					Er wurde wÑhrend der gro·en Schlacht zerstîrt, fÅrwahr, das 
+					wurde er. Siehst du, die Titanen tragen die Schuld an 
+					allem Elend unserer Welt. Ich verfluche sie, und die 
+					schreckliche VerwÅstung, die sie damals wÑhrend der 
+					gro·en Schlacht anrichteten.");
+				}
+				else
+				{
+					bark("During the Great Cataclysm it was. Spoken of it
+					have I not? The most tragic day in the history
+					our people it is.
+
+					\g Das war wÑhrend der gro·en Schlacht, fÅrwahr, das war es. 
+					Habe ich dir noch gar nicht davon erzÑhlt? Das war der 
+					schwÑrzeste Tag in der Geschichte meines Volkes.");
+
+					askList+=<<"Tell me more of the Great Cataclysm.
+								\g ErzÑhlt mir mehr Åber die gro·e Schlacht.">>;
+					spokeOfCataclysm = true;
+				}
+				askList-=<<"What happened to the ball of fire?
+							\g Was ist mit dem Feuerball geschehen?">>;
+			}
+
+
+			case "How do they speak through you?
+				\g Wie sprachen sie durch die Hohepriester?"
+			{
+				bark("A very sacred ceremony it was. Takes place in
+				the Temple of the Ancients it did. Call upon them I would
+				to let them know willing to receive them I was. Take control
+				of my body they would and my mouth they use their
+				wisdom to speak.
+
+				\g Diese Zeremonie war uns sehr heilig, fÅrwahr, das war sie. Sie 
+				fand im Tempel der Alten statt. Die Hohepriester riefen die Alten 
+				an, um ihnen zu zeigen, da· sie bereit waren, fÅrwahr, das taten 
+				sie. Dann fuhren die Alten in die Glieder der Hohepriester und 
+				sprachen ihre weisen Worte durch ihre MÅnder.");
+				askList-=<<"How do they speak through you?
+							\g Wie sprachen sie durch die Hohepriester?">>;
+			}
+
+			case "Why are there no more special days?
+				\g Weshalb gibt es keine Feiertage mehr?"
+			{
+				if spokeOfCataclysm
+				{
+					bark("Told you of the Great Cataclysm I did. Since then
+					silent the Ancient Ones have been. Never experienced
+					the rapture of the Ancients speaking through me
+					I have, nor my mother did nor her mother before
+					her. Yet still we wait. Return to us they will
+					and here we will be, ready their
+					wisdom to receive.
+
+					\g Wahrlich, ich habe dir von der gro·en Schlacht erzÑhlt. 
+					Seit jenem Tag schweigen die Alten. Mir war es noch nie 
+					vergînnt, die Alten durch mich sprechen zu lassen. Auch meine 
+					Mutter und ihre Mutter vor ihr warteten vergeblich, fÅrwahr, 
+					das taten sie. Aber wir werden weiterhin geduldig ihrer 
+					Wiederkehr harren. Sie werden zurÅckkehren und uns hier finden, 
+					wahrlich, das werden sie. Und wir werden bereit sein, ihre 
+					Weisheit zu empfangen.");
+				}
+				else
+				{
+					bark("With the Great Cataclysm the days of
+					hearing the Ancient Ones speak did end. Stopped speaking
+					to us then the Ancients did. But back they will be and
+					when return they do, waiting to receive their wisdom
+					we will be.
+
+					\g Mit der gro·en Schlacht endeten auch die weisen Worte 
+					der Alten. Seitdem haben sie nicht mehr zu uns gesprochen, 
+					fÅrwahr, so ist es. Aber eines Tages werden sie zurÅckkehren. 
+					Und wenn sie wiederkommen, werden wir bereit sein, erneut 
+					ihre Weisheit zu empfangen, fÅrwahr, das werden wir.");
+					spokeOfCataclysm = true;
+				}
+					askList-=<<"Why are there no more special days?
+								\g Weshalb gibt es keine Feiertage mehr?">>;
+					askList^=<<"Tell me more of the Great Cataclysm.
+								\g ErzÑhlt mir mehr Åber die gro·e Schlacht.">>;
+			}
+
+			case "I am from Britannia.
+				\g Ich komme aus Britannia."
+			{
+				bark("Britannia?....No place in the Vale called
+				'Britannia' there is. From 'outside' the barrier are you?
+
+				\g Britannia? Hier im Tal gibt es keinen Ort, der einen solchen 
+				Namen trÑgt. Wahrlich, kommst du von au·erhalb der Wand?");
+				askList-=<<"I am from Britannia.
+							\g Ich komme aus Britannia.", 
+							"What do you do?
+							\g Was ist Euer Beruf?">>;
+				askList+=<<"Yes, I am from outside.
+							\g Ja, ich komme von au·erhalb.", 
+							"No, I am not from outside.
+							\g Nein, ich komme nicht von au·erhalb.">>;
+			}
+
+			case "No, I am not from outside.
+				\g Nein, ich komme nicht von au·erhalb."
+			{
+				bark("Well, away from my people longer I have been than I
+				thought . Cities I have never heard of, have they?
+				Where exactly this 'Britannia' is?
+
+				\g Wahrlich, ich lebe schon lange fern von den Meinen. 
+				Es gibt StÑdte hier, von denen ich noch nie gehîrt habe, 
+				fÅrwahr, kann das sein? Wo genau liegt dieses 'Britannia'?");
+
+				askList-=<<"No, I am not from outside.
+							\g Nein, ich komme nicht von au·erhalb.", 
+							"Yes, I am from outside.
+							\g Ja, ich komme von au·erhalb.">>;
+				askList+=<<"Why have you been away from your people?
+							\g Wieso lebt Ihr fern von Eurem Volk?",
+							"Britannia is not in the Vale.
+							\g Britannia liegt nicht im Tal.", 
+							"Britannia is near the barrier.
+							\g Britannia liegt in der NÑhe der Wand.">>;
+			}
+
+			case "Britannia is near the barrier.
+				\g Britannia liegt in der NÑhe der Wand."
+			{
+				bark("Hmmm, perhaps faster the Vale is growing than
+				I know. A new town, then we have.
+
+				\g Wahrlich, es scheint, unsere Bevîlkerung hier im Tal wÑchst 
+				schneller, als ich dachte. Wir haben also ein neues Dorf?");
+				askList-=<<"Britannia is not in the Vale.
+							\g Britannia liegt nicht im Tal.", 
+							"Britannia is near the barrier.
+							\g Britannia liegt in der NÑhe der Wand.">>;
+			}
+
+			case "Britannia is not in the Vale.
+				\g Britannia liegt nicht im Tal."
+			{
+				bark("That much guess I can by the way you act and certainly
+				by the way you speak. Very difficult to understand you are.
+				In your Britannia as well, the Titans are?
+
+				\g Wahrlich, das dachte ich mir schon. Dein fremdartiges Benehmen 
+				und dein eigenartiger Akzent zeigten mir ganz eindeutig, da· du 
+				nicht von hier bist. Du bist sehr schwer zu verstehen, fÅrwahr, 
+				das bist du. Herrschen die Titanen auch Åber dein Britannia?");
+
+				askList-=<<"Britannia is not in the Vale.
+							\g Britannia liegt nicht im Tal.", 
+							"Britannia is near the barrier.
+							\g Britannia liegt in der NÑhe der Wand.">>;
+				askList+=<<"The Titans are in Britannia.
+							\g Ja, die Titanen herrschen Åber Britannia.", 
+							"The Titans are not in Britannia.
+							\g Nein, die Titanen herrschen dort nicht.">>;
+			}
+
+			case "The Titans are in Britannia.
+				\g Ja, die Titanen herrschen Åber Britannia."
+			{
+				bark("Ah, perhaps then, where our Ancient Ones are that is.
+				Fighting the Titans in your Britannia, they have been.
+
+				\g Wahrlich, dann sind unsere Alten vielleicht dort zu finden. 
+				Bestimmt bekÑmpfen sie gerade die Titanen in deinem Britannia, 
+				fÅrwahr, das tun sie!");
+				askList-=<<"The Titans are in Britannia.
+							\g Ja, die Titanen herrschen Åber Britannia.", 
+							"The Titans are	not in Britannia.
+							\g Nein, die Titanen herrschen dort nicht.">>;
+			}
+
+			case "The Titans are not in Britannia.
+				\g Nein, die Titanen herrschen dort nicht."
+			{
+				bark("No? Then there our Ancient Ones are? Perhaps
+				resting there they are. Gaining strength to return they
+				are the Titans to defeat.
+
+				\g Wirklich? Sind unsere Alten vielleicht dort? Vielleicht 
+				sammeln sie ihre KrÑfte, fÅrwahr, so ist es. Bald werden 
+				sie stark genug sein, um zurÅckzukehren und die Titanen zu 
+				besiegen.");
+
+				askList-=<<"The Titans are in Britannia.
+							\g Ja, die Titanen herrschen Åber Britannia.", 
+							"The Titans are	not in Britannia.
+							\g Nein, die Titanen herrschen dort nicht.">>;
+				askList+=<<"The Ancient Ones are in Britannia.
+							\g Ja, die Alten sind in Britannia.", 
+							"The Ancient Ones are not in Britannia.
+							\g Die Alten sind nicht in Britannia.">>;
+
+				if not askedAboutAncients
+				{
+					askList+=<<"Who are the Ancient Ones?
+								\g Wer sind die Alten?">>;
+				}
+			}
+
+			case "The Ancient Ones are in Britannia
+				\g Ja, die Alten sind in Britannia."
+			{
+				bark("Ah, relieves my heart this news does. Perhaps
+				in my lifetime return to us they will.
+
+				\g Wahrlich, wie freut es mich, das zu hîren. Vielleicht 
+				werden sie noch zu meinen Lebzeiten zu uns zurÅckkehren, 
+				fÅrwahr, das hoffe ich.");
+
+				askList-=<<"The Ancient Ones are in Britannia.
+							\g Ja, die Alten sind in Britannia.", 
+							"The Ancient Ones are not in Britannia.
+							\g Die Alten sind nicht in Britannia.">>;
+			}
+
+			case "The Ancient Ones are not in Britannia.
+				\g Die Alten sind nicht in Britannia."
+			{
+				bark("Well, wherever they are, I hope resting they are and
+				preparing for their return they are. Waiting the Zealans
+				will be.
+
+				\g Wahrlich, wo immer sie auch sein mîgen... ich hoffe, da· sie 
+				ihre KrÑfte sammeln und sich auf ihre RÅckkehr vorbereiten, fÅrwahr, 
+				das hoffe ich. Wir Zealanen warten auf sie, fÅrwahr, das tun wir.");
+				askList-=<<"The Ancient Ones are in Britannia.
+							\g Ja, die Alten sind in Britannia.", 
+							"The Ancient Ones are not in Britannia.
+							\g Die Alten sind nicht in Britannia.">>;
+			}
+
+			case "Why have you been away from your people?
+				\g Wieso lebt Ihr fern von Eurem Volk?"
+			{
+				if spokeOfCataclysm
+				{
+					bark("Goes back to the Great Cataclysm I mentioned it does.
+					When occured that did, rush to the High Priestess the
+					people did. Demand an answer from the Ancient Ones they did.
+					But answer the High Priestess the Ancients
+					would not. Accused the High Priestess of lying the people did.
+					Ran her out of their village they did. Forbade her come back
+					they did until communicated with the Ancient Ones she had.
+					Many, many years ago that was. Allow me back, the people of
+					the village will not. Crazy, me they call. A fake I am
+					they say. But watch for the return of the Ancients
+					someone must. So for the Ancients to speak I still
+					wait, as my mother did and her mother before her.
+
+					\g Wahrlich, der Grund ist so alt wie die gro·e Schlacht selbst. 
+					Zu Beginn der gro·en Schlacht rief das Volk die Hohepriesterin 
+					um Hilfe an, fÅrwahr, das taten sie. Sie verlangten, da· die 
+					Alten ihnen verrieten, wie man der Schlacht ein Ende bereiten 
+					kînne. Aber die Alten antworteten nicht, fÅrwahr, sie schwiegen. 
+					Das Volk beschuldigte die Hohepriesterin des Verrates und 
+					der LÅge. Und wahrlich, sie verbannten sie aus dem Dorf und 
+					verbaten ihr, zurÅckzukehren, bis sie mit den Alten 
+					gesprochen hatte. Das war vor vielen, vielen Jahren, fÅrwahr, 
+					das war es. Und auch heute verwehren sie mir den Zutritt zum 
+					Dorf. Sie nennen mich verrÅckt, fÅrwahr, das tun sie. Sie 
+					sagen, ich sei eine LÅgnerin. Aber einer von uns mu· auf die 
+					RÅckkehr der Alten warten. Und so warte ich, wie auch meine 
+					Mutter und meine Gro·mutter schon warteten.");
+					askList-=<<"Why have you been away from your people?
+								\g Wieso lebt Ihr fern von Eurem Volk?">>;
+				}
+				else
+				{
+					bark("Goes back to the Great Cataclysm it does.
+					When occured that did, rush to the High Priestess the
+					people did. Demand an answer from the Ancient Ones they did.
+					But answer the High Priestess the Ancients
+					would not. Accused the High Priestess of lying the people did.
+					Ran her out of their village they did. Forbade her come back
+					they did until communicated with the Ancient Ones she had.
+					Many, many years ago that was. Allow me back, the people of
+					the village will not. Crazy, me they call. A fake I am
+					they say. But watch for the return of the Ancients
+					someone must. So for the Ancients to speak I still
+					wait, as my mother did and her mother before her.
+
+
+					\g Wahrlich, der Grund ist so alt wie die gro·e Schlacht selbst. 
+					Zu Beginn der gro·en Schlacht rief das Volk die Hohepriesterin 
+					um Hilfe an, fÅrwahr, das taten sie. Sie verlangten, da· die 
+					Alten ihnen verrieten, wie man der Schlacht ein Ende bereiten 
+					kînne. Aber die Alten antworteten nicht, fÅrwahr, sie schwiegen. 
+					Das Volk beschuldigte die Hohepriesterin des Verrates und 
+					der LÅge. Und wahrlich, sie verbannten sie aus dem Dorf und 
+					verbaten ihr, zurÅckzukehren, bis sie mit den Alten 
+					gesprochen hatte. Das war vor vielen, vielen Jahren, fÅrwahr, 
+					das war es. Und auch heute verwehren sie mir den Zutritt zum 
+					Dorf. Sie nennen mich verrÅckt, fÅrwahr, das tun sie. Sie 
+					sagen, ich sei eine LÅgnerin. Aber einer von uns mu· auf die 
+					RÅckkehr der Alten warten. Und so warte ich, wie auch meine 
+					Mutter und meine Gro·mutter schon warteten.");
+					spokeOfCataclysm = true;
+					askList-=<<"Why have you been away from your people?
+								\g Wieso lebt Ihr fern von Eurem Volk?">>;
+					askList^=<<"Tell me more of the Great Cataclysm.
+								\g ErzÑhlt mir mehr Åber die gro·e Schlacht.">>;
+				}
+			}
+
+			case "Yes, I am from outside.
+				\g Ja, ich komme von au·erhalb."
+			{
+				bark("Oh, my! And not a Pagan you are? Well, of course not,
+				the Mark you bear! Well, an interesting day this
+				has become, met someone from outside I have.
+				Goes well on the other side of the barrier does it? Still
+				running amuck the Titans are? Heard from the Ancient Ones
+				have you?
+
+				\g Wirklich? Und doch bist du kein Pagane. Nein, ich kann das 
+				Zeichen an dir erkennen, fÅrwahr, das kann ich. Das ist ein 
+				interessanter Tag fÅr mich, wahrlich, das ist es. Ich habe 
+				jemanden von au·erhalb der Wand kennengelernt. Und wie stehen 
+				die Sachen auf der anderen Seite der Wand? WÅten die Titanen 
+				immer noch wie wahnsinnig? Und wahrlich, hast du von den 
+				Alten gehîrt?");
+				askList-=<<"Yes, I am from outside.
+							\g Ja, ich komme von au·erhalb.">>;
+				askList=<<"Can you help me?
+						\g Kînnt Ihr mir helfen?", 
+						"The Titans are still in control.
+						\g Ja, die Titanen herrschen immer noch.", 
+						"Who are the Ancient Ones?
+						\g Wer sind die Alten?", 
+						"I have heard from the Ancient Ones.
+						\g Ja, ich habe von den Alten gehîrt.", 
+						"I have not heard from the Ancient Ones.
+						\g Ich habe nichts von den Alten gehîrt.",
+						"What do you do?
+						\g Was ist Euer Beruf?">>;
+			}
+
+			case "Who are the Ancient Ones?
+				\g Wer sind die Alten?"
+			{
+				bark("The Ancient Ones, who are? Sunk so far has it
+				the names of the Ancients the young do not know? Oh, sad
+				this is. Wounded I am, but tell you of them I will.
+				Control all emotions, the Ancients do. Rich in power
+				they are. Power to heal the world they have... and power
+				to destroy it. Worshipped by all of Pagan they were until
+				arrived the Titans did. A great battle it was. Ended in
+				the Great Cataclysm it did.
+
+				\g Wer die Alten sind? FÅrwahr, das ist ein trauriger Tag. 
+				So lange her ist die Herrschaft der Alten schon, da· die Jungen ihre 
+				Namen nicht mehr kennen? Das tut mir in der Seele weh, fÅrwahr, 
+				das tut es. Aber ich werde dir trotzdem von ihnen erzÑhlen. 
+				Wahrlich, die Alten kontrollieren unsere Emotionen, unsere 
+				GefÅhle. Sie sind sehr mÑchtig. Sie kînnen die Welt heilen... 
+				aber auch zerstîren, fÅrwahr, das kînnen sie. Ganz Pagan verehrte 
+				sie vor der Ankunft der Titanen. Wahrlich, und dann kam die 
+				gro·e Schlacht. Und in der gro·en Schlacht endete auch die 
+				Herrschaft der Alten.");
+
+				askedAboutAncients = true;
+				askList-=<<"Who are the Ancient Ones?
+							\g Wer sind die Alten?">>;
+				askList^=<<"Tell me more of the Great Cataclysm.
+							\g ErzÑhlt mir mehr Åber die gro·e Schlacht.">>;
+			}
+
+			case "The Titans are still in control.
+				\g Ja, die Titanen herrschen immer noch."
+			{
+				bark("Oh, sad news this is. Perhaps why we
+				have not heard from the Ancient Ones this is.
+				Still battling those terrible Titans they are.
+
+				\g Wahrlich, das sind traurige Nachrichten. Vielleicht haben 
+				wir deshalb seitdem nichts mehr von den Alten gehîrt. Sie 
+				kÑmpfen immer noch mit diesen schrecklichen Titanen, fÅrwahr, das 
+				tun sie.");
+				askList-=<<"The Titans are still in control.
+							\g Ja, die Titanen herrschen immer noch.">>;
+			}
+
+			case "I have heard from the Ancient Ones.
+				\g Ja, ich habe von den Alten gehîrt."
+			{
+				bark("You have? Oh what great news this is! Where hear
+				from them did you? Mention their poor devoted
+				followers here in the vale did they? Say when return they
+				would, did they?
+
+				\g Wirklich? Wahrlich, das sind gute Nachrichten! Was hast 
+				du von ihnen gehîrt? FÅrwahr, haben sie ihre arme, ergebene 
+				GlÑubige hier im Tal erwÑhnt? Haben sie dir gesagt, wann 
+				sie zu uns zurÅckkehren werden?");
+
+				askList-=<<"The Titans are still in control.
+							\g Ja, die Titanen herrschen immer noch.", 
+							"I have not	heard from the Ancient Ones.
+							\g Ich habe nichts von den Alten gehîrt.", 
+							"I have heard from the Ancient Ones.
+							\g Ja, ich habe von den Alten gehîrt.", 
+							"Who are the Ancient Ones?
+							\g Wer sind die Alten?">>;
+				askList+=<<"They did mention you.
+							\g Sie haben dich erwÑhnt.", 
+							"They did not mention you.
+							\g Sie haben dich nicht erwÑhnt.", 
+							"I was in their temple.
+							\g Ich war in ihrem Tempel.">>;
+			}
+
+			case "They did mention you.
+				\g Sie haben dich erwÑhnt."
+			{
+				bark("Oh, wonderful! Ready to return they must be. If
+				only the Shield of the Ancients I had.
+
+				\g Wahrlich, das ist wunderbar! Sie werden wohl bald zu uns 
+				zurÅckkehren, wahrlich, das werden sie. Wenn ich doch nur den 
+				Schild der Alten hÑtte.");
+
+				askList-=<<"They did mention you.
+							\g Sie haben dich erwÑhnt.", 
+							"They did not mention you.
+							\g Sie haben dich nicht erwÑhnt.">>;
+				mentionShield = true;
+				askList^=<<"Shield of the Ancients?
+							\g Schild der Alten?">>;
+			}
+
+			case "They did not mention you.
+				\g Sie haben dich nicht erwÑhnt."
+			{
+				bark("Forgotten us can they have? Certainly not! Terribly
+				busy they must be. Fighting the Titans still are they?
+				Oh, if only the Shield of the Ancients I had.
+
+				\g Wahrlich, haben sie uns vergessen? Das kann nicht sein, 
+				fÅrwahr, das ist unmîglich! Sie mÅssen schrecklich 
+				beschÑftigt sein. Wahrlich, kÑmpfen sie immer noch mit 
+				den Titanen? Oh, wenn ich doch nur den Schild der Alten 
+				hÑtte?");
+
+				mentionShield = true;
+				askList-=<<"They did not mention you.
+							\g Sie haben dich nicht erwÑhnt.", 
+							"They did mention you.
+							\g Sie haben dich erwÑhnt.">>;
+				mentionShield = true;
+				askList^=<<"Shield of the Ancients?
+							\g Schild der Alten?">>;
+			}
+
+			case "I was in their temple.
+				\g Ich war in ihrem Tempel."
+			{
+				bark("The temple on the other side you mean? Destroyed long
+				ago I thought it had been.
+				\g Wahrlich, meinst du den Tempel auf der anderen Seite. 
+				Ich dachte, er wÑre schon vor langer Zeit zerstîrt worden, 
+				fÅrwahr, das dachte ich.");
+				askList-=<<"I was in their temple.
+							\g Ich war in ihrem Tempel.">>;
+				askList+=<<"It is not destroyed.
+							\g Er ist nicht zerstîrt worden.", 
+							"It is destroyed.
+							\g Er wurde zerstîrt.">>;
+			}
+
+			case "It is not destroyed.
+				\g Er ist nicht zerstîrt worden."
+			{
+				bark("Joyful news this is! Hope there is that 
+				return they shall!
+				\g Wahrlich, das sind wunderbare Nachrichten! Dann besteht 
+				noch Hoffnung, da· sie zurÅckkehren werden!");
+				askList-=<<"It is not destroyed.
+							\g Er ist nicht zerstîrt worden.", 
+							"It is destroyed.
+							\g Er wurde zerstîrt.">>;
+			}
+
+			case "It is destroyed.
+				\g Er wurde zerstîrt."
+			{
+				bark("Sad, news this is. Lost then hope is. Return to us
+				the Ancient Ones may never.
+
+				\g Wahrlich, das sind traurige Nachrichten. Alle Hoffnung 
+				scheint verloren. Die Alten werden wohl nie mehr zu uns 
+				zurÅckkehren. FÅrwahr, wir sind verloren.");
+
+				askList-=<<"It is not destroyed.
+							\g Er ist nicht zerstîrt worden.", 
+							"It is destroyed.
+							\g Er wurde zerstîrt.">>;
+			}
+
+			case "Can you help me?
+				\g Kînnt Ihr mir helfen?"
+			{
+				bark("Ah, hard to understand you are. Help you need,
+				say did you?
+
+				\g Ich kann deine Sprache nur schwer verstehen. Du 
+				brauchst Hilfe, sagst du?");
+				askList=<<"I have been poisoned.
+						\g Ich leide an einer Vergiftung.">>;
+			}
+
+			case "I have been poisoned.
+				\g Ich leide an einer Vergiftung."
+			{
+				bark("Poisoned? Nothing of poisons I know. Help you I can
+				not.
+
+				\g Eine Vergiftung? Wahrlich, darÅber wei· ich nichts. 
+				Ich kann dir nicht helfen, fÅrwahr, das kann ich nicht.");
+
+				askList-=<<"I have been poisoned.
+							\g Ich leide an einer Vergiftung.">>;
+				if thordisToldTest
+				{
+					askList=<<"Thordis sent me to you.
+							\g Thordis hat mich zu Euch geschickt.">>;
+				}
+				if atliToldTest
+				{
+					askList=<<"Atli sent me to you.
+							\g Atli hat mich zu Euch geschickt.">>;
+				}
+				else
+				{
+					askList=<<"But I'm dying!
+							\g Aber ich werde sterben!">>;
+				}
+			}
+
+			case "But I'm dying!
+				\g Aber ich werde sterben!"
+			{
+				bark("Sorry I am. A nice young man you seemed, too. A
+				little hard to understand you are, but nice. Well,
+				prepare a nice funeral for you I shall. The least I can do
+				it is.
+
+				\g Wahrlich, das tut mir leid, fÅrwahr, das tut es. Du 
+				scheinst ein netter, junger Mann zu sein. Du sprichst 
+				zwar ein wenig undeutlich, aber du bist trotzdem nett, 
+				fÅrwahr, das bist du! Ich werde mich bemÅhen, ein 
+				schînes BegrÑbnis fÅr dich vorzubereiten, fÅrwahr, das 
+				werde ich!");
+
+				askList-=<<"But I'm dying!
+							\g Aber ich werde sterben!">>;
+				askList+=<<"Prepare my funeral?!
+							\g Mein BegrÑbnis?!">>;
+			}
+
+			case "Atli sent me to you.
+				\g Atli hat mich zu Euch geschickt."
+			{
+				bark("He did? This most odd I find. To acknowledge
+				my presence he refuses. Hmmmmm, to me sent you, did he...?
+				How sad this is. A nice young man you seemed. A little hard to
+				understand you are, but nice you are. Well, prepare
+				a nice funeral for you I shall. The least I can do it is.
+
+				\g Wirklich? Das ist eigenartig, fÅrwahr, das ist es. Er 
+				weigert sich sonst, meine Gegenwart Åberhaupt zur Kenntnis 
+				zu nehmen, fÅrwahr, das tut er. Wahrlich, er hat dich zu 
+				mir geschickt...? Wie traurig. Du scheinst ein netter junger 
+				Mann zu sein. Ein bi·chen schwer zu verstehen, fÅrwahr, aber trotzdem 
+				nett. Wahrlich, ich werde mich bemÅhen, ein schînes BegrÑbnis 
+				fÅr dich vorzubereiten, fÅrwahr, das werde ich!");
+
+				askList-=<<"Atli sent me to you.
+							\g Atli hat mich zu Euch geschickt.">>;
+				askList+=<<"Why does he hate you?
+							\g Warum ha·t er Euch?", 
+							"Prepare my	funeral?!
+							\g Mein BegrÑbnis?!">>;
+			}
+
+			case "Thordis sent me to you.
+				\g Thordis hat mich zu Euch geschickt."
+			{
+				bark("She did? Most odd this I find. Not friends we
+				are. Despises me she does. Sent you to me, did she...?
+				How sad, a nice young man you seemed, too. A
+				little hard to understand you are, but nice. Well,
+				prepare a nice funeral for you I shall. The least I
+				can do it is.
+
+				\g Wirklich? Das ist eigenartig, fÅrwahr, das ist es. Wir 
+				sind sonst nicht befreundet. Sie ha·t mich, fÅrwahr, das 
+				tut sie. Wahrlich, sie hat dich zu 
+				mir geschickt...? Wie traurig. Du scheinst ein netter junger 
+				Mann zu sein. Ein bi·chen schwer zu verstehen, aber trotzdem 
+				nett. Wahrlich, ich werde mich bemÅhen, ein schînes BegrÑbnis 
+				fÅr dich vorzubereiten, fÅrwahr, das werde ich!");
+				askList-=<<"Thordis sent me to you.
+							\g Thordis hat mich zu Euch geschickt.">>;
+				askList+=<<"Why does she hate you?
+							\g Warum ha·t sie Euch?", 
+							"Prepare my funeral!?
+							\g Mein BegrÑbnis?!">>;
+			}
+
+			case "Why does he hate you?
+				\g Warum ha·t er Euch?"
+			{
+				bark("Now, say he hate me I would not. Rather, to
+				acknowlege my presence he refuses. All the problems
+				of this Vale on me he blames. If the High Priestess
+				hadn't let the Shield be stolen he says, still
+				lush and green the Vale would be.
+
+				\g Oh, fÅrwahr, ich wÅrde nicht sagen, da· er mich ha·t.
+				Nein, ich wÅrde eher sagen, da· er sich weigert, mich 
+				zur Kenntnis zu nehmen. Er glaubt, da· ich an allem 
+				Elend im Tal die Schuld trage, fÅrwahr, das glaubt er. 
+				'Wenn die Hohepriesterin nicht zugelassen hÑtte, da· man 
+				den Schild stiehlt, dann wÑre das Tal heute noch grÅn 
+				und fruchtbar!' Das sagt er immer, fÅrwahr, das tut er.");
+				askList-=<<"Why does he hate you?
+							\g Warum ha·t er Euch?">>;
+			}
+
+			case "Why does she hate you?
+				\g Warum ha·t sie Euch?"
+			{
+				bark("Blames me for all the ills of her people, she does,
+				particularly for her brother.
+
+				\g Wahrlich, sie glaubt, da· alles Elend unseres Volkes 
+				meine Schuld ist, fÅrwahr, das glaubt sie. Und ganz 
+				besonders das Elend ihres Bruders.");
+
+				askList-=<<"Why does she hate you?
+							\g Warum ha·t sie Euch?">>;
+				if toldAboutAddiction
+				{
+					askList+=<<"You mean his drinking problem?
+								\g Meint Ihr seinen Hang zum Trinken?">>;
+				}
+				else
+				{
+					askList+=<<"Why her brother?
+								\g Das Elend ihres Bruders?">>;
+				}
+			}
+
+			case "You mean his drinking problem?
+				\g Meint Ihr seinen Hang zum Trinken?"
+			{
+// @@@ CHANGE F G
+				bark("Afraid so I am. If talk to the Ancients I could, heal
+				her brother of his addiction I could. But everyone she
+				blames for her brother's problems except her brother.
+
+				\g Wahrlich, genau das meine ich. Ich wei· zwar nicht, wieso 
+				ich daran die Schuld tragen soll, fÅrwahr, das wei· ich nicht. 
+				Aber in ihren Augen trÑgt jeder die Schuld am Elend ihres 
+				Bruders... au·er ihr Bruder selbst, fÅrwahr, so ist es.");
+				askList-=<<"You mean his drinking problem?
+							\g Meint Ihr seinen Hang zum Trinken?", 
+							"Why her brother?
+							\g Das Elend ihres Bruders?">>;
+			}
+
+			case "Why her brother?
+				\g Das Elend ihres Bruders?"
+			{
+				bark("Ah, not met Tjorvi have you? Let's just say
+				a slight problem with liquor he has.
+
+				\g Wahrlich, du hast Tyorvi noch nicht kennengelernt? 
+				Nun, er trinkt gerne Åber den Durst, fÅrwahr, das tut er.");
+				askList-=<<"You mean his drinking problem?
+							\g Meint Ihr seinen Hang zum Trinken?", 
+							"Why her brother?
+							\g Das Elend ihres Bruders?">>;
+			}
+
+			case "Prepare my funeral?!
+				\g Mein BegrÑbnis?!"
+			{
+				bark("A nice funeral it will be. Burn the finest
+				incense I will and sing some of the old songs I will.
+				Invoke the Ancient Ones of Love and Joy I will and
+				perform the ritual to chase away Sorrow I will.
+
+				\g Es wird ein schînes und feierliches BegrÑbnis werden. 
+				Ich werde teuren Weihrauch schwenken und die alten Lieder 
+				singen, fÅrwahr, das werde ich. Wahrlich, ich werde die 
+				Gîtter der Liebe und der Freude anrufen und die Zeremonie 
+				vollfÅhren, um die Trauer zu verjagen.");
+
+				askList-=<<"Prepare my funeral?!
+							\g Mein BegrÑbnis?!", 
+							"Why does she hate you?
+							\g Warum ha·t sie Euch?">>;
+				askList+=<<"I want to be healed!
+							\g Ich will geheilt werden!", 
+							"I don't want a funeral!
+							\g Ich will kein BegrÑbnis!">>;
+			}
+
+			case "I want to be healed!
+				\g Ich will geheilt werden!"
+			{
+				bark("This I cannot do. But begin preparations for
+				your funeral right away I will. Have to gather the
+				appropriate mushrooms I will. Prepare the ceremonial pyre
+				I wll. Hmmm, require some time that will. I hope hold
+				out for a little while longer you can! Time to prepare
+				I need!
+
+				\g Damit kann ich Euch leider nicht helfen. Aber ich werde 
+				sofort mit den Vorbereitungen fÅr dein BegrÑbnis beginnen, 
+				fÅrwahr, das werde ich. Ich mu· die geeigneten Pilze 
+				sammeln und die Vorbereitungen zur Verbrennung des 
+				Leichnams treffen. Wahrlich, das wird einige Zeit dauern. 
+				Ich hoffe, da· du noch eine Weile durchhalten kannst. 
+				Ich brauche Zeit, um alle Vorbereitungen abzuschlie·en, 
+				fÅrwahr, das brauche ich!");
+				askList-=<<"I want to be healed!
+							\g Ich will geheilt werden!">>;
+			}
+
+			case "I don't want a funeral!
+				\g Ich will kein BegrÑbnis!"
+			{
+				bark("What mean do you? If not buried with proper ceremoneis
+				you are, accept you the Ancient Ones will not.
+				Achieve eternal peace you will not.
+
+				\g Was hat das zu bedeuten? Ohne die geeignete 
+				BegrÑbniszeremonie werden dich die Alten nicht 
+				in ihr Reich aufnehmen kînnen. Du wirst unmîglich den 
+				ewigen Frieden erlangen kînnen, fÅrwahr, so ist es!");
+				askList-=<<"I don't want a funeral!
+							\g Ich will kein BegrÑbnis!">>;
+				askList+=<<"You said the Ancient Ones were gone!
+						\g Aber die Alten sind verschwunden!", 
+// @@@ CHANGE F G
+						"What kind of eternal peace?">>;
+			}
+
+			case "What kind of eternal peace?"
+			{
+				bark("Oh, live with the Ancient Ones you will and in
+				their wonderful Cloud City serve them you will.");
+				askList-=<<"What kind of eternal peace?">>;
+				askList+=<<"A city in the clouds?">>;
+			}
+
+			case "A city in the clouds?"
+			{
+				bark("Certainly? Where else live would the Ancient Ones?
+				Said it is that beautiful the city is. White as the clouds
+				the walls are and bright as gold the streets are. To go there
+				when they die all Zealans hope, but it happen it will not
+				until return the Ancient Ones do.");
+				askList-=<<"A city in the clouds?">>;
+				spokeOfClouds = true;
+			}
+			 
+
+
+
+			case "You said the Ancient Ones were gone!
+				\g Aber die Alten sind verschwunden!"
+			{
+				bark("Yes, well, so it seems. But when return they do, 
+				accept you they will.
+
+				\g Das mag sein, aber wenn sie zurÅckkommen, werden sie 
+				dich in ihr Reich aufnehmen.");
+				askList-=<<"You said the Ancient Ones were gone!
+						\g Aber die Alten sind verschwunden!">>;
+				askList+=<<"Where will I be until then?
+							\g Und wo werde ich bis dahin sein?", 
+							"When will they	return?
+							\g Wann werden sie wiederkehren?">>;
+			}
+
+			case "When will they return?
+				\g Wann werden sie wiederkehren?"
+			{
+				bark("Oh, my friend, asking that question for 200 years
+				my ancestors have been!
+
+				\g Wahrlich, diese Frage stellen wir uns schon seit 
+				200 Jahren, fÅrwahr, das tun wir!");
+				askList-=<<"When will they return?
+							\g Wann werden sie wiederkehren?">>;
+			}
+
+			case "Where will I be until then?
+				\g Und wo werde ich bis dahin sein?"
+			{
+				bark("Well....ummm....unknown that is. Some there are
+				who believe those horrid undead water things are dead
+				Zealans. Believe they do this is how await
+				the return of the Ancients, they will.
+
+				\g Nun... hmmm... das wissen wir nicht genau. Manche 
+				glauben, da· diese schrecklichen, untoten Wasserzombies 
+				in Wirklichkeit verstorbene Zealanen sind. Sie glauben, 
+				da· wir in dieser Form auf die RÅckkehr der Alten 
+				warten mÅssen, fÅrwahr, das glauben sie.");
+
+				askList-=<<"Where will I be until then?
+							\g Und wo werde ich bis dahin sein?">>;
+				askList+=<<"I don't want to be an undead!
+							\g Ich will kein Untoter sein!", 
+							"Those cannot be Zealans!
+							\g Das kînnen keine Zealanen sein!">>;
+			}
+
+			case "Those cannot be Zealans!
+				\g Das kînnen keine Zealanen sein!"
+			{
+				bark("To agree with you, I tend, however, saw one that
+				like my grandmother looked I did.
+
+				\g Wahrlich, eigentlich stimme ich dir zu. Ich habe aber 
+				einmal eine Untote gesehen, die meiner Gro·mutter Ñhnelte, 
+				fÅrwahr, das habe ich!");
+
+				askList-=<<"Those cannot be Zealans!
+							\g Das kînnen keine Zealanen sein!">>;
+			}
+
+			case "I don't want to be an undead!
+				\g Ich will kein Untoter sein!"
+			{
+				bark("Oh, believe it is so I do not! Remnants of that
+				horrid water Titan I believe they are. Believe the undead
+				Zealans go to the Cloud City I do, the return of the
+				Ancients to await.
+
+				\g Wahrlich, ich glaube nicht, da· es in Wirklichkeit so 
+				ist. Die Untoten im Wasser sind bestimmt Diener dieser 
+				schrecklichen Wassertitanin, fÅrwahr, das sind sie. Ich 
+				glaube, da· die verstorbenen Zealanen in die Wolkenstadt 
+				eingehen, um dort die RÅckkehr der Alten zu erwarten, fÅrwahr, 
+				das glaube ich.");
+				askList-=<<"I don't want to be an undead!
+							\g Ich will kein Untoter sein!", 
+							"Those cannot be Zealans!
+							\g Das kînnen keine Zealanen sein!">>;
+				askList+=<<"Cloud City?
+							\g Wolkenstadt?", 
+							"Remnants of the Water Titan?
+							\g Diener der Wassertitanin?">>;
+			}
+
+			case "Remnants of the Water Titan?
+				\g Diener der Wassertitanin?"
+			{
+				bark("Set upon us some of their minions the Titans did
+				during the Great Cataclysm. Mentioned
+				that to you have I not? Undead from the water,
+				whirlwinds, raining fire, earthquakes. Terrible it was.
+
+				\g WÑhrend der gro·en Schlacht griffen die Titanen uns 
+				in vielen verschiedenen Formen an, fÅrwahr, das taten sie. 
+				Habe ich dir noch gar nicht davon erzÑhlt? Untote stiegen aus 
+				den GewÑssern, WirbelstÅrme fegten Åber das Land, es regnete 
+				Feuer und Erdbeben verwÅsteten weite Landstriche. Es war 
+				furchtbar, fÅrwahr, das war es!");
+				askList-=<<"Remnants of the Water Titan?
+							\g Diener der Wassertitanin?">>;
+			}
+
+			case "Cloud City?
+				\g Wolkenstadt?"
+			{
+
+// @@@ CHANGE F G
+				if spokeOfClouds = true
+				{
+					bark("Yes as told you I did.");
+				}
+
+
+				bark("The home of the Ancient Ones the Cloud City is. Atop
+				those very tall cliffs you see off to the Northwest it is.
+				Hmmmm, now that about it I think. A possible way for you
+				to be healed there may be.
+
+				\g Wahrlich, die Wolkenstadt ist die Heimat der Alten, fÅrwahr, 
+				das ist sie. Siehst du die hohen Klippen dort im Nordwesten? öber 
+				diesen Klippen liegt die Wolkenstadt, fÅrwahr, das tut sie. 
+				Wenn wir gerade davon sprechen: vielleicht kannst du dort 
+				Heilung finden.");
+
+				askList-=<<"Cloud City?
+							\g Wolkenstadt?", 
+							"Remnants of the Water Titan?
+							\g Diener der Wassertitanin?">>;
+				askList+=<<"How?! How can I be healed?
+							\g Wie kann ich dort geheilt werden?">>;
+			}
+
+			case "How?! How can I be healed?
+				\g Wie kann ich dort geheilt werden?"
+			{
+				bark("Well, not a very good chance it is, but better than
+				no chance, any chance is. Before the Cataclysm, heal those
+				poisoned in the Trial the High Priestess would.
+				But gone many years the Shield has been and without it
+				speak with the Ancients the High Priestess cannot.
+				Heal you only the Ancients can. Said by some it is that the
+				not gone the Ancient Ones are, but merely sleeping in their
+				Cloud City. Perhaps go you could and awaken them. Then ask
+				them to heal you, you could.
+
+				\g Wahrlich, es besteht nicht viel Hoffnung, aber ein bi·chen 
+				Hoffnung ist immer noch besser als Åberhaupt keine Hoffnung. 
+				Vor der gro·en Schlacht heilte die Hohepriesterin alle, die 
+				wÑhrend der PrÅfung vergiftet wurden, fÅrwahr, das tat sie. 
+				Aber jetzt ist der Schild verschwunden und die Hohepriesterin 
+				kann ihre Zeremonien nur mit Hilfe des Schildes durchfÅhren. 
+				Wahrlich, jetzt kînnen nur noch die Alten dir helfen, fÅrwahr, 
+				so ist es. Manche behaupten, da· die Alten nicht verschwunden 
+				sind. Sie sind in der Wolkenstadt in einen tiefen Schlaf 
+				gefallen, fÅrwahr, so hei·t es in der Legende. Vielleicht 
+				kannst du sie aufwecken und so geheilt werden.");
+
+				askList=<<"Tell me of the Shield.
+							\g ErzÑhlt mir mehr Åber den Schild.", 
+							"Where is the Cloud	City?
+							\g Wo liegt die Wolkenstadt?", 
+							"How can I awaken the Ancients?
+							\g Wie kann ich die Alten aufwecken?">>;
+
+// this finds out if the Avatar is carrying the original shield
+				foreach recursive shield where (type = TypeShields)
+				and (frame = 0) within container Avatar 
+				{
+					askList^=<<"I have the Ancient Shield.
+							\g Ich habe den Schild der Alten.">>;
+				}
+			}
+
+			case "How can I awaken the Ancients?
+				\g Wie kann ich die Alten aufwecken?"
+			{
+				bark("Ah, something I have thought on for many
+				years that is. Confess I do, though, no answer I have. Perhaps
+				once there you arrive, find something with
+				which to awaken them you will.
+
+				\g Wahrlich, diese Frage stelle ich mir bereits seit vielen 
+				Jahren. Ich mu· leider gestehen, da· auch ich keine Antwort 
+				darauf habe. Aber wenn es dir erst einmal gelingt, die 
+				Wolkenstadt zu erreichen, findest du vielleicht etwas, 
+				womit du sie aufwecken kannst, fÅrwahr, das hoffe ich.");
+
+				askList-=<<"How can I awaken the Ancients.
+							\g Wie kann ich die Alten aufwecken?">>;
+			}
+
+			case "I have the Ancient Shield.
+				\g Ich habe den Schild der Alten."
+			{
+// @@@ CHANGE F G
+				bark("Hmmmm, that I see. Afraid I am a
+				a forgery that is. While the same shape it is and
+				the wrong symbols it has. The symbols of Amoras,
+				Apathos and Odion those are. On the Shield
+				of the Ancients are the symbols for Felicitar, Doloras and
+				Timyra. Clever the fake is, but uneducated the maker was.
+
+				\g Wahrlich, das sehe ich, aber leider ist das nur eine 
+				FÑlschung, die du das in der Hand hÑltst, fÅrwahr, das ist 
+				es. Der Schild hat zwar eine Ñhnliche Form und Erscheinung 
+				wie der Schild der Alten, aber die Symbole sind falsch. Das 
+				sind die Symbole der Alten im Tempel in Pagan. Auf dem Schild, 
+				der uns fehlt, kann man die Symbole der Alten in unserem 
+				Tempel erkennen, fÅrwahr, das kann man.");
+				askList-=<<"I have the Ancient Shield.
+							\g Ich habe den Schild der Alten.">>;
+				askList+=<<"I found it in the Temple in Pagan.
+							\g Ich habe ihn im Tempel in Pagan gefunden.">>;
+			}
+
+			case "I found it in the Temple in Pagan.
+				\g Ich habe ihn im Tempel in Pagan gefunden."
+			{
+// @@@ CHANGE F G
+				bark("Ah, then a true relic it may be. Representing the
+				Ancients that did not arrive to help defend the Vale
+				those symbols are. Perhaps held in Pagan they were. However,
+				feel no power from that shield I do. So an interesting piece
+				of history it is, help us here in the Vale it will not.
+				
+				\g Wahrlich, das ist sehr interessant, aber in unseren 
+				Legenden wird immer nur ein Schild erwÑhnt, fÅrwahr, das 
+				wird es. Das mu· eine FÑlschung sein.");
+
+				askList-=<<"I found it in the Temple in Pagan.
+							\g Ich habe ihn im Tempel in Pagan gefunden.">>;
+			}
+
+			case "Tell me of the Shield.
+				\g ErzÑhlt mir mehr Åber den Schild.", 
+				"Tell me again of the Shield.
+				\g ErzÑhlt mir noch mehr Åber den Schild."
+			{
+				bark("a great powerful artifact the Shield is. 
+				Used it to communicate with us the Ancients did.
+				So powerful their magic is, sear the flesh from the
+				High Priestess it would. So constructed s shield was to
+				protect her when receiving their	presence she was.
+				But lost many years ago the shield was.
+
+				\g Wahrlich, der Schild der Alten ist ein heiliger Gegenstand 
+				von gro·er Macht, fÅrwahr, das ist er. Die Magie der Alten war 
+				so konzentriert, da· die Hohepriesterin Verbrennungen 
+				erlitt, fÅrwahr, so war es. Deshalb wurde ein besonderer Schild 
+				gefertigt, um die Priesterin zu schÅtzen, wÑhrend sie die 
+				Botschaften der Alten empfing. Dieser Schild ging jedoch schon 
+				vor vielen, vielen Jahren verloren, wahrlich, so ist es.");
+
+				askList-=<<"Tell me of the Shield.
+							\g ErzÑhlt mir mehr Åber den Schild.">>;
+				askList+=<<"How was it lost?
+							\g Wie konnte er verlorengehen?", 
+							"Can you make another shield?
+							\g Kînnt Ihr einen neuen Schild fertigen?">>;
+				toldOfShield = true;
+			}
+
+			case "How was it lost?
+				\g Wie konnte er verlorengehen?"
+			
+			{
+				bark("The shame of the High Priestess it is. After the
+				Great Cataclysm terribly depressed the High Priestess
+				became. Stopped eating she did. Spent all her time
+				in ritual and prayer she did. One night, disappeared
+				from her house the Shield did. At the same time,
+				disappeared from the villages two young boys did.
+				When found out the villagers did, angry they became.
+				Begin to fight the boys' families did.
+				Claimed each side did that the other boy had
+				stolen the shield. Claimed each side did only gone to
+				retrieve it their boy had. Neither boy nor the shield
+				was ever found. Fighting ever since the families have been.
+
+				\g Wahrlich, das ist die Schuld der Hohepriesterin. Nach der 
+				gro·en Schlacht verfiel die damalige Hohepriesterin in eine 
+				schwere Depression, fÅrwahr, das tat sie. Sie weigerte sich, 
+				zu essen und verbrachte ganze Tage im Gebet. Und fÅrwahr, eines 
+				Nachts verschwand der Schild aus ihrem Haus. In der selben 
+				Nacht verschwanden aber au·erdem zwei Jungen, fÅrwahr, das 
+				taten sie. Wahrlich, das ganze Dorf war in heller Aufregung. 
+				Die Familien der zwei Jungen begannen, sich zu streiten, fÅrwahr, 
+				das taten sie. Jede Seite behauptete, der andere Junge habe den 
+				Schild gestohlen und ihr Sohn sei dem Dieb nur gefolgt, um das 
+				Artefakt zurÅckzubringen. Weder der Schild noch die zwei Jungen 
+				wurden jemals gefunden, fÅrwahr, so ist es. Die zwei Familien 
+				liegen jedoch seitdem im Streit, wahrlich, das tun sie.");
+
+				askList-=<<"How was it lost?
+							\g Wie konnte er verlorengehen?">>;
+				askList^=<<"Can you make another shield?
+							\g Kînnt Ihr einen neuen Schild fertigen?", 
+							"When did this happen?
+							\g Wann passierte das alles?">>;
+			}
+
+			case "When did this happen?
+				\g Wann passierte das alles?"
+			{
+				bark("Shortly after the Great Cataclysm. Nearly 200 years
+				ago that would be.
+
+				\g Wahrlich, das war kurz nach der gro·en Schlacht vor fast 200 
+				Jahren, fÅrwahr, das war es.");
+				askList-=<<"When did this happen?
+							\g Wann passierte das alles?">>;
+			}
+
+			case "Can you make another shield?
+				\g Kînnt Ihr einen neuen Schild fertigen?"
+			{
+				bark("No. Made by Zealan hands the shield was not.
+				A gift from the Ancient Ones to Casera, our first
+				High Priestess, it was.
+
+				\g Wahrlich, das ist unmîglich, denn der Schild wurde nicht 
+				von den Zealanen gefertigt. Er war ein Geschenk der Alten an 
+				Casera, unsere erste Hohepriesterin, fÅrwahr, das war er.");
+				askList-=<<"Can you make another shield?
+							\g Kînnt Ihr einen neuen Schild fertigen?">>;
+			}
+
+			case "Where is the Cloud City?
+				\g Wo liegt die Wolkenstadt?"
+			{
+				bark("See the great cliffs to the 
+			    Northwest of our vale can you? At the top of those
+				cliffs the fabled Cloud City lies.
+
+				\g Wahrlich, kannst du die hohen Klippen dort im Nordwesten 
+				sehen? Die sagenhafte Wolkenstadt liegt Åber diesen Klippen, 
+				fÅrwahr, das tut sie.");
+				askList-=<<"Where is the Cloud City?
+							\g Wo liegt die Wolkenstadt?">>;
+				askList^=<<"Tell me more of the Cloud City.
+							\g ErzÑhlt mir mehr Åber die Wolkenstadt.">>;
+			}
+
+			case "Tell me more of the Cloud City.
+				\g ErzÑhlt mir mehr Åber die Wolkenstadt."
+			{
+				bark("Said to be the most beautiful land it is. The
+				clouds which as our ceiling we see, the
+				floor for the Cloud City they are. Of white
+				polished stone the buildings are and sparkle with
+				gold. The home of the Ancient Ones it is.
+
+				\g Wahrlich, es soll dort wunderschîn sein. In der Stadt 
+				kann man auf den Wolken gehen, die wir im Himmel sehen. Die 
+				GebÑude dort sind aus wei·em Marmor und glÑnzen golden, 
+				fÅrwahr, das tun sie. Dort sind die Alten zuhause.");
+				askList-=<<"Tell me more of the Cloud City.
+						\g ErzÑhlt mir mehr Åber die Wolkenstadt.">>;
+				askList+=<<"Are the Ancient Ones still there?
+							\g Sind die Alten noch dort?", 
+							"Has anyone ever been there?
+							\g Seid Ihr je dagewesen?">>;
+			}
+
+			case "Are the Ancient Ones still there?
+				\g Sind die Alten noch dort?"
+			{
+				bark("No one knows. Steep and treacherous the Cliffs
+				which guard the Cloud City are . Shortly after the Cataclysm
+				to climb the cliffs many young Zealans tried. Met their
+				deaths on the rocks below, many did. So many died,
+				sealed off the way to the Cliffs, the High Priestess did.
+				Now, approach the Cliffs only those who bear the Key to the
+				Clouds may.
+
+				\g Wahrlich, das wei· niemand so genau. Um die Wolkenstadt 
+				zu erreichen, mu· man zuerst die Klippen erklimmen. Sie 
+				sind sehr steil und gefÑhrlich, fÅrwahr, das sind sie. Kurz 
+				nach der gro·en Schlacht versuchten viele junge Zealanen, 
+				Åber die Klippen zur Wolkenstadt zu gelangen. Die meisten 
+				stÅrzten in den Tod, fÅrwahr, das taten sie.");
+
+				askList-=<<"Are the Ancient Ones still there?
+							\g Sind die Alten noch dort?">>;
+// @@@ CHANGE F G
+				askList+=<<"Perhaps I will try the Cliffs.
+							\g Ich will es versuchen.", "Key to the Clouds?">>;
+			}
+
+			case "Key to the Clouds?"
+			{
+				bark("Allows the bearer to be transfererd safely across the
+				lava it does. Built it was with what little magic the High
+				Priestess has left. Died shortly after making it, she did.");
+				askList-=<<"Key to the Clouds?">>;
+			}
+
+			case "Has anyone ever been there?
+				\g Seid Ihr je dagewesen?"
+			{
+				bark("Told about Casera a story is. The first High
+				Priestess she was. Carried her
+				up to their City the Ancient Ones did. Gone for 3 days she
+				was. Thought her dead all the Zealans did. Began to mourn they
+				did. Then, on the morning of the	fourth day, 
+				rumbled the ground did and parted the clouds did. 
+				Then a stairway of radiant light Casera descended. 
+				The Shield Of The Ancients she brought. Told stories of
+				the brilliance of the Cloud City she often did.
+
+				\g Nein, aber Casera soll dort gewesen sein, fÅrwahr, das war sie. 
+				Wahrlich, sie war unsere erste Hohepriesterin. Sie erzÑhlte uns, da· 
+				die Alten sie in ihre Stadt trugen, fÅrwahr, das taten sie. Drei 
+				Tage lang war sie verschwunden. Und wahrlich, alle Zealanen trauerten 
+				und glaubten schon, sie sei tot. Dann, am Morgen des vierten Tages 
+				bebte die Erde, fÅrwahr, sie bebte. Die Wolken teilten sich und 
+				Casera stieg auf einer leuchtenden Treppe aus dem Himmel herab, fÅrwahr, 
+				genauso soll es gewesen sein. Sie brachte den Schild der Alten mit 
+				sich zurÅck. Wahrlich, oft erzÑhlte sie Geschichten Åber die wunderbare, 
+				glÑnzende Wolkenstadt.");
+				askList-=<<"Has anyone ever been there?
+							\g Seid Ihr je dagewesen?">>;
+			}
+
+			case "Perhaps I will try the Cliffs.
+				\g Ich will es versuchen."
+			{
+				bark("Hmmmm, your only chance it may be. For if still there
+				the Ancient Ones are, able to wake them and ask
+				them to heal you, you may. If the Key to the Clouds I had,
+				gladly give	it to you I would. But have it I do not. Given
+				it to Tyorvi I have. From him retrieve it and the cliffs
+				climb. A strength about you there is. Go to the sacred
+				place I will and perform I will the rituals to help guide you.
+				Remain there I will until return you do, or brought to
+				me news of your death is.
+
+				\g Wahrlich, das ist vielleicht deine letzte Hoffnung. Wenn die Alten 
+				wirklich noch dort sind und schlafen, dann kannst du sie vielleicht 
+				aufwecken und sie bitten, dich zu heilen, fÅrwahr, das kannst du. Ich wÅrde 
+				dir den WolkenschlÅssel gerne geben, aber, wahrlich,  ich habe ihn nicht 
+				mehr bei mir. Ich habe ihn Tyorvi gegeben, fÅrwahr, das habe ich. Hol dir 
+				den SchlÅssel von ihm und finde die Klippen. Wahrlich, von dir geht eine 
+				wundersame Kraft aus. Vielleicht wird es dir gelingen, die Wolkenstadt zu 
+				erreichen, fÅrwahr, ich hoffe es. Wahrlich, ich werde an den Heiligen 
+				Kreis zurÅckkehren und die Zeremonien vollfÅhren, die dir den Weg weisen 
+				kînnen. Ich werde dort bleiben, bis du zurÅckkehrst oder man mir deinen 
+				Leichnam bringt, fÅrwahr, das werde ich.");
+				sentToTyorvi = true;
+				askList-=<<"Perhaps I will try the Cliffs.
+							\g Ich will es versuchen.">>;
+				askList^=<<"Where is the Sacred Circle?
+							\g Wo ist der Heilige Kreis?">>;
+				if toldOfShield = false
+				{
+					askList+=<<"Tell me of the Shield.
+								\g ErzÑhlt mir mehr Åber den Schild.">>;
+				}
+			}
+
+			case "Where is the Sacred Circle?
+				\g Wo ist der Heilige Kreis?"
+			{
+				bark("On top of the plateau on the north east
+				side of the Vale it is.
+				\g Er liegt auf dem Plateau am nordîstlichen Ende des Tals, fÅrwahr, 
+				dort kannst du mich finden.");
+				askList-=<<"Where is the Sacred Circle?
+							\g Wo ist der Heilige Kreis?">>;
+			}
+
+
+			case "Please heal me.
+				\g Bitte heilt mich."
+			{
+				bark("I thought change your mind you might. Certainly
+				heal you I will.
+				\g Ich dachte, du wÅrdest es dir vielleicht anders Åberlegen. Wahrlich, 
+				ich will dich gerne heilen, fÅrwahr, das will ich.");
+				if (Avatar.getHp() < (Avatar.getStr() * 2))
+				{
+					healingTouch(Avatar:Referent);
+					bark("Rest now I must. Please leave me.
+					\g Wahrlich, nun mu· ich mich ausruhen. Bitte la· mich jetzt 
+					alleine.");
+					exitConvo();
+					return;
+				}
+				else
+				{
+					bark("Hmmm, it seems heal you no more I can. Sapped your
+					strength has been. Repair that damage only the Ancient Ones
+					can. Sorry I am.
+					\g Wahrlich, es scheint, als ob auch ich dir nicht mehr helfen kann. 
+					Du hast bereits zu viel Kraft verloren, fÅrwahr, das hast du. Jetzt 
+					kînnen dir leider nur noch die Alten helfen, fÅrwahr, so ist es.");
+					exitConvo();
+					return;
+				}
+			}
+
+
+			case "I climbed the cliffs!
+				\g Ich habe die Klippen erklommen!"
+			{
+				bark("Find the Ancient Ones did you?
+					\g Wahrlich, hast du die Alten gefunden?");
+				askList-=<<"I climbed the cliffs.
+							\g Ich habe die Klippen erklommen!">>;
+				askList=<<"No, I did not.
+							\g Nein.", 
+							"Yes, I did.
+							\g Ja.">>;
+			}
+
+			case "No, I did not.
+				\g Nein."
+			{
+				spokeOfAwaken = true;
+				bark("Ah, I thought you had not. For had you awakened them,
+				known it I would have. Perhaps search hard enough you did not.
+				The way is perilous I know, but consider returning you might.
+				Looking for clues you should as to where the
+				Ancient Ones are.
+
+				\g Wahrlich, ich dachte es mir schon. Ich hÑtte es gewu·t, wenn es 
+				dir gelungen wÑre, sie aufzuwecken, fÅrwahr, das hÑtte ich. Vielleicht 
+				hast du nicht lange genug gesucht. Wahrlich, ich wei·, wie schwer der 
+				Weg ist, aber du solltest trotzdem zurÅckkehren. Vielleicht stî·t du 
+				ja auf Spuren, die die Alten hinterlassen haben.");
+				exitConvo();
+				return;
+			}
+
+			case "Yes, I did.
+				\g Ja."
+			{
+				spokeOfAwaken = true;
+				bark("Strange that is. Had you found them, sure I am that
+				known it I would have. Well, obvious it is awaken them you
+				did not. The way is perilous I know, consider returning you
+				should and look for clues you might.
+
+				\g Wahrlich, das erscheint mir sehr eigenartig. Ich hÑtte es gewu·t, wenn 
+				du sie wirklich aufgeweckt hÑttest, fÅrwahr, das hÑtte ich. Nein, sie 
+				schlafen noch immer. Wahrlich, ich wei·, wie schwer der Weg ist, aber 
+				du solltest trotzdem zurÅckkehren. Vielleicht stî·t du ja auf Spuren, die 
+				die Alten hinterlassen haben.");
+				exitConvo();
+				return;
+			}
+
+			case "I have freed your gods!
+				\g Ich habe Eure Gîtter befreit!"
+			{
+				if hasBag
+				{
+					bark("Yes yes! I know! Wonderful it is. I know
+					not enough to repay you the bag I gave you is. Thank
+					you again for your help. Now, much there is for me
+					to do. If excuse me you will?
+
+					\g Wahrlich, ich wei·! Es ist wunderbar, fÅrwahr, das ist es. Ich 
+					kann dir gar nicht genug danken. Vielleicht kann der Beutel, den ich 
+					dir gab, meine Dankbarkeit wenigstens teilweise ausdrÅcken, fÅrwahr, 
+					das hoffe ich. Wahrlich, ich habe viel zu tun. Wir kînnen uns ja noch 
+					spÑter unterhalten.");
+					exitConvo();
+					return;
+				}
+				else
+				{
+					bark("What a wonderful time this is! Once again
+					be able to fulfill my duties as High Priestess I will!
+					Nothing there is I can give you to repay you for your
+					trouble, but this I can give you there is. A magical bag
+					it is. Provide you it will with any magical
+					reagents you need. Take it, with our heartfelt thanks!
+
+					\g Wahrlich, das sind wunderbare Zeiten! Ich werde wieder meine 
+					Pflichten als Hohepriesterin erfÅllen kînnen! Ich kann dir gar nicht 
+					genug fÅr deine Wohltat danken, aber ich will es wenigstens versuchen, 
+					fÅrwahr, das will ich. Wahrlich, das hier ist ein magischer Beutel. 
+					In ihm kannst du alle magischen Reagenzien finden, die du jemals 
+					benîtigen wirst, fÅrwahr, das kannst du. Wir mîchten dir alle von 
+					Herzen danken!");
+					exitConvo();
+					return;
+				}
+			}
+
+				case "I have opened your temple!
+					\g Ich habe Euren Tempel geîffnet!"
+				{
+					if spokeOfOpenTemple
+					{
+					bark("Yes. Yes. Now, get Atli and Thordis I must. Please
+					go back to the temple. Meet you there I will.
+
+					\g Ja, ja. Wahrlich, ich mu· jetzt Atli und Thordis holen. 
+					Bitte geh zurÅck in den Tempel, fÅrwahr, das wÑre jetzt am 
+					besten. Wahrlich, ich werde dich dort treffen.");
+					exitConvo();
+					return;
+					}
+
+					else
+					{
+						bark("Opened the temple have you?!
+						Something had happened I knew. I sensed it!
+						How managed it did you? How...oh, never mind
+						what is important is you open it you did! What
+						find did you?
+
+						\g Wahrlich, du hast den Tempel geîffnet?! Ich wu·te, da· etwas 
+						geschehen war. Wahrlich, ich konnte es spÅren, fÅrwahr, das konnte 
+						ich! Wahrlich, wie hast du das nur geschafft? Wie... nun, es ist 
+						eigentlich unwichtig, wie es dir gelungen ist, fÅrwahr, das ist es. 
+						Wahrlich, ich freue mich nur, da· du es tatsÑchlich geschafft hast, 
+						fÅrwahr, das tue ich! Was hast du dort gefunden?");
+						askList-=<<"I have opened your temple!
+								\g Ich habe Euren Tempel geîffnet!">>;
+						askList=<<"I found the Ancient Ones!
+									\g Ich habe die Alten gefunden!", 
+									"I found great treasure!
+									\g Ich habe sagenhafte SchÑtze gefunden!", 
+									"I found nothing.
+									\g Ich habe nichts gefunden.">>;
+					}
+				}
+
+				case "I found the Ancient Ones!
+					\g Ich habe die Alten gefunden!"
+				{
+					bark("Knew something happened I did! Contact
+					us then will they? Make their presence known to me will
+					they?
+
+					\g Ich wu·te, da· etwas geschehen sein mu·te, fÅrwahr, das wu·te 
+					ich. Wahrlich, werden sie nun wieder zu uns sprechen? Werden sie 
+					mir ihre Wiederkehr verkÅnden, fÅrwahr, werden sie das?");
+					askList-=<<"I found the Ancient Ones!
+								\g Ich habe die Alten gefunden!", 
+								"I found great treasure!
+								\g Ich habe sagenhafte SchÑtze gefunden!", 
+								"I found nothing.
+								\g Ich habe nichts gefunden.">>;
+					askList+=<<"They are encased in amber.
+								\g Sie sind von Bernstein umgeben.">>;
+				}
+
+				case "They are encased in amber.
+					\g Sie sind von Bernstein umgeben."
+				{
+					bark("Oh dear, the work of the Titans this is. Release
+					them we must. Quickly, to the temple return.
+					Bring Atli and Thordis and meet you there I will!
+
+					\g Wahrlich, das ist das Werk dieser scheu·lichen Titanen. Wir 
+					mÅssen sie befreien, fÅrwahr, das mÅssen wir. Geh schnell zurÅck 
+					zum Tempel.");
+					ezToTemple = true;
+					spokeOfOpenTemple = true;
+					exitConvo();
+					return;
+				}
+
+				case "I found great treasure!
+					Ich habe sagenhafte SchÑtze gefunden!"
+				{
+					bark("Great treasure? What sort of treasure it is?
+
+					\g Wahrlich, sagenhafte SchÑtze? FÅrwahr, welche SchÑtze?");
+					askList-=<<"I found the Ancient Ones!
+								\g Ich habe die Alten gefunden!", 
+								"I found great treasure!
+								\g Ich habe sagenhafte SchÑtze gefunden!", 
+								"I found nothing.
+								\g Ich habe nichts gefunden.">>;
+					askList+=<<"I found the Ancient Ones!
+								\g Ich habe die Alten gefunden!", 
+								"I found gold.
+								\g Ich habe Gold gefunden!",
+								"I found gems!
+								\g Ich habe Juwelen gefunden!">>;
+				}
+
+				case "I found gold.
+					\g Ich habe Gold gefunden!"
+				{
+					bark("You lie! Never something as worthless
+					as gold in the temple there was!
+
+					\g Wahrlich, du lÅgst! Im Tempel wÅrde man nie etwas so 
+					wertloses wie Gold finden, fÅrwahr, niemals!");
+					askList-=<<"I found gold.
+								\g Ich habe Gold gefunden!", 
+								"I found gems!
+								\g Ich habe Juwelen gefunden!">>;
+				}
+
+				case "I found gems!
+					\g Ich habe Juwelen gefunden!"
+				{
+					bark("Believe you I do not. 
+					A storage house of treasure the temple was not!
+					There certainly kept there no gems were!
+
+					\g Wahrlich, das glaube ich nicht! Im Tempel wurden niemals 
+					SchÑtze aufbewahrt, fÅrwahr, niemals! Man wÅrde dort sicherlich 
+					keine Juwelen finden.");
+					askList-=<<"I found gold.
+								\g Ich habe Gold gefunden!", 
+								"I found gems!
+								\g Ich habe Juwelen gefunden!">>;
+				}
+
+				case "I found nothing.
+					\g Ich habe nichts gefunden."
+				{
+					bark("Hardly believe that I can. A surge of
+					power down in the depth of my heart I felt. I know
+					something you found. Now, what find did you?
+
+					\g Wahrlich, das kann ich nicht glauben. Ich habe die Macht in 
+					mir gefÅhlt, fÅrwahr, tief in meinem Herzen. Wahrlich, ich wei·, 
+					da· du etwas gefunden hast. Wahrlich, was war es?");
+					askList-=<<"I found nothing.
+								\g Ich habe nichts gefunden.">>;
+				}
+
+
+
+				case "Tell me of the Vale.
+					\g ErzÑhlt mir mehr Åber das Tal."
+				{
+					if toldValeOne = false
+					{
+						toldValeOne = true;
+						#if English
+						{
+						bark("Once a lush, green place the Vale was.
+						Said it is green the ground was and blue the
+						sky was. One day,  walking along the shore
+						of a small stream High Priestess Casera
+						was. Up from the water a fish jumped.
+						'Hello,' to her it said. 
+						'Hello.' she said. 
+						'If give me a kiss you will, become a handsome man
+					    I will and abide with you forever I will.'"
+
+						+" Picked up the fish from the stream
+						High Priestess Casera did.
+						Said the fish. 'Bewitched by an evil mage I was.
+						To release me, only kiss me you must.'
+						'Become a handsome man you will and abide with
+						me forever you say?' she asked. 
+						For a moment Casera thought, then said, 'Careless
+				 		to get caught by a mage you were. Want to live
+						with someone so careless I do not.' and fried fish
+						for dinner that night she had!");
+						}
+						#if French
+						{
+						}
+						#if German
+						{
+						bark("Wahrlich, das Tal war einmal grÅn und fruchtbar, fÅrwahr, 
+						das war es. Eines Tages ging die Hohepriesterin Casera am 
+						Ufer eines kleinen Baches spazieren, fÅrwahr, das tat sie. 
+						Und wahrlich, plîtzlich sprang ein Fisch aus dem Wasser, ihr 
+						genau in die HÑnde. 'Guten Tag', sagte der Fisch zu ihr. 
+						'Guten Tag', antwortete sie, nicht wenig erstaunt, fÅrwahr, das 
+						war sie. Wahrlich, der Fisch sagte: 'Wenn du mich kÅ·t, werde 
+						ich mich in einen stattlichen Mann verwandeln und fÅr immer 
+						an deiner Seite bleiben.' Wahrlich, die Hohepriesterin Casera 
+						wandte den Fisch in den HÑnden hin und her." 
+						+" 'Ein bîser Magier hat mich in einen Fisch verwandelt. 
+						Du kannst mich erlîsen, wenn du	mich nur kÅ·t'. Wahrlich, 
+						Casera Åberlegte einen Augenblick und sagte dann: 'Auch 
+						wenn du noch so stattlich bist: Ich will niemanden an meiner 
+						Seite haben, der unvorsichtig genug war, sich von einem bîsen 
+						Magier erwischen zu lassen. Wahrlich, ich will keinen 
+						dummen Mann an meiner Seite'. Zum Abendessen briet sie sich 
+						den Fisch und verzehrte ihn genÅ·lich, fÅrwahr, das tat sie.");
+						}
+						exitConvo();
+						return;
+					}
+					if (toldValeOne = true) and (toldValeTwo = false)
+					{
+						toldValeTwo = true;
+						#if English
+						{
+						bark("Before the Titans, before the Pagans and
+						even before the Zealans, here the Ancient Ones
+						were. All of Pagan to live in they had."
+// @@@ CHANGE F G
+						+" Their favorite place the Vale was. Now, happy all the
+						Ancient Ones were, except Felicitas. Weary of the company
+						of the other Ancients she became.
+						Somewhat stuffy and boring they were, she thought.
+						For something more to occupy her time she longed. "
+
+						+"So, one day a bit of the ground she picked up and
+						a bit of the clouds she mixed in and a small
+						figure she formed. Gently into the figure's mouth
+						she blew and to life it came. Several more just "
+
+						+"like it she made and, once breathing they all were,
+						set them in the Vale she did. How the Zealans came to
+						live in the Vale that is.");
+						}
+
+
+						#if German
+						{
+						bark("Wahrlich, vor der Ankunft der Titanen, der Paganen und 
+						sogar der Zealanen gab es nur die Alten hier in Pagan. Das 
+						gesamte Land gehîrte ihnen, fÅrwahr, das tat es. "
+
+						+"In diesem Tal hielten sie sich am allerliebsten auf, fÅrwahr, 
+						das taten sie. Alle Alten waren glÅcklich, fÅrwahr, mit einer 
+						Ausnahme. Die Freude langweilte sich und sehnte sich nach 
+						Abwechslung, fÅrwahr, das tat sie. Sie fand die anderen 
+						Alten ziemlich langweilig und stumpfsinnig. "
+
+						+"Und wahrlich, eines Tages hob sie einen Erdklumpen auf, 
+						vermischte ihn mit ein paar Wolken und formte daraus eine 
+						kleine Gestalt, fÅrwahr, das tat sie. Als sie vorsichtig in 
+						den Mund der kleinen Figur blies, erwachte die Gestalt zum 
+						Leben. "
+
+						+"Sie formte noch mehrere Gestalten, fÅrwahr, genau wie die erste. 
+						Und wahrlich, nachdem sie sie alle zum Leben erweckt hatte, setzte 
+						sie sie in dieses Tal. Seit diesem Tag ist das Tal die Heimat 
+						der Zealanen, fÅrwahr, so ist es.");
+						}
+						#if French
+						{
+						bark("Before the Titans, before the Pagans and
+						even before the Zealans, here the Ancient Ones
+						were. All of Pagan to live in they had."
+
+						+" The Vale their favorite place was. Now happy all the
+						Ancient Ones were, except Joy. Weary of the company
+						of the other Ancients she became.
+						Somewhat stuffy and boring they were, she thought.
+						For something more to occupy her time she longed. "
+
+						+"So, one day a bit of the ground she picked up and
+						a bit of the clouds she mixed in and a small
+						figure she formed. Gently into the figure's mouth
+						she blew and to life it came. Several more just "
+
+						+"like it she made and, once breathing they all were,
+						them in the Vale she set. How the Zealans came to
+						live in the vale that is.");
+						}
+
+						exitConvo();
+						return;
+					}
+					if (toldValeOne=true) and (toldValeTwo =true) and (toldValeThree = false)
+					{
+						toldValeThree=true;
+						#if English
+						{
+						bark("Once in the sky a great orange ball of
+						fire hung. At the beginning of every day rise into the
+
+						sky it would and at the end of every day, sink down
+						into the ground it would. Called the Heart of Gudbrand
+						this was. Said it is that came to the Vale Amoras did. "
+
+						+"Here Gudbrand, leader of the Zealans, saw her and
+						instantly in love he fell. Brought her many gifts he did.
+						The finest gems from the hills and the carvings of rarest
+						obsidean. When return to the Cloud City she had to, "
+
+						+"beg her to stay he did. 'What give you can I to get you
+						to stay' asked he. 'Nothing there is on this land can
+						me you give,' said she 'For go I	must.' Then left she did. "
+
+						+"Heartbroken Gudbrand was. Hide away in his house
+						he did. Then a thought he had. 'If nothing there
+						is on this land to make her return, then get something
+						from the sky I will!' Into the night he walked and
+						into the sky looked. There a thousand lights shining "
+
+						+"he saw. 'One of those lights bring her I will. Then
+						to me return she will.' Up the cliffs Gudbrand began
+						to climb. The very top he reached. On to a slender
+						spire he climbed. As for one of the lights he reached, "
+
+						+"slipped he did. Down the cliff he fell, to his death.
+						When heard this Amoras did, fly to him she did, but
+						too late she was. So touched she was by his love that
+						his heart she took and placed it into the sky she did.
+						That way provide light for all the world his love would.");
+						}
+						#if French
+						{
+						bark("Once in the sky a great orange ball of
+						fire hung. At the beginning of every day rise into the
+
+						sky it would and at the end of every day, sink down
+						into the ground it would. Called the Heart of Gudbrand
+						this was. Said it is that came to the Vale Amoras did."
+
+						+"Her Gudbrand, leader of the Zealans, saw and instantly
+						in love he fell. Many gifts her he brought. The finest
+						gems from the hills and the carvings of rarest
+						obsidean. When return to the Cloud City she had to,"
+
+						+"beg her to stay he did. 'What give you can I to stay
+						convince you?' begged he. 'Nothing on this land can
+						me you give,' said she 'to make me stay. For go I
+						must.' Then left she did."
+
+						+"Heartbroken Gudbrand was. Hide away in his house
+						he did. Then a thought he had. 'If nothing there
+						is on this land to make her return, then get something
+						from the sky I will!' Into the night he walked and
+						into the sky looked. There a thousand lights shining"
+
+						+"he saw. 'One of those lights bring her I will. Then
+						to me return she will.' Up the cliffs Gudbrand began
+						to climb. The very top he reached. On to a slender
+						spire he climbed. As for one of the lights he reached,"
+
+						+"slipped he did. Down the cliff he fell, to his death.
+						When heard this Amoras did, fly to him she did, but
+						too late she was. So touched she was by his love that
+						his heart she took and into the sky placed it. That
+						way provide light for all the world his love would.");
+						}
+						#if German
+						{
+						bark("Wahrlich, vor langer, langer Zeit stand ein gro·er 
+						Feuerball am Himmel, fÅrwahr, so war es. Jeden Morgen 
+						stieg er am Himmel auf, fÅrwahr, und jeden Abend soll er 
+						wieder untergegangen sein. Wahrlich, man nannte dieses 
+						Feuer Gudbrands Herz, nach dem AnfÅhrer der Zealanen, fÅrwahr, 
+						so war es. Und das kam so. Vor langer Zeit kam Amoras 
+						eines Tages in das Tal. "
+
+						+"Vom ersten Augenblick, als Gudbrand sie erblickte, verliebte 
+						er sich in sie, fÅrwahr, das tat er. Und wahrlich, er machte 
+						ihr viele Geschenke. Die feinsten Juwelen und wunderbare 
+						Schnitzereien aus seltenem Obsidian brachte er ihr, fÅrwahr, das 
+						tat er. Und wahrlich, als die Zeit kam, da· sie in die 
+						Wolkenstadt zurÅckkehren sollte, flehte er sie an, bei ihm 
+						zu bleiben."
+
+						+" 'Was kann ich nur tun, damit du bei mir bleibst?', fragte er 
+						verzweifelt. 'Wahrlich, es gibt nichts in diesem Tal, was du mir 
+						geben kînntest, um mich hierzubehalten', sagte sie. 'Ich mu· 
+						gehen'. Und mit diesen Worten verschwand sie, fÅrwahr, so 
+						war es."
+
+						+" Wahrlich, das brach Gudbrand das Herz. Er verriegelte sich 
+						in seinem Haus und trauerte, fÅrwahr, das tat er. Und dann 
+						hatte er eines Tages eine Idee, fÅrwahr, so war es. 'Wenn es 
+						hier nichts gibt, was sie haben will, dann mu· ich ihr eben 
+						etwas aus dem Himmel holen'! Wahrlich, er lief hinaus in die 
+						Nacht und blickte zum Himmel auf, fÅrwahr, das tat er. Am 
+						Firmament glitzerten tausende von kleinen Lichtern, fÅrwahr, 
+						wie kleine Juwelen."
+
+						+" 'Ich werde ihr eines von diesen Lichtern holen. Dann wird 
+						sie es sich vielleicht doch noch anders Åberlegen und zu mir 
+						zurÅckkehren'. Gudbrand lief zu den Klippen und begann zu 
+						klettern, fÅrwahr, das tat er. Als er endlich oben angekommen 
+						war, sah er eine schlanke SÑule, die weiter nach oben fÅhrte, 
+						fÅrwahr, so war es. Wahrlich, als er endlich hoch genug 
+						geklettert war, um nach einem der Lichter zu greifen,"
+
+						+" rutschte er aus und stÅrzte in den Tod. fÅrwahr, so war 
+						es. Als Amoras seinen Schrei hîrte, flog sie ihm zur Hilfe, 
+						aber es war bereits zu spÑt. Aber wahrlich, seine gro·e 
+						Liebe rÅhrte sie so tief, da· sie sein Herz in den Himmel 
+						setzte, um allen anderen Zealanen zu leuchten, fÅrwahr, das 
+						tat sie. Wahrlich, von dem Tag an leuchtete Gudbrands Herz auf 
+						die ganze Welt.");
+						}
+
+						exitConvo();
+						return;
+					}
+					else
+					{
+						bark("Sorry I am, too tired to tell
+						you another tale of our Vale I am.
+						\g Wahrlich, es tut mir sehr leid, aber ich bin zu mÅde, um 
+						dir noch mehr Geschichten Åber das Tal zu erzÑhlen, fÅrwahr, 
+						das bin ich.");
+						exitConvo();
+						return;
+					}
+				}
+
+
+				case "Tell me more of the Cataclysm.
+					\g ErzÑhlt mir mehr Åber die Schlacht."
+				{
+					if shieldFixed
+					{
+						if templeOpen
+						{
+							bark("Oh, sorry I am. Time to tell stories I do not have
+							So much to do there is! Going I must
+							be!
+							\g Wahrlich, es tut mir sehr leid, aber ich habe keine 
+							Zeit, um dir Geschichten zu erzÑhlen. Es gibt so viel zu 
+							tun, fÅrwahr, das gibt es! Wahrlich, ich mu· mich auf 
+							den Weg machen.");
+							exitConvo();
+							return;
+						}
+						else
+						{
+							ran= urandom(4);
+							if ran = 1
+							{
+								#if English
+								{
+								bark("The day of the Great Cataclysm started
+								as a day of Celebration. The time of
+								year it was when stood the HIgh Priestess did on the
+								altar of the Temple of the Ancient Ones.
+								There their presence	she received. Hold
+								the Shield of the Ancients "
+
+								+"before her she would. Begin the chants
+								to call the Ancient Ones from their home
+								in the clouds she would. As the Ancients
+								arrived, control of the High Priestess
+								they took. Use her to give their messages"
+
+								+"to the followers they would. On that
+								particular day, just begun to arrive the
+								Ancient Ones had, when up a great roar
+								went. Arrived and attacked "
+
+								+"the Temple the Titans did. Some fled, but
+								stayed and fought many Zealans did. All 
+								in vain it was, by the end of the day,
+								destroyed the Temple was and broken the Shield
+								of the Ancients had been. Not heard from
+								since, the Ancients Ones have been.");
+								}
+								#if French
+								{
+								bark("The day of the Great Cataclysm started
+								as a day of Celebration. The time of
+								year it was when stood on the
+								altar of the Temple of the Ancient Ones
+								the High Priestess did. There their presence
+								she received. Hold the Shield of the Ancients "
+
+								+"before her she would. Begin the chants
+								to call the Ancient Ones from their home
+								in the clouds she would. As the Ancients
+								arrived, control of the High Priestess
+								they took. Use her to give their messages "
+
+								+"to the followers they would. On that
+								particular day, just begun to arrive the
+								Ancient Ones had, when up a great roar
+								went. Arrived and attacked "
+
+								+"the Temple the Titans did. Some fled, but
+								stayed and fought many Zealans did. All 
+								in vain it was, by the end of the day,
+								destroyed the Temple was and broken the Shield
+								of the Ancients had been. Not heard from
+								since, the Ancients Ones have been.");
+								}
+								#if German
+								{
+								bark("Wahrlich, der Tag der gro·en Schlacht begann 
+								als ein feierlicher Tag, fÅrwahr, als ein Tag der Freude. 
+								Es war zu der Jahreszeit, als die Hohepriesterin auf 
+								dem Altar des Tempels stand, um die Botschaft der 
+								Alten zu empfangen, fÅrwahr, so war es. Wahrlich, dort 
+								hielt sie ihren Schild und rief die Alten an. "
+
+								+"Sie sang die zealanischen GesÑnge, um die Alten in 
+								der Wolkenstadt anzubeten. Wahrlich, fÅr gewîhnlich 
+								Åbernahmen die Alten die Macht Åber die Hohepriesterin 
+								und sprachen durch ihren Mund zu ihren GlÑubigen, fÅrwahr, 
+								das taten sie. "
+
+								+"Wahrlich, an diesem Tag jedoch hatte die Zeremonie 
+								gerade begonnen, als die Zealanen plîtzlich ein 
+								schreckliches Grollen vernahmen, fÅrwahr, das taten 
+								sie. Und dann griffen die Titanen den Tempel an. "
+
+								+"Wahrlich, manche Zealanen flohen sofort, aber viele 
+								GlÑubige blieben und kÑmpften gegen die öbermacht der 
+								Titanen. Aber es war vergebens, fÅrwahr, das war es. 
+								Am Abend lag der Tempel zerstîrt da. Der Schild der 
+								Alten war zerbrochen, fÅrwahr, das war er. Wahrlich, 
+								seitdem hat niemand mehr von den Alten gehîrt, fÅrwahr, 
+								so ist es.");
+								}
+
+
+							}
+							if ran = 2
+							{
+								#if English
+								{
+								bark("On the Day of the Great Cataclysm,
+								something was not quite right the
+								High Priestess knew. Twice as long in
+								her preparation rituals she took and"
+
+								+"twice all her ceremonial items she checked.
+								When the Temple she reached, a most unusual
+								thing she did. Her daughter home she sent.
+								Now, this quite hard her daughter took.
+								Understand she did not why being punished she was "
+
+								+"But a fortunate thing this was as when
+								started the battle did , crushed the place
+								was where the High Priestess and her daughter
+								would be	standing. Killed the
+								High Priestess was, but alive her daughter was
+								to take on the mantle.");
+								}
+								#if French
+								{
+								bark("On the Day of the Great Cataclysm,
+								something was not quite right the
+								High Priestess knew. Twice as long in
+								her preparation rituals she took and all "
+
+								+"all her ceremonial items twice she checked.
+								When the Temple she reached, a most unusual
+								thing she did. Her daughter home she sent.
+								Now, this quite hard her daughter took. Not
+								understanding she did not why punished she was "
+
+								+"being. But a fortunate thing this was as when
+								the battle started, where the
+								High Priestess and her daughter would be
+								standing crushed the place was. Killed the
+								High Priestess was, but alive her daughter was
+								to take on the mantle.");
+								}
+								#if German
+								{
+								bark("Wahrlich, am Morgen der gro·en Schlacht hatte 
+								die Hohepriesterin eine bîse Vorahnung. Sie nahm sich 
+								zweimal soviel Zeit fÅr die Vorbereitung ihrer Zeremonien 
+								wie gewîhnlich, fÅrwahr, das tat sie. Sie ÅberprÅfte alle 
+								zeremoniellen GegenstÑnde mehrere Male, fÅrwahr, das tat 
+								sie. "
+
+								+"Wahrlich, als sie den Tempel erreichte, traf sie eine 
+								sehr ungewîhnliche Entscheidung, fÅrwahr, das tat sie. 
+								Sie schickte ihre Tochter nach Hause. Wahrlich, ihre 
+								Tochter war sehr enttÑuscht. Sie konnte nicht verstehen, 
+								warum ihre Mutter sie so bestrafte. "
+
+								+"Wahrlich, die Hohepriesterin hatte gewu·t, was sie tat. 
+								Als die Schlacht begann, fiel ein riesiger Felsen auf 
+								die Stelle, wo sonst immer die Hohepriesterin mit ihrer Tochter 
+								gestanden hatte. Die Priesterin wurde getîtet, aber die Tochter 
+								Åberlebte, um ihr Erbe anzutreten, fÅrwahr, das tat sie.");
+								}
+
+							}
+							if ran = 3
+							{
+								#if English
+								{
+								bark("When occured the Great Cataclysm did,
+								stayed to try to fight many Zealans did.
+								Bravely they fought. As crashed down around
+								them the walls of the Temple did, weapons they
+								grabbed. Charged the evil forces the Titans
+								brought with them, they did."
+
+								+"Ghouls and ghosts from beyond the grave,
+								whirlwinds powerful enough to knock a man down,
+								Demons from the firepits and undead water
+								zombies. While fought these
+								evil creatures the Zealans did, wrestled with "
+
+								+"the Ancients Ones the Titans did. Know  we do
+								not what happen inside those temple walls once the
+								sealed by rubble the entrance was. Know we do
+								that fought to save us those brave Zealans
+								did. Even today to save use they still fight. "
+
+								+"As guardians of the Vale their spirits serve.
+								Should this Vale any interloper enter
+								and harm to any Zealan cause, come to his
+								defense the shades will. In this find
+								some hope for tomorrow we can.");
+								}
+								#if French
+								{
+								bark("When occured the Great Cataclysm did,
+								stayed to try to fight many Zealans did.
+								Bravely they fought. As crashed down around
+								them the walls of the Temple did, weapons they
+								grabbed and the evil forces the Titans brought with "
+
+								+"them, they charged. Ghouls and ghosts from beyond the grave,
+								whirlwinds powerful enough to knock you down,
+								Demons from the firepits and undead water
+								zombies. While fought these
+								evil creatures the Zealans did, wrestled with "
+
+								+"the Ancients Ones the Titans did. Know  we do
+								not what happen inside those temple walls once the
+								sealed by rubble the entrance was. Know we do
+								that fought to save us those brave Zealans
+								did. even today to save use they still fight. "
+
+								+"As guardians of the Vale their spirits serve.
+								Should this Vale any interloper enter
+								and harm to any Zealan cause, come to his
+								defense the shades will. In this find
+								some hope for tomorrow we can.");
+								}
+								#if German
+								{
+								bark("Wahrlich, als die Titanen den gro·en Tempel angriffen, 
+								versuchten viele Zealanen, gegen ihre Gegner zu kÑmpfen. Als 
+								die WÑnde des Tempels um sie herum zusammenfielen, griffen sie 
+								nach Steinen und Stîcken, um die Soldaten der Titanen abzuwehren, 
+								fÅrwahr, das taten sie. "
+
+								+"Ghuls und Geister, WirbelstÅrme, FeuerdÑmonen und untote 
+								Wasserzombies fielen erbarmungslos Åber die Zealanen her. Und 
+								wahrlich, wÑhrend die Zealanen mit diesen Untieren rangen, 
+								kÑmpften die Alten mit den Titanen, fÅrwahr, das taten sie. "
+
+								+"Wahrlich, wir wissen nicht, was in dem Tempel der Alten 
+								geschah, nachdem der Eingang verschÅttet worden war. Aber 
+								wir wissen, wie tapfer unsere Vorfahren gegen die titanischen 
+								MÑchte kÑmpften, fÅrwahr, das wissen wir. Bis auf den 
+								heutigen Tag kÑmpfen sie weiter, fÅrwahr, das tun sie. "
+
+								+"Ihre Seelen dienen uns als WÑchter dieses Tals, fÅrwahr, 
+								so ist es. Wahrlich, wenn ein Eindringling versuchen sollte, 
+								den Zealanen Leid zuzufÅgen, eilen die Schatten uns zur Hilfe. 
+								FÅr mich ist das ein Zeichen, da· noch nicht alle Hoffnung verloren 
+								ist.");
+								}
+
+
+							}
+						}
+					}
+					else
+					{
+						ran = urandom (3);
+						if ran = 1
+						{
+							#if English
+							{
+							bark("In the early days of our history,
+							too reckless the young Zealans were becoming
+							one of the High Priestess thought.
+							To climb the cliffs they sought, not out of"
+
+							+"reverence, but rather for mischief. 
+							Very dangerous this was and killed several were, but
+							in their foolishness they persisted. So
+							an idea the High Priestess had.
+							Devised as a passage to adulthood for the"
+
+							+"young Zealans, a test was. Of going to a
+							grove and retrieving the fruit of
+							a sacred plant, this test consisted.
+							If it correctly they did, feast upon the"
+
+							+"fruit the village would. However, if it
+							incorrectly they did, explode the fruit would.
+							Showered with poison they would be.
+							A very slow acting poison this was.
+							Slowly ate away at a person's strengh it did"
+
+							+"until, too weak to stand, collapsed and died
+							they did. Once poisoned,"
+
+							+"have to travel to the High Priestess the
+							young Zealan would. Have to ask her to
+							heal the poison he would. This do with
+							the use of the Shield of the Ancients
+							she would. In this way taught how precious"
+
+							+"life was the young Zealans were. Worked
+							very well it did and tried no more to climb
+							the Cliffs young Zealans did. Then lost"
+
+							+"the Shield was. As fatal without the shield the
+							test would be, given no more it was. So, lost
+							to the Titans another great tradition was.");
+							}
+							#if French
+							{
+							bark("In the early days of our history,
+							too reckless the young Zealans were becoming
+							one of the High Priestess thought. They
+							To climb the cliffs they sought, not out of"
+
+							+"reverence, but rather for mischief. 
+							Very dangerous this was and killed several were, but
+							in their foolishness they persisted. So
+							with an idea the High Priestess came up.
+							Devised as a passage to adulthood for the"
+
+							+"young Zealans, a test was. Of going to a
+							grove and retrieving the fruit of
+							a sacred plant, this test consisted.
+							If it correctly they did, feast upon the"
+
+							+"fruit the village would. However, if it
+							incorrectly they did, explode the fruit would
+							and showered with poison they would be.
+							A very slow acting poison this poison was.
+							Slowly ate away at a person's strengh it did"
+
+							+"until, too weak to stand, collapsed and died
+							they did. What know the young Zealans did not
+							was no way to retrieve the fruit there was.
+							Always explode it would. Once poisoned,"
+
+							+"have to travel to the High Priestess the
+							young Zealan would. Have to ask her to
+							heal the poison he would. This do with
+							the use of the Shield of the Ancients
+							she would. In this way taught how precious"
+
+							+"life was the young Zealans were. Worked
+							very well it did and no more to climb
+							the Cliffs young Zealans tried. Then lost"
+
+							+"the Shield was. As fatal without the shield the
+							test would be, given no more it was. So, lost
+							to the Titans another great tradition was.");
+							}
+							#if German
+							{
+							bark("Wahrlich, in den frÅhen Tagen der Zealanen kam es, 
+							da· die Hohepriesterin die jungen Zealanen fÅr zu 
+							unvorsichtig und respektlos hielt, fÅrwahr, so war es. 
+							Sie versuchten, an den Klippen hochzuklettern, fÅrwahr, aber 
+							nicht aus Respekt zu den Alten, sondern nur aus 
+							Abenteuerlust."
+
+							+"Wahrlich, das war sehr gefÑhrlich und mehrere junge 
+							Zealanen stÅrzten dabei in den Tod, aber dennoch hîrten 
+							sie nicht auf, fÅrwahr, so war es. Und wahrlich, eines 
+							Tages hatte die Hohepriesterin eine Idee. Sie dachte sich 
+							eine PrÅfung fÅr die jungen Zealanen aus, die als 
+							Initiationsritual fÅr den öbergang in die Erwachsenenwelt 
+							dienen sollte, fÅrwahr, das sollte sie. " 
+
+							+"Wahrlich, die PrÅfung bestand darin, in den 
+							Wald zu gehen und die Frucht einer geheiligten Pflanze zu 
+							finden und zurÅckzubringen. Wenn sie diese Aufgabe richtig 
+							ausfÅhrten, wÅrde das ganze Dorf von der Frucht essen. "
+
+							+"Aber wahrlich, wenn ihnen dabei ein Fehler unterlief, 
+							explodierte die Frucht und ÅberschÅttete den jungen 
+							Zealanen mit Gift. Dieses Gift wirkte sehr langsam, fÅrwahr, 
+							das tat es. Die Vergiftung breitete sich langsam aus, bis 
+							das Opfer immer schwÑcher wurde und endlich zusammenbrach 
+							und starb, fÅrwahr, so war es. Wahrlich, was die jungen 
+							Zealanen nicht wu·ten, war, da· man die Frucht gar nicht 
+							holen konnte, ohne das sie explodierte. Sie explodierte immer, 
+							fÅrwahr, das tat sie. "
+
+							+"Wenn sie erst einmal an der Vergiftung litten, mu·ten 
+							die jungen Zealanen zur Hohepriesterin gehen, fÅrwahr, 
+							das mu·ten sie. Und wahrlich, sie mu·ten die Priesterin 
+							anflehen, sie von der Vergiftung zu heilen. Die Hohepriesterin 
+							aber heilte sie mit dem Schild der Alten und lehrte sie so, 
+							wie kostbar das Leben doch war, fÅrwahr, das tat sie. "
+
+							+"Und wahrlich, die PrÅfung tat ihre Wirkung. Die jungen 
+							Zealanen versuchten nicht mehr, in den Klippen herumzuklettern, 
+							fÅrwahr, so war es. Aber dann verloren die Zealanen in der 
+							gro·en Schlacht den Schild der Alten. "
+
+							+"Wahrlich, da die PrÅfung ohne die heilende Wirkung des 
+							Schildes immer zum Tode fÅhrte, mu·ten die Zealanen 
+							damit aufhîren, fÅrwahr, das mu·ten sie. Und so ging mit 
+							der gro·en Schlacht nicht nur der Schild, sondern auch 
+							eine wunderbare zealanische Tradition verloren, fÅrwahr, 
+							so ist es.");
+							}
+
+											
+						}
+						if ran = 2
+						{
+							#if English
+							{
+							bark("Shortly after the Shield of the Ancients was lost,
+							a terrible plague came through the Vale. Terrible
+							it was. Terrible pain, suffering and even death it
+							caused. So  desperate to find a cure, the Zealans were
+							that to the Cloud City they decided someone to send."
+
+							+"Called a great meeting was, but volunteer no one would.
+							Finally spoke up from the back of the crowd a small
+							voice did. 'Go I will.' she said. Turned around and
+							saw a young girl standing there, the crowd did. Small
+							she was and with a cane she walked. 'How go can you?'"
+
+							+"the High Priestess asked. 'Go someone must, but
+							 to go noone wants. So go I will' Backed away, the
+							 crowd did. Looked around once more, the High
+							 Priestess did. Then the Key to the Clouds
+							 the High Priestess gave her. To the"
+
+							 +"cliffs, they went. On the morning of the fourth
+							 day awoke early the High Priestess did. A dream
+							 about the girl she'd had. In this dream laughing
+							 and dancing the girl was. Found the cure she said"
+
+							 +"she had. Then, gone the dream was. To the base
+							 of the Cliffs the High Priestess went and there
+							 the body of the girl she found, dashed to death
+							 on the rocks. In her hands a small bunch of"
+
+							 +"herbs she held. Magic these herbs were. Took
+							 them the High Priestess did and from them a
+							 medicine she brewed. Cured the plague, the medicine
+							 did. Buried with the greatest honors, the girl was.
+							 But, never found, her cane was.");
+							 }
+						 	#if French
+							{
+							bark("Shortly after the Shield of the Ancients was lost,
+							a terrible plague came through the Vale. Terrible
+							it was. Terrible pain, suffering and even death it
+							caused. So  desperate to find a cure, the Zealans were
+							that to the Cloud City they decided someone to send."
+
+							+"Called a great meeting was, but volunteer no one would.
+							Finally spoke up from the back of the crowd a small
+							voice did. 'Go I will.' she said. Turned around and
+							saw a young girl standing there, the crowd did. Small
+							she was and with a can she walked. 'How go can you?'"
+
+							+"the High Priestess asked. 'Go someone must, but
+							 to go noone wants. So go I will' Backed away, the
+							 crowd did. Looked around once more, the High
+							 Priestess did. The talisman that gives access to
+							 the Cliffs the High Priestess gave her. To the"
+
+							 +"cliffs, they went. On the morning of the fourth
+							 day awoke early the High Priestess did. A dream
+							 about the girl she'd had. In this dream laughin
+							 and dancing the girl was. Found the cure she said"
+
+							 +"she had. Then, gone the dream was. To the base
+							 of the Cliffs the High Priestess went and there
+							 the body of the girl she found, dashed to death
+							 on the rocks. In her hands a small bunch of"
+
+							 +"herbs she held. Magic these herbs were. Took
+							 them the High Priestess did and from them an
+							 elixar brewed. Cured the plague, the elixar did.
+							 Buried with the greatest honors, the girl was.
+							 But, never found, her cane was.");
+							 }
+ 							#if German
+							{
+							bark("Wahrlich, kurz nachdem der Schild der Alten 
+							verlorengegangen war, verbreitete sich eine schreckliche 
+							Pest im Tal. Das Leiden war unbeschreiblich, fÅrwahr, 
+							das war es. Die Zealanen litten unsagbare Qualen und 
+							viele starben, fÅrwahr, das taten sie. Wahrlich, die 
+							Zealanen waren so verzweifelt, da· sie sich dazu 
+							entschlossen, jemanden in die Wolkenstadt zu schicken. "
+
+							+"Wahrlich, die Zealanen hielten eine gro·e Versammlung 
+							in der Mitte des Dorfes, aber niemand erklÑrte sich dazu 
+							bereit, die schwere Aufgabe auf sich zu nehmen, fÅrwahr, 
+							so war es. Endlich, als schon alle Hoffnung verloren schien, 
+							ertînte plîtzlich eine zaghafte Stimme aus der letzten Reihe.
+							Als sie sich umdrehten, stand ein junges MÑdchen auf. 
+							'Ich werde gehen', sagte sie, fÅrwahr, das tat sie. Sie 
+							war sehr klein und stÅtzte sich mit KrÅcken, fÅrwahr, 
+							so war es. 'Du willst gehen? Aber das ist unmîglich!', sagte 
+							die Hohepriesterin verwundert."
+
+							+"'Wahrlich, irgendjemand mu· gehen, aber niemand 
+							ist bereit, es auf sich zu nehmen. Also gehe ich eben!', 
+							sagte die Kleine ganz ruhig und selbstbewu·t, fÅrwahr, 
+							so war es. Die Menge wich zurÅck und alle sahen 
+							schuldbewu·t zu Boden, fÅrwahr, das taten sie. Die 
+							Hohepriesterin gab ihr zîgernd den Talisman, der ihr 
+							den Zugang zu den Klippen gewÑhren wÅrde. Und wahrlich, 
+							das MÑdchen verschwand in den Klippen. "
+
+							 +"Am Morgen des vierten Tages wachte die Hohepriesterin 
+							 noch frÅher als gewîhnlich auf, fÅrwahr, das tat sie. Wahrlich, 
+							 sie hatte von dem MÑdchen getrÑumt. In ihrem Traum 
+							 hatte sie getanzt und gelacht, weil es ihr gelungen war, 
+							 ein Heilmittel gegen die schreckliche Pest zu finden. "
+
+							 +"Wahrlich, die Hohepriesterin eilte sofort an die Klippen. 
+							 Am Fu· der Felswand stie· sie auf den Kîrper des MÑdchens, 
+							 fÅrwahr, so war es. Sie war offensichtlich gestÅrzt. Aber 
+							 wahrlich, in ihrer schon kalten Hand umklammerte sie einen 
+							 kleinen KrÑuterstrauch. "
+
+							 +"Wahrlich, die Hohepriesterin spÅrte sofort, da· es 
+							 magische KrÑuter waren, fÅrwahr, das waren sie. Die 
+							 Hohepriesterin nahm sie mit sich nach Hause und braute 
+							 daraus ein besonderes Elixier. Alle, die von diesem 
+							 Elixier tranken, waren sofort geheilt, fÅrwahr, so 
+							 war es. Wahrlich, das MÑdchen wurde mit gro·en Ehren 
+							 bestattet, aber ihre KrÅcken fand man nie.");
+							 }
+
+						}
+  
+					}
+					exitConvo();
+					return;
+				}
+
+
+// @@@ CHANGE F G  (sorry guys!)
+
+			case "I would speak to you of Tyorvi."
+			{
+				bark("Tyorvi? Thordis' brother he is.");
+				askList-=<<"I would speak to you of Tyorvi.">>;
+				askList+=<<"He needs help.", "Yes, he is Thordis'brother.">>;
+			}
+
+// @@@ CHANGE F G						
+			case "Yes, he is Thordis' brother."
+			{
+				bark("Thought so I did. So little I hear. Barely know the
+				names of the villagers, I do. See them only once in a while
+				I do. When food they bring.");
+				askList-=<<"Yes, he is Thordis brother.">>;
+				askList+=<<"They bring you food?">>;
+			}
+			
+// @@@ CHANGE F G
+			case "They bring you food?"
+			{
+				bark("Yes, the only contact it is. By the order of the Anciet
+				Ones it is. Bring me food at the first of each season, they
+				must. Ha, the only tradition they keep!");
+				askList-=<<"They bring you food?">>;
+				askList+=<<"That isn't much food.">>;
+			}
+
+//@@@ CHANGE F G
+			case "That isn't much food."
+			{
+				bark("Well, if known the truth must be, bring me more food
+				Ragnar does. A good man he is. Say much he does not.
+				Distracted he is. And lonely too, I think. But, brings
+				me fresh meat he does. Roots he brings, too and mushrooms.
+				You see, too old I am to walk much. Little this vale provides.
+				Why if not for Ragnar, I believe dead I would be!");
+				askList-=<<"Thiat isn't much food.">>;
+			}
+			
+// @@@ CHANGE F G
+			case "He needs help."
+			{
+				bark("Hmmm, so heard have I. Drinks too much he does, right?");
+				askList-=<<"He needs help.">>;
+				askList+=<<"Yes, he drinks.", "He has another problem.">>;
+			}
+
+// @@@ CHANGE F G
+			case "Yes, he drinks."
+			{
+				bark("A shame that is. Every strong man this vale needs.
+				Pitch in and help all need. Sad.");
+				askList-=<<"Yes, he drinks.">>;
+			}
+
+// @@@ CHANGE F G
+			case "He has another problem."
+			{
+				bark("No wonder. Often other problems those that drink have.");
+				askList-=<<"He has another problem.">>;
+				askList+=<<"He mourns his friend.", "He has nightmares.">>;
+			}
+
+// @@@ CHANGE F G
+			case "He mourns his friend."
+			{
+				bark("Ah yes. Remember the tragedy I do. Fell from the cliffs
+				his friend did, right? Trying to climb the cliffs they were.
+				But had too much to drink before, they did. If a harder
+				woman I was, serves them right say I would. But in this
+				day for the loss of any life, we mourn.");
+				askList-=<<"He mourns his friend.">>;
+			}
+
+// @@@ CHANGE F G
+			case "He has nightmares."
+			{
+				bark("Nightmares? Oh if had the power of the Ancient Ones I
+				did, help him right away I could. But little there is that
+				can be done now.");
+				askList-=<<"He has nightmares.">>;
+				askList+=<<"Is there nothing to help him?">>;
+			}
+
+// @@@ CHANGE F G
+			case "Is there nothing to help him?"
+			{
+				bark("Wait, there is something I remember. When very little
+				I was, nightmares I had. Gave me a bitter tea my
+				grandmother did. 'Calm your	dreams this will,' she said.
+				Never had nightmares again I did. Made from a root this
+				tea was. Look long and hard for it she did, I remember.");
+				askList-=<<"Is there nothing to help him?">>;
+				askList+=<<"Where is this root?", "Can you make the tea?">>;
+			}
+
+// @@@ CHANGE F G
+			case "Where is this root?"
+			{
+				bark("Oh dead, such a long time ago it was. By the
+				standing stones it grew, she said. What standing
+				stones those were, recall I do not. Help you to
+				find them I would, but strong I
+				am not. Hard on me the trip would be.");
+				askList-=<<"Where is this root?">>;
+			}
+
+// @@@ CHANGE F G
+			case "Can you make the tea?"
+			{
+				bark("If you find the root, I certainly will. Like to help
+				Tyorvi in some small way I would.");
+				askList-=<<"Can you make the tea?">>;
+				askList+=<<"What does it look like?", "I will find it!">>;
+			}
+
+// @@@ CHANGE F G						
+			case "What does it look like?"
+			{
+				bark("Remember exactly I do not. Brightly colored I think
+				it was, maybe purple.");
+				askList-=<<"What does it look like?">>;
+			}
+
+// @@@ CHANGE F G
+			case "I will find it!"
+			{
+				bark("Good of you that is. A kind man you are.");
+				askList-=<<"I will find it!">>;
+			}
+
+// @@@ CHANGE F G
+			case "I have found the root!"
+			{
+				bark("Ah, good that is. Take it I will and brew the tea
+				I will.");
+				foreach recursive item where (type = TypeWeedz) and (frame = 9)
+				within container Avatar
+				{
+					item.destroy();
+				}
+				givenRoot = true;
+				justGotRoot = true;
+			}
+
+
+// @@@ CHANGE F G
+			case "Is Tyorvi's elixar ready yet?"
+			{
+				ran = urandom(4);
+				if ran = 1
+				{
+					bark("Patience, my friend, patience. Time
+					these things take.");
+				}
+				if ran = 2
+				{
+					bark("Not so quickly. Long ago it was. Wish
+					to make a mistake I do not.");
+				}
+
+				if ran = 3
+				{
+					bark("Ah, always in a hurry the young are. No,
+					ready it is not.");
+				}
+				exitConvo();
+				return;
+			}
+					
+
+// @@@ CHANGE F G
+			case "Have you made the elixar?"
+			{
+				bark("Yes, I have. Take it to him now you can.");
+				askList-=<<"Have you made the tea?">>;
+ 				myMan.x = Avatar.getX();
+				myMan.y = Avatar.getY();
+				myMan.z = Avatar.getZ();
+				if give(Avatar:Referent,TypeBottle,0,0,13)
+				{
+				}
+				else if createNear(myMan,TypeBottle,0,0,13)
+				{
+				}
+			 	justGotRoot = false;
+				bark("Hope it helps him, I do.");
+  				exitConvo();
+				return;
+			}
+
+
+			case"bye \g Lebt wohl."
+			{
+				ran = urandom(4);
+				if ran = 1
+				{
+					bark("Farewell, friend. 
+						\g Lebewohl, mein Freund.");
+				}
+				if ran = 2
+				{
+					bark("Again please visit, friend.
+						\g Wahrlich, besuch mich bald wieder, mein Freund.");
+				}
+				if ran = 3
+				{
+					bark("Take care.
+						\g Auf bald.");
+				}
+				exitConvo();
+				return;
+			}
+		}
+	}
+}
+
+
+
+
+/**********************
+
+GAME FLAGS USED
+(not necessarily in any
+particular order)
+
+
+toldValeThree
+toldValeTwo
+toldValeOne
+spokeOfAwaken
+testFromAtli
+testFromThordis
+mentionSheild
+templeOpen
+exrekalJob
+ezrekalName
+yelledAtAvatar
+avatarPoisoned
+spokeOfCataclysm
+haveSheild
+climbedCliffs
+askedAboutAncients
+
+spokeAboutClouds
+
+***********************/
+

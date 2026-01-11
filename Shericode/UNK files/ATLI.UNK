@@ -1,0 +1,2935 @@
+// @@@ READY TO TRANSLATE FRENCH AND GERMAN
+
+uses "flags";
+uses "free";
+uses "npc";
+
+npcclass Atli inherits Npc
+{
+	process look();
+	process use();
+	process schedule (currentTime:Long);
+	process enterFastArea();
+	process leaveFastArea();
+
+	process cast(ref:Referent);
+}
+process Atli::look()
+{
+	if Atli.isDead()
+	{
+		if atliName
+		{
+			bark("Atli's body \f Corps d'Atli \g");
+		}
+		else
+		{
+			bark("dead body \f Despoille \g");
+		}
+	}
+
+	if atliName and atliJob
+	{
+		bark("Atli, Elder of Clan Gunnar \f Atli, FrŠre Aisn‚ du Clan Gunnar \g" );
+	}
+
+	else if atliName
+	{
+		bark("Atli \f Atli \g");
+	}
+
+	else if atliJob
+	{
+		bark("Elder of Clan Gunnar \f FrŠre Aisn‚ du Clan Gunnar \g");
+	}
+
+	else
+	{
+		bark("man \f homme \g");
+	}
+
+}
+
+process Atli::schedule(currentTime:Long)
+{
+	if inShadeScene = true
+	{
+		return;
+	}
+
+	if plantScene = true
+	{
+		return;
+	}
+
+	point : WorldPoint;
+	map : MapNum = 10;
+
+
+	//Eating
+
+	if (getPeriod() = daytide) or (getPeriod() = eventide)
+	or (getPeriod()= threemoons)
+	{
+		point.x = 18943;
+		point.y = 19711;
+		point.z =64;
+	}
+
+
+
+	//Lab 1
+
+	if (getPeriod() = firstebb) or (getPeriod() = lastebb)
+	or (getPeriod()=bloodwatch)
+	{
+		point.x = 18175;
+		point.y = 20095;
+		point.z = 64;
+	}
+
+
+	safeTeleport(point,map);
+}
+
+process Atli::enterFastArea()
+{
+	if isDead()
+	{
+		return;
+	}
+
+	if inShadeScene = true
+	{
+		killProcess(referent, PT_ACTIVITY);
+		return;
+	}
+
+	cSetActivity(ACT_LOITER);
+}
+
+
+process Atli::leaveFastArea()
+{
+	killProcess(referent,PT_ACTIVITY);
+}
+
+
+process Atli::cast(ref:Referent)
+{
+	count:Number;
+	count = 10;
+	while (not getTarget()) and (count)
+	{
+		wait(1);
+		count--;
+	}
+
+	ref=getTarget();
+	if ref = Avatar:Referent
+	{
+		spawn callTheShades() -> return;
+
+		if not isDead()
+		{
+			killProcess(referent,PT_ACTIVITY);
+			killProcess(referent,PT_BARK);
+			bark("Help! Help! \f A l'aide! A l'aide! \g");
+		}
+	}
+}
+
+
+
+process Atli::use()
+{
+
+	if atliMet
+	{				   
+		if atliName
+		{
+			Avatar.bark("Hail, Atli. \f Salut, Atli. \g");
+		}
+		else
+		{
+			Avatar.bark("Hello again, friend. \f Re-salut, mon amy. \g");
+		}
+	}
+	else
+	{
+		Avatar.bark("A moment, good sir. \f Un instant, Seigneur. \g");
+	}
+
+
+	askList:String List;
+	item:Item;
+	answer:String;
+	enterConvo();
+
+
+	if atliMet
+	{
+		if avatarPoisoned
+		{
+			if ezrekalMet
+			{
+				if toldCliffs
+				{
+					askList+=<<"Tell me about the Cloud Cliffs. \f Parle-moy de la falaise embrum‚e \g">>;
+					// talk about cliffs and ez,
+				}
+				else
+				{
+					askList+=<<"I have spoken with Ezrekal. 
+					            \f J'ai parl‚ … Ezrekal.
+							    \g">>;
+					// talk about cliffs and other stuff
+				}
+			}
+			else
+			{
+				if thordisToldTest
+				{
+					askList+=<<"I have been poisoned. \f On m'a empoisonn‚. \g">>;
+				}
+				// talk about Ez, sent to Ezrekal
+				else if atliToldTest
+				{
+					askList+=<<"You didn't say it was poisoned!
+					            \f Tu n'as point mentionn‚ que cela estoit empoisonn‚!
+								\g">>;
+				}
+			}
+		}
+		else
+		{
+			if haveMark
+			{
+				if templeOpen
+				{
+					if godsFree
+					{
+						bark("I have freed your Ancient Ones! 
+						     \f J'ai lib‚r‚ tes Anciens!
+							 \g");
+						// talk about how great it is
+					}
+					else
+					{
+						askList+=<<"I have opened your Temple!
+									\f J'ai ouvert ton Temple!
+									\g">>;
+					}
+				}
+				else
+				{
+					askList+=<<"I am no longer poisoned!
+								\f Je ne souffre plus de l'empoisonnement.
+								\g">>;
+					// talk about how great it is the feud is over
+				}
+			}
+			else  // you've met atli, you haven't taken the test,
+			{
+				if thordisToldTest
+				{
+					askList+=<<"Thordis told me of the Rite.
+								\f Thordis m'a parl‚ du Rite.
+								\g ">>;
+				// they have the stone, go take test, you fool
+				}
+				if atliToldTest
+				{
+					askList=<<"Where are the Hoskulds?
+							  \f O— sont les Hoskulds?
+							  \g", 
+							  "Where did you say the body was found?
+							  \f O— as-tu dit que le corps avoit ‚t‚ trouv‚?
+							  \g">>;
+					if hoskuldSpokeStone
+					{
+						askList+=<<"The Hoskulds don't have the Stone.
+						           \f Les Hoskulds n'ont point la Roche.
+								   \g">>;
+					}
+					else
+					{
+						askList+=<<"Where is the Passage Stone?
+					            	\f O— est la Roche Magique?
+						            \g">>;
+					}
+					// go get the stone from them, where they are, where
+					// the body was
+				}
+				else  // you haven't heard about the test
+				{
+					if hrodnyMet
+					{
+						askList+=<<"Hrodny sent me to you.
+									\f Hrodny m'a dit de venir te voir.
+									\g">>; // learn
+						//about test
+					}
+					if ingyaldMet
+					{
+						askList+=<<"I've met Ingyald.
+									\f J'ai rencontr‚ Ingyald.
+									\g">>; // learn about
+						//tyorvi.
+					}
+					else
+					{
+						askList+=<<"Is there some way I may stay?
+									\f Comment puis-je rester?
+									\g">>;
+					}
+				}
+			}
+		}
+	}
+
+	else  // if not met atli
+	{
+		if thordisToldTest
+		{
+			askList+=<<"I have come for the Passage Stone.
+						\f Je suis venu pour la Roche Magique.
+						\g">>; //ask about stone
+		}
+		if atliToldTest
+		{
+			askList+=<<"Tell me again of the Rite Of Passage.
+						\f Parle-moy encor du Rite de Passage.
+						\g",
+		   		       "Where are the Hoskulds?
+					    \f O— sont les Hoskulds?
+					    \g", 
+					   "Tell me again of the Passage Stone.
+					    \f Parle-moy encor de la Roche Magique.
+						\g">>;// ask about test again, ask where hoskulds are
+		}
+		else
+		{
+			askList=<<"May I speak with you?
+					   \f Je peux te parler?
+					   \g">>; //First contact
+		}
+	}
+
+	while answer!="bye
+				   \f Salut
+				   \g"
+	{
+		askList-=<<"bye
+		            \f Salut
+					\g">>;
+		askList+=<<"bye
+		            \f Salut
+					\g">>;
+		answer = ask(askList);
+		switch answer
+		{
+
+			case "May I speak with you?
+			      \f Je peux te parler?
+				  \g"
+			{
+				bark("What? Who are you? Strange you dress! stranger
+				you talk! A Pagan are you? No, surely not!
+				
+				\f Comment? Qui es-tu? De quelle fa‡on estrange tu es vestu!
+				Et tu causes comme un estranger! Tu es Pagan? Non, certainement
+				point!
+				
+				\g");
+				askList-=<<"May I speak with you? 
+							\f Je peux te parler? 
+							\g">>;
+				askList^=<<"I am not a Pagan. 
+							\f Je ne suis point Pagan. 
+							\g", 
+							"I am from Brittania. 
+							\f Je viens de Britannia. 
+							\g",
+							"What is your name? 
+							\f Comment te nommes-tu? 
+							\g", 
+							"What do you do? 
+							\f Que fais-tu? 
+							\g">>;
+			}
+
+			case "What is your name? 
+				  \f Comment te nommes-tu?
+				  \g"
+			{
+				bark("Called Atli I am.
+				      \f On m'appelle Atli.
+					  \g");
+				atliName = true;
+				askList-=<<"What is your name?
+				            \f Comment te nommes-tu?
+							\g">>;
+			}
+
+			case "What do you do?
+			      \f Que fais-tu?
+				  \g"
+			{
+				bark("The Elder of Clan Gunnar I am.
+				      \f Des Gunnar, je suis l'Aisn‚.
+					  \g");
+				askList-=<<"What do you do?
+						      \f Que fais-tu?
+							  \g">>;
+
+				askList^=<<"Clan Gunnar?
+				            \f Les Gunnar?
+							\g">>;
+				atliJob = true;
+			}
+
+			case "Clan Gunnar?
+			      \f Les Gunnar?
+				  \g"
+			{
+				bark("Related to Gunnar the martyr, we are.
+				      \f Nous descendons de Gunnar le Martyre.
+					  \g");
+				askList-=<<"Clan Gunnar?
+				            \f Les Gunnar?
+							\g">>;
+				askList+=<<"Gunnar the martyr?
+				            \f Gunnar le Martyre?
+							\g">>;
+
+			}
+
+			case "Gunnar the martyr?
+			      \f Gunnar le Martyre?
+				  \g"
+			{
+				bark("Heard of him surely you have! The all-giving
+				martyr he was. Gave his life he did to save our clan.
+				\f Tu as certainement entendu parler de lui. C'estoit le
+				Martyre avec le coeur sur la main. Il a fait don de sa vie
+				pour sauver notre clan.
+				\g");
+				askList-=<<"Gunnar the martyr?
+				            \f Gunnar le Martyre?
+							\g">>;
+				askList+=<<"Gave his life?
+				            \f Fait don de sa vie?
+							\g",
+						   "Save the clan?
+						    \f Pour sauver le clan?
+							\g">>;
+			}
+
+			case "Gave his life?
+			      \f Fait don de sa vie?
+				  \g"
+			{
+				bark("Bravely he died. Fighting to save a most precious
+				relic he was.
+				\f Il est mort en brave. Il s'est battu jusqu'au bout pour 
+				d‚fendre sa pr‚cieuse relique.
+				\g");
+				askList-=<<"Gave his life?
+				            \f Fait don de sa vie?
+							\g">>;
+				askList+=<<"Precious relic?
+				            \f Sa pr‚cieuse relique?
+							\g">>;
+			}
+
+			case "Precious relic?
+			      \f Sa pr‚cieuse relique?
+				  \g"
+			{
+				bark("The Shield of the Ancients it was. Stolen by that
+				father of all evil Hoskuld, it was. After Hoskuld Gunnar
+				went. Tried to bring the shield back he did. Killed by
+				Hoskuld he was.
+				\f L'Escu des Anciens. Vol‚ par ce satan‚ Hoskuld. Gunnar
+				est all‚ … sa recherche. Il vouloit rapporter l'Escu,
+				mais HosKuld l'a tu‚.
+				\g");
+				askList-=<<"Precious relic?
+				            \f Sa pr‚cieuse relique?
+							\g">>;
+			}
+
+			case "Save the clan?
+			      \f Pour sauver le clan?
+				  \g"
+			{
+				bark("Tried to save the whole Vale he did. Tried retrieve
+				the Shield of the Ancients he did.
+				\f Il vouloit sauver toute la Vall‚e. C'est pourquoi il a
+				essay‚ de rescup‚rer l'Escu des Anciens.
+				\g");
+				askList-=<<"Save the clan?
+				            \f Pour sauver le clan?
+							\g">>;
+				askList+=<<"Shield of the Ancients?
+				            \f L'Escu des Anciens?
+							\g">>;
+			}
+			
+			case "Shield of the Ancients?
+			      \f L'Escu des Anciens?
+				  \g"
+			{
+				bark("What teach you did your parents? Nothing? The
+				only tie to our Ancients Ones, the shield is. The only
+				method of communicating with the Ancient Ones, it is. But
+				now lost it is.
+				\f Mais, qu'as-tu donc appris … l'escole? Rien? L'escu est
+				notre unique lien avec les Anciens. C'est le seul moyen par
+				lequel nous pouvons communiquer avec eux. Et, maintenant, il
+				est perdu.
+				\g");
+				askList+=<<"Communicate with the Ancient Ones?
+								\f Communiquer avec les Anciens?
+								\g",
+							"Who are the Ancient Ones?
+						    	\f Qui sont les Anciens?
+								\g">>;
+				askList-=<<"Shield of the Ancients?
+				            \f L'Escu des Anciens?
+							\g">>;
+			}
+
+			case "Communicate with the Ancient Ones?
+			      \f Communiquer avec les Anciens?
+				  \g"
+			{
+				bark("Use the Shield the High Priestess did. Through
+				the Shield, possess the Priestess the Ancients Ones did.
+				Through her, speak to us the Ancients Ones would. To us
+				their wisdom they gave.
+				\f La Grande Prestresse se servoit de l'Escu. Grƒce … l'Escu,
+				les Anciens poss‚doient la Prestresse. A travers elle, les
+				Anciens nous parloient. Et c'est comme ‡a qu'ils nous
+				donnoient leur sagesse.
+				\g");
+				askList-=<<"Communicate with the Ancient Ones?
+				            \f Communiquer avec les Anciens?
+							\g">>;
+			}
+
+			case "Who are the Ancient Ones?
+			      \f Qui sont les Anciens?
+				  \g"
+			{
+				bark("The Ancient Ones who are? Dumb are you? Or just
+				a Pagan?
+				\f Les Anciens? Tu es stupide ou quoi? A moins que tu ne sois
+				Pagan?
+				\g");
+			}
+
+			case "I am not a Pagan.
+			      \f Je ne suis point Pagan.
+				  \g"
+			{
+				bark("Hmmm, I thought not. Come into the Vale, no Pagan
+				ever has. Too treacherous the way is.
+
+				\f Hmmm, c'est vrai. Oncques Pagan ne vint dans la Vall‚e.
+				Le chemin est bien trop tortueux.
+
+				\g"
+				);
+
+				askList-=<<"I am not a Pagan.
+				            \f Je ne suis point Pagan.
+							\g">>;
+				askList+=<<"How do you know it is treacherous?">>;
+			}
+
+			case "How do you know it is treacherous?
+			      \f Comment sais-tu qu'il est tortueux?
+				  \g"
+			{
+				bark("Because in our history several there were who
+				felt dead the Ancient Ones were.
+				Wanted to contact the Pagans they did. Silly notion, that.
+				Anyway, made it through not one did. Find their bodies,
+				or various pieces of their bodies, a little way up the
+				passage, we would. Usually met a grizzly end, they had.
+				In fact, believe you came through there, I do not.
+				I think a Hoskuld you are, sent here to spy!
+
+				\f Car l'histoire dit que tous ceux qui ont cru que les
+				Anciens estoient morts trespassŠrent. Ils vouloient se mettre
+				en relation avec les Pagans. N'est-ce point ridicule? De
+				toute fa‡on, personne n'y parvint. Nous avons trouv‚ leurs
+				despoilles, ou des membres de leurs corps, diss‚min‚s sur le
+				chemin. Quelle triste fin! Et, je ne crois point un seul
+				instant que tu sois parvenu l…-bas. Tu es plutost un Hoskuld
+				envoy‚ ici pour espionner!
+				\g 
+				");
+				askList-=<<"How do you know it is treacherous?
+				            \f Comment sais-tu qu'il est tortueux?
+							\g">>;
+				askList=<<"I am not a Hoskuld!
+							\f Je ne suis point un Hoskuld!
+							\g", 
+						  "I am from Brittania!
+						   \f Je viens de Brittania!
+						   \g">>;
+				if (thordisMet=false) or (hrodnyMet=false)
+				{
+					askList+=<<"Who or what are the Hoskulds?
+					            \f Qu'est-ce qu'un Hoskuld?
+								\g ">>;
+				}
+			}
+
+			case "Who or what are the Hoskulds?
+			      \f Qu'est-ce qu'un Hoskuld?
+				  \g"
+			{
+				bark("Those dung-eating peasants who
+				live on the other side of the Vale, they are.
+				\f Ces bouseux qui vivent de l'aultre cost‚ de la vall‚e.
+				\g");
+				askList-=<<"Who or what are the Hoskulds?
+				            \f Qu'est-ce qu'un Hoskuld?
+							\g">>;
+			}
+
+			case "I am from Brittania.
+			      \f Je viens de Brittania.
+				  \g"
+			{
+				bark("Know of this Brittania I do not. Where it is?
+				      \f Je ne connois point cette Britannia. O— est-ce?
+					  \g");
+				askList-=<<"Iam from Brittania.
+							\f Je viens de Brittania.
+						    \g">>; 
+				askList=<<"On the other side of the barrier.
+				           \f De l'aultre cost‚ du chastel.
+						   \g", 
+						  "In another world.
+						   \f D'un aultre monde.
+						   \g", 
+						  "That is not important.
+						   \f Ce n'est point important.
+						   \g">>;
+			}
+
+			case "That is not important.
+			      \f Ce n'est point important.
+				  \g"
+			{
+				bark("So, answer my questions you will not, eh?
+				Perhaps because no answers you have...because
+				really a Hoskuld you are!
+				\f Responds … mes questions, veux-tu? A moins que tu n'aies
+				point de responses...ce qui justifieroit que tu es un
+				Hoskuld!
+				\g");
+				askList=<<"I -am- from Brittania!
+				           \f Je -viens- de Brittania!
+						   \g",
+						  "I -am- from the other side of the barrier!
+						   \f Je -viens- de l'aultre cost‚ du chastel!
+						   \g",
+						  "I am not a Hoskuld!
+						  	\f Je ne suis point un Hoskuld!
+							\g">>;
+			}
+
+			case "In another world.
+			      \f D'un aultre monde.
+				  \g"
+			{
+				bark("Pagan you mean? Believe you I do not. Able to cross
+				out through the barrier, no one has. In all our
+				history crossed -in- no one has. I think from the
+				Hoskulds you are. I think a spy you are. Sent here to gather
+				information for their sneaky plots you were! Those
+				blood-sucking, troll-vomit eating vermin! Well, just go
+				right back you can and tell them falling for it
+				I am not. And if you again I see, kill you I will!
+
+				\f Tu veux dire Pagan? Je ne te crois point. De l'aultre
+				cost‚ du chastel, personne n'est oncques pass‚. De toute
+				notre histoire, ce n'est point arriv‚. Un espion oui, voil…
+				ce que tu es, envoy‚ ici pour grapiller des informations et
+				nourir ainsy leurs sordides complots. Ces vampires mangeurs
+				de vermine et de vomis de troll!!! Et bien, retourne t'en
+				donc d'o— tu viens et dis-leur que je ne mange point de leur
+				pain. Et, si je te revois dans la Vall‚e, je te fais la peau.
+				\g");
+				askList=<<"I -am- from Brittania!
+				           \f Je -viens- de Brittania!
+						   \g",
+						  "I -am- from the other side of the barrier!
+						   \f Je -viens- de l'aultre cost‚ du chastel!
+						   \g",
+						  "I am not a Hoskuld!
+						  	\f Je ne suis point un Hoskuld!
+						  	\g">>;
+			}
+
+			case "On the other side of the barrier.
+			      \f De l'aultre cost‚ du chastel.
+				  \g"
+			{
+				bark("The other side of the barrier? Hm, believe you
+ 				I do not. I think from the Hoskulds you are. I think
+				a spy you are. Sent here to gather information for their
+				sneaky plots you were. Those blood- sucking,
+				troll-vomit eating vermin! Well, go right back
+				you can and tell them falling for it I am not.
+				And if you again I see, kill you I will!
+
+				\f De l'aultre cost‚ du chastel? Je ne te crois point. Un
+				Hoskuld oui, voil… ce que tu es. Un espion oui, envoy‚ ici 
+				pour grapiller des informations et nourir ainsy leurs sordides
+				complots. Ces vampires mangeurs	de vermine et de vomis de 
+				troll!!! Et bien, retourne t'en	donc d'o— tu viens et dis-leur
+				que je ne mords point … leur hame‡on.
+				Et, si je te revois dans la Vall‚e, je te fais la peau.
+				\g");
+				askList-=<<"On the other side of the barrier.
+					      \f De l'aultre cost‚ du chastel.
+						  \g">>;
+
+				askList=<<"I -am- from Brittania!
+				           	\f Je -viens- de Brittania!
+						   	\g",
+						  "I -am- from the other side of the barrier!
+						   	\f Je -viens- de l'aultre cost‚ du chastel!
+						   	\g",
+						  "I am not a Hoskuld!
+						  	\f Je ne suis point un Hoskuld!
+							\g">>;
+			}
+
+			case "I -am- from Brittania!
+			      	\f Je -viens- de Brittania!
+					  \g",
+				 "I -am- from the other side of the barrier!
+					  \f Je -viens- de l'aultre cost‚ du chastel!
+					  \g", 
+			     "I am not a Hoskuld!
+				 	\f Je ne suis point un Hoskuld!
+					\g"
+			{
+				bark("Prove it!
+				      \f Prouve-le!
+					  \g");
+
+				foreach recursive item where (type = TypeAOArtifact)
+				and (frame = 0) within container Avatar
+				{
+					askList+=<<"I have this shield!
+					            \f J'ai cet escu!
+								\g">>;
+				}
+
+				foreach recursive item where (type = TypeHammerOfStrength)
+				and (frame = 0) within container Avatar
+				{
+					askList+=<<"I have this wonderous hammer!
+					            \f J'ai ce marteau magique!
+								\g ">>;
+				}
+
+				foreach recursive item where (type = TypeProtector) and
+				(frame = 0) within container Avatar
+				{
+					askList^=<<"I have this powerful sword!
+					            \f J'ai cette puissante esp‚e!
+								\g">>;
+				}
+
+				foreach recursive item where (type = TypeFlameSting) and
+				(frame = 0) within container Avatar
+				{
+					askList^=<<"I have this powerful sword!
+					            \f J'ai cette puissante esp‚e!
+								\g">>;
+				}
+
+				foreach recursive item where (type = TypeBladeOfStriking) and
+				(frame = 0) within container Avatar
+				{
+					askList^=<<"I have this powerful sword!
+					            \f J'ai cette puissante esp‚e!
+								\g">>;
+				}
+				foreach recursive item where (type = TypeKorghinsFang) and
+				(frame = 0) within container Avatar
+				{
+					askList^=<<"I have this powerful sword!
+					            \f J'ai cette puissante esp‚e!
+								\g">>;
+				}
+				foreach recursive item where (type = TypeScimitarOfKumashGor) and
+				(frame = 0) within container Avatar
+				{
+					askList^=<<"I have this powerful sword!
+					            \f J'ai cette puissante esp‚e!
+								\g">>;
+				}
+				foreach recursive item where (type = TypeSlayer) and
+				(frame = 0) within container Avatar
+				{
+					askList^=<<"I have this wonderous mace!
+					            \f J'ai cette massue magique!
+								\g">>;
+				}
+
+
+
+				askList+=<<"You will have to trust me.
+				            \f Tu dois me faire confiance.
+							\g">>;
+			}
+
+		case "You will have to trust me.
+		      \f Tu dois me faire confiance.
+			  \g"
+		{
+			bark("Trust you, you say? Hmmmm, well, done no harm you have, so
+			an hour or so more hurt it will not. But then leave you must.
+
+			\f Te faire confiance? Hmmm, bon, puisque tu n'as point fait de
+			mal jusque l…, une ou deux heures de plus ne devroient point poser
+			de problŠmes; mais aprŠs cela, tu dois continuer ton chemin.
+
+			\g");
+			askList=<<"Why must I leave?
+			           \f Pourquoi devrois-je partir?
+					   \g">>;
+		}
+
+
+		case "I have this wonderous mace!
+		      \f J'ai cette massue magique!
+			  \g"
+		{
+			spawn safePlaySFX(MAGIC1,200) -> return;
+
+			bark("Wonderous you say? Glow a bit is all it does. Mushrooms
+			there are whose juice can make things glow as if magic. But,
+			admit I must, seen a mace like that I have not. Perhaps
+			telling the truth you are. In any event, matter it does not,
+			leave you must.
+
+			\f Magique, tu dis? Elle brille un peu, c'est tout ce que je vois.
+			Il y a une substance dans les champignons qui peut faire rutiler
+			une massue comme si elle estoit magique. Mais, je dois admettre
+			qu'oncques n'ai-je vu une telle massue. Tu dis peut estre bien la
+			v‚rit‚. Mais, de toute maniŠre, ‡a m'importe guŠre, car tu dois
+			t'en aller.
+			\g");
+
+			askList+=<<"Why must I leave?
+			            \f Pourquoi devrois-je partir?
+						\g">>;
+		}
+
+
+		case "I have this powerful sword!
+		      \f J'ai cette puissante esp‚e!
+			  \g"
+		{
+			spawn safePlaySFX(MAGIC1,200) -> return;
+			bark("Hmmmm, seen mushrooms whose juice will make
+			things glow like that, I have. But perhaps telling
+			the truth you are. Actually, matter it does not. Leave
+			you must.
+
+			\f Hmmm, j'ai d‚j… vu des champignons, dont la substance fait
+			rutiler les objets comme ‡a. Mais, peut estre dis-tu la v‚rit‚.
+			Mais, en fait, cela n'importe guŠre. Tu dois passer ton chemin.
+			\g");
+			askList=<<"It is a magic sword!
+			           \f C'est une esp‚e magique!
+					   \g", 
+			          "Why must I leave?
+					   \f Pourquoi devrois-je partir?
+					   \g">>;
+		}
+
+		case "It is a magic sword!
+		      \f C'est une esp‚e magique!
+			  \g"
+		{
+			spawn safePlaySFX(MAGIC1,200) -> return;
+			bark("If magic it is, never seen the like of it I have! Titan
+			magic it must be. Yes, detect the stink of that
+			foul art now, I can. Own such an Ancients'
+			be-cursed item I would not! Take it and leave you must!
+
+			\f Si elle est magique, je ne l'ai point remarqu‚! €a doit estre
+			de la mesme magie que les Titans. Oui, je crois que je d‚cŠle la
+			puanteur de cet art festide maintenant. Je ne voudrois point
+			poss‚der un objet aussy maudit des Anciens! Emporte-le avec toy
+			et fiche le camp!
+			\g");
+			askList-=<<"It is a magic sword!
+			            \f C'est une esp‚e magique!
+						\g">>;
+		}
+
+		case "I have this wonderous hammer!
+		      \f J'ai ce marteau magique!
+			  \g"
+		{
+			spawn safePlaySFX(MAGIC1,200) -> return;
+			bark("Hmmm, never such a weapon have I seen. Where get
+			it did you? Magical is it? Perhaps speaking the truth
+			you are! Still, stay here you can not. Leave you must.
+
+			\f Hmmm, oncques n'ai-je vu une telle arme. O— fichtre l'as-tu
+			trouv‚e? C'est magique, tu dis? Peut estre dis-tu la v‚rit‚!
+			Mais, tu ne peux point rester ici. Tu dois t'en aller.
+			\g");
+			askList=<<"I found this on the Plateau.
+			           \f Je l'ai trouv‚ sur le Plateau.
+					   \g",
+					  "It is great magic.
+					   \f C'est de la magie.
+					   \g",
+			          "Why must I leave?
+			           \f Pourquoi devrois-je partir?
+			           \g">>;
+		}
+
+		case "I found this on the Plateau.
+		      \f Je l'ai trouv‚ sur le Plateau.
+			  \g"
+		{
+			bark("No place called the Plateau in the Vale there is. A
+			place on the other side is this?
+
+			\f Il n'y a aucun lieu dans la Vall‚e qu'on appelle le Plateau.
+			Tu veux dire que ce seroit de l'aultre cost‚?
+			\g");
+			askList-=<<"I found this on the Plateau.
+			            \f Je l'ai trouv‚ sur le Plateau.
+						\g">>;
+			askList+=<<"The Plateau is in Pagan.
+			            \f Le Plateau est sur Pagan.
+						\g">>;
+		}
+
+		case "The Plateau is in Pagan.
+		      \f Le Plateau est sur Pagan.
+			  \g"
+		{
+			bark("Pagan...distastful to me even the name is. Well,
+			certain I am never seen or heard of its like in the Vale.
+
+			\f Pagan...comme ce nom m'est destestable. Pour s–r, je n'ai
+			oncques entendu parler de cet endroit dans la Vall‚e.
+			\g ");
+
+			askList-=<<"The Plateau is in Pagan.
+			            \f Le Plateau est sur Pagan.
+						\g">>;
+		}
+
+		case "It is great magic.
+		      \f C'est de la magie.
+			  \g"
+		{
+			bark("Hmmm, Titan magic it must be. If look and
+			speak so differently you did not, believe you a Pagan I
+			would. Well, I suggest use you do not that Titan magic here in
+			the Vale. Certainly want we do not the attention of the
+			Titans drawn here.
+
+			\f Hmmm, de la magie de Titan ouais! Si tu n'estois point aussy
+			estrangement vestu, je dirois volontiers que tu es Pagan.
+			Bon, je te conseille de ne point trop user du mot Titan icy, dans
+			la Vall‚e. Nous ne voulons absolument point attirer l'attention
+			des Titans sur nous.
+			\g");
+			askList-=<<"It is great magic.
+			            \f C'est de la magie.
+						\g">>;
+		}
+
+		case "I have this shield!
+		      \f J'ai cet escu!
+			  \g"
+		{
+			spawn safePlaySFX(MAGIC1,200) -> return;
+			bark("Where get that did you? Looks it does much like the
+			stories	say the Shield-Which-Was-Broken looked! A wonderous
+			item you have! Perhaps from the other side you are! Still,
+			stay here you can not. Leave you must.
+
+			\f O— as-tu trouv‚ cela? €a ressembleroit bien … ce que la
+			lesgende nomme l'Escu Bris‚! Alors, oeut estre viens-tu de
+			l'aultre cost‚! Mais mesme, tu ne peux point rester icy. Tu dois
+			partir.
+			\g");
+			askList=<<"I got this in the Shrine of the Ancients.
+			           \f Je l'ai trouv‚ dans le Sanctuaire des Anciens.
+					   \g",
+					  "Why must I leave?
+					   \f Pourquoi devrois-je partir?
+					   \g">>;
+		}
+
+		case "I got this in the Shrine of the Ancients.
+		      \f Je l'ai trouv‚ dans le Sanctuaire des Anciens.
+			  \g"
+		{
+			bark("Our shrine? Impossible! Been sealed off for over 200
+			years that has. No, either a clever fake that is, or from
+			the other side you are. Still leave you must.
+
+			\f Notre Sanctuaire? C'est impossible! Il est scell‚ depuis
+			plus de 200 ans. Soit, c'est une trŠs belle imitation, soit tu
+			viens de l'aultre cost‚. Et quand bien mesme, tu dois t'en aller.
+			\g");
+			askList-=<<"I got this in the Shrine of the Ancients.
+			            \f Je l'ai trouv‚ dans le Sanctuaire des Anciens.
+						\g">>;
+		}
+
+		case "Hrodney sent me to you.
+		      \f Hrodney m'a dit de venir te voir.
+			  \g"
+		{
+			bark("Oh, she did, did she? Well, a meddling,
+			blasphemer she is. Know what she told you I do not, but
+			welcome here you are not. Leave you must...and quickly.
+
+			\f Oh, vraiment? Et bien, elle n'est rien d'aultre qu'une 
+			mesle-tout et une blasph‚matrice. Je ne sais point ce qu'elle
+			t'a racont‚, mais, tu n'es point le bienvenu icy. Fiche donc le
+			camp...et vite.
+			\g");
+			askList-=<<"Hrodney sent me to you.
+			            \f Hrodney m'a dit de venir te voir.
+						\g">>;
+			askList+=<<"She is a blasphemer?
+			            \f C'est une blasph‚matrice?
+						\g", 
+			           "Why must I leave?
+					    \f Pourquoi devrois-je partir?
+						\g">>;
+		}
+
+		case "She is a blasphemer?
+		      \f C'est une blasph‚matrice?
+			  \g"
+		{
+			bark("If her cynical ways she continues, when return the
+			Ancient Ones do, smite us all for her
+			faithlessness they will. Why, even return they may not
+			to a place that	would harbor such an unbeliever!
+			
+			\f Si elle continue comme ‡a son cynisme, dŠs leur retour, les
+			Anciens	nous feront payer cher le prix de sa perfidie. Et oui, 
+			pourquoi voudroient-ils revenir dans un lieu qui abrite une telle 
+			incresdule!
+			\g ");
+			askList-=<<"She is a blasphemer?
+			            \f C'est une blasph‚matrice?
+						\g">>;
+		}
+
+		case "Why must I leave?
+		      \f Pourquoi devrois-je partir?
+			  \g"
+		{
+			bark("A Zealan you are not. Welcome here you are not.
+			Little enough food to support us there is. 
+			Few enough of us there are. Jeopardize the future of the Gunnar's
+			by keeping you here we can not.
+
+			\f Tu n'es point Zealan. Et icy, tu n'es point le bienvenu. Il
+			n'y a que peu de nourriture icy, et nous sommes desj… moultes
+			nombreux … la partager. Nous ne pouvons point mettre en pesril
+			l'avenir des Gunnar pour tes beaux yeux.
+			\g");
+			askList-=<<"Why must I leave?
+			            \f Pourquoi devrois-je partir?
+						\g">>;
+			askList+=<<"Is there some way I may stay?
+			            \f Comment puis-je rester?
+						\g",
+					   "Why are there few of you?
+					    \f Pourquoi estes-vous si peu nombreux?
+						\g">>;
+		}
+
+		case "Why are there few of you?
+		      \f Pourquoi estes-vous si peu nombreux?
+			  \g"
+		{
+			bark("Blind are you? Around you look! Dying our land is.
+			Attack us from the water, creatures do. Attack
+			us from the sky, flying evils do. Stay alive is all we can do!
+
+			\f Tu es aveugle ou quoi? Ouvre tes mirettes! Notre pays meurt
+			petit … petit. Des cr‚atures de l'eau nous attaquent. Des
+			diables volants tombent du ciel tous les quatre matins et nous
+			desciment. Rester en vie est notre seul but.
+			\g");
+			askList-=<<"Why are there few of you?
+			            \f Pourquoi estes-vous si peu nombreux?
+						\g">>;
+			askList+=<<"Creatures from the water?
+			            \f Des cr‚atures de l'eau?
+						\g",
+					   "Flying evils?
+					    \f Des diables volants?
+						\g">>;
+		}
+
+		case "Creatures from the water?
+		      \f Des cr‚atures de l'eau?
+			  \g"
+		{
+			bark("Yes, the dead and yet not-dead. Stalk and kill
+			us, then feed upon our bodies they do. Overrun the
+			southwest side of our Vale they have.
+
+			\f Oui, les morts et les moiti‚s de morts. Ils nous ‚gorgent, 
+			nous tuent, et puis se nourrissent de nos corps. Ils ont envahi
+			la partie sud-ouest de notre Vall‚e.
+			\g");
+			askList-=<<"Creatures from the water?
+			            \f Des cr‚atures de l'eau?
+						\g">>;
+		}
+
+		case "Flying evils?
+		      \f Des diables volants?
+			  \g"
+		{
+			bark("Horrid half-human half-bird monstrosities
+			that dwell upon the cliffs, they are. Swoop down from the sky
+			and carry off our babies, they do.
+			\f Oui, des monstres mi-hommes mi-volatiles qui descendent des
+			collines. Ils tombent du ciel et emportent nos enfants.
+			\g");
+			askList-=<<"Flying evils?
+			            \f Des diables volants?
+						\g">>;
+		}
+
+		case "Is there some way I may stay?
+		      \f Comment puis-je rester?
+			  \g"
+		{
+			bark("Only stay if one of us you were. If a Zealan
+			you would become.
+
+			\f Tu pourrais rester si tu devenois l'un des nostres et te 
+			faisois Zealan!
+
+			\g");
+			askList=<<"Then I will become a Zealan.
+			           \f Alors, je vais me faire Zealan.
+					   \g", 
+					  "I cannot become a Zealan!
+					   \f Je ne peux point devenir Zealan!
+					   \g">>;
+		}
+
+		case "I cannot become a Zealan!
+		      \f Je ne peux point devenir Zealan!
+			  \g"
+		{
+			bark("Right you are, man enough to pass our test you are not!
+
+			      \f Tu as raison. Tu n'es point assez viril pour r‚ussir
+				  notre espreuve.
+				  \g");
+			askList=<<"Test?
+			           \f Espreuve?
+					   \g",
+					  "I can pass any test!
+					   \f Je peux r‚ussir n'importe quelle espreuve!
+					   \g">>;
+		}
+
+		case "Test?
+		      \f Espreuve?
+			  \g"
+		{
+			bark("Right that is. Called the Rite of Passage it is.
+
+			      \f En effet. Cela s'appelle le Rite de Passage.
+				  \g");
+			askList=<<"Rite of Passage?
+			           \f Le Rite de Passage?
+					   \g">>;
+		}
+
+		case "I can pass any test!
+		      \f Je peux r‚ussir n'importe quelle espreuve!
+			  \g"
+		{
+			bark("So you say. Cocky, arn't you? Well, soon take that
+			out of you, the Rite of Passage would.");
+
+			askList=<<"Rite of Passage?
+			           \f Le Rite de Passage?
+					   \g">>;
+		}
+
+		case "Then I will become a Zealan.
+		      \f Alors, je vais me faire Zealan.
+			  \g"
+		{
+			bark("Think it so simple then do you? Ha, well, think again.
+			Only one way there is and the Rite of Passage that is.
+
+			\f Tu cois que c'est aussy simple que cela? Ah, et bien songe-s'y
+			… deux fois. Car il n'existe qu'une seule voie, et c'est le Rite
+			du Passage.
+			\g");
+			askList=<<"Rite of Passage?
+			           \f Le Rite de Passage?
+					   \g">>;
+		}
+
+		case "Rite of Passage?
+		      \f Le Rite de Passage?
+			  \g"
+		{
+			bark("Unless fully recognized as a member of the
+			Zealans you are, not allowed you are to partake of the benefits
+			such as hunting, farming and, most importantly,
+			marriage.
+
+			\f A moins que tu ne sois establi et reconnu comme Zealan, tu n'as
+			aucun droit sur la chasse, les r‚coltes, et surtout le mariage.
+			\g");
+			askList-=<<"Rite of Passage?
+			            \f Le Rite de Passage?
+						\g">>;
+			askList+=<<"I wish to take the test.
+			            \f J'aimerois passer l'espreuve.
+						\g",
+					   "Tell me more of the test.
+					    \f Dis m'en plus sur l'espreuve.
+						\g">>;
+		}
+
+		case "I wish to take the test.
+		      \f J'aimerois passer l'espreuve.
+			  \g"
+		{
+// @@@ CHANGE F G
+			bark("To do this, take the Passage Stone you must to the southern
+			corner of the vale. There made open to you the way will be.
+			Then approach the Passage Plant you must. Reach into its very
+			center you must. Pluck you must the fruit which grows there
+			and here bring it you must.
+
+			\f Pour cela, tu dois te munir de la Roche Magique et aller tout
+			au bout de la Vall‚e. L…, la voie te sera ouverte. Alors, tu dois
+			trouver la Plante du Passage et en cueillir son fruit.
+			\g");
+			askList-=<<"I wish to take the test.
+			            \f J'aimerois passer l'espreuve.
+						\g", 
+					   "Tell me more of the test.
+					    \f Dis m'en plus sur l'espreuve.
+						\g">>;
+			askList+=<<"That's all?
+			            \f C'est tout?
+						\g",
+					   "Where is the Passage Stone?
+					    \f O— se trouve la Roche Magique?
+						\g">>;
+		}
+
+		case "Tell me again of the Rite Of Passage.
+		      \f Parle moy encor du Rite de Passage.
+			  \g"
+		{
+// @@@ CHANGE F G
+			bark("Hmm, a short memory it seems you have. First, take the
+			Passage Stone you must to the southern corner of the vale.
+			Only then made open to you the way will be. Then approach
+			Passage Plant you must, Reach into its very center you must.
+			Pluck its fruit and here bring it.
+
+			\f Hmm, tu pers un peu la boule. Prends tout d'abord la Roche
+			Magique et va tout au bout de la Vall‚e. L… seulement, la voie 
+			s'ouvrira devant toy. Approche toy alors de la Plante du Passage,
+			et cueille le fruit qui se trouve dans son coeur.
+			\g");
+			askList-=<<"Tell me again of the Rite Of Passage.
+			            \f Parle moy encor du Rite de Passage.
+						\g",
+					   "Tell me	again of the Passage Stone.
+					    \f Parle moy encor de la Roche Magique.
+						\g">>;
+			askList+=<<"That's all?
+			            \f C'est tout?
+						\g",
+					   "Where is the Passage Stone?
+					    \f O— se trouve la Roche Magique?
+						\g">>;
+		}
+
+
+
+		case "Tell me more of the test.
+		      \f Dis m'en plus sur l'espreuve.
+			  \g",
+			 "Tell me again of the Rite of Passage.
+			  \f Parle moy encor du Rite de Passage.
+			  \g"
+		{
+// @@@ CHANGE F G
+			bark("Very dangerous it is. Ready in your heart, mind
+			and soul you must be. First take the Passage Stone to
+			the southern corner of the vale you must. Only then made open
+			to you the way will be. Then approach the Passage Plant
+			you must, reach into its very center you will and pluck its fruit.
+
+			\f C'est trŠs dangereux. Tu dois te sentir prest en ton asme et
+			conscience. Emporte d'abord la Roche Magique tout au bout de la
+			Vall‚e. Alors seulement l…, la voie te sera ouverte. Rapproche toy
+			ensuite de la Plante du Passage, et cueille le fruit qui se trouve
+			en son coeur.
+			\g");
+			askList-=<<"I wish to take the test.
+			            \f J'aimerois passer l'espreuve.
+						\g",
+					   "Tell me more of	the test.">>;
+			askList+=<<"That's all?
+			            \f C'est tout?
+						\g",
+					   "Where is the Passage Stone?
+					    \f O— se trouve la Roche Magique?
+						\g">>;
+		}
+
+		case "That's all?
+		      \f C'est tout?
+			  \g"
+		{
+			bark("Yes, that all there is. However, remember always
+			most concerned a wise man is about those things that
+			too easy seem.
+
+			\f Oui, c'est tout. Cependant, souviens toy que le sage
+			est toujours pr‚occup‚ par ce qui semble moult facile.
+			\g");
+			askList-=<<"That's all?
+			            \f C'est tout?
+						\g">>;
+		}
+
+		case "Tell me again of the Passage Stone.
+		      \f Parle moy encor de la Roche Magique.
+			  \g"
+		{
+			bark("As told you before I did, disappeared the last
+			candidate did on her way to take the test.
+			When return from the test she did not, a search for her we began.
+			Her body we found half-submerged in the shallow lake to the
+			east of here. But missing the Passage Stone was.
+			The Hoskulds killed her I believe, and the Stone they took.
+
+			\f Comme je te l'ai desj… mentionn‚, la derniŠre personne qui s'est
+			aventur‚e … passer l'espreuve a disparu en cours de chemin. Comme
+			nous ne la revoyions point revenir, nous sommmes partis … sa
+			recherche. Nous avons trouv‚ son corps … moiti‚ immerg‚ dans le
+			petit lac … l'est d'icy, mais la Roche Magique n'estoit plus l….
+			\g");
+			askList-=<<"Tell me again of the Passage Stone.
+			            \f Parle moy encor de la Roche Magique.
+						\g",
+					   "Tell me	again of the Rite of Passage.
+					    \f Parle moy encor du Rite de Passage.
+						\g">>;
+		}
+
+		case "Where is the Passage Stone?
+		      \f O— se trouve la Roche Magique?
+			  \g"
+		{
+			bark("Ah, now a mystery that is. The last person
+			to attempt the test it seems, disappered she did on her way
+			to take the test. When return from the test she did not, a
+			search for her we began. Found her body half-submerged in the
+			shallow lake to the	east of here we did. Missing the Passage
+			Stone was. The Hoskulds killed her I believe, and
+			the Stone they took.
+
+			\f Ah, maintenant, ‡a c'est le mystŠre. La derniŠre personne qui
+			a tent‚ l'espreuve a disparu sur le chemin. Lorsque nous nous
+			sommes aper‡us qu'elle n'estoit point de retour, nous sommes all‚s
+			… sa recherche. Nous avons retrouv‚ son corps … moiti‚ immerg‚
+			dans le petit lac … l'est d'icy, mais sans la Roche Magique. A mon
+			avis, les Hoskulds l'ont tu‚e et ont pris la Roche.
+			\g");
+			askList=<<"Took the Stone?
+			           \f Pris la Roche?
+					   \g",
+					  "Hoskuld's killed her?
+					   \f Les Hoskulds l'ont tu‚e?
+					   \g">>;
+		}
+
+		case "Where is the Passage Stone?
+		      \f O— se trouve la Roche Magique?
+			  \g"
+		{
+			bark("As before you I told, know I do not! Disappeared it did with
+			the last person who wanted to take the test. Found her
+			body we did, but not the stone.
+
+			\f Tu es sourd ou quoi! Elle a disparu avec la derniŠre personne
+			qui a tent‚ l'espreuve. On a trouv‚ son corps, mais point la
+			Roche.
+			\g");
+			askList-=<<"Where is the Passage Stone?
+			            \f O— se trouve la Roche Magique?
+						\g">>;
+		}
+
+		case "Where did you say the body was found?
+		      \f O— a-t'on retrouv‚ le corps?
+			  \g"
+		{
+			bark("Changed it has not since last you I told.
+			Found in a shallow lake to the east of here it was.
+
+			\f Depuis que je te l'ai dit, je ne crois point qu'il ait chang‚
+			de place. On l'a retrouv‚ dans le petit lac … l'est d'icy.
+			\g");
+			askList-=<<"Where did you say the body was found?
+			            \f O— a-t'on retrouv‚ le corps?
+						\g">>;
+		}
+
+		case "Hoskuld's killed her?
+		      \f Les Hoskulds l'ont tu‚e?
+			  \g"
+		{
+			bark("Crushed almost beyond recognition her head was.
+			Set upon her they must have when for a drink she stopped.
+			Beat her with stones they did. Those lowly, cowards!
+
+			\f On reconnaissoit … grand peine son visage tant il estoit
+			tumesfi‚. Ils devoient estre juste derriŠre elle, lorsqu'elle
+			s'est arrest‚e pour boire. Et, ils l'ont lapid‚e. Immondes
+			gueux!!!");
+			askList-=<<"Hoskuld's killed her?
+			            \f Les Hoskulds l'ont tu‚e?
+						\g">>;
+		}
+
+		case "Took the Stone?
+		      \f Pris la Roche?
+			  \g"
+		{
+			bark("Of course, tell who can why do anything such
+			mouth-breathing, nose-picking idiots like the
+			Hoskulds would?	But if to take a guess I had, say because
+			they are too cowardly to take the test themselves,
+			I would. Prevent any of us from taking it as well
+			they want. How they are that is, those zombie-spawned
+			mud fish!
+
+			\f Pour s–r. Et pourquoi ils auraient fait ‡a ces cr‚nom de
+			vauriens de Hoskulds? Tout simplement parce qu'ils sont bien
+			trop lƒches pour passer l'espreuve eux-mesme. Et donc, ils veulent
+			aussy nous empˆcher de la passer. Voil… comment ils sont, ces
+			espŠces de morts-vivants bouffeurs de vase!
+			\g");
+			askList=<<"I will find the stone.
+			           \f Je retrouverois la Roche.
+					   \g",
+					  "I will speak to the Hoskulds.
+					   \f Je parlerois aux Hoskulds.
+					   \g">>;
+		}
+
+		case "The Hoskuld's don't have the Stone.
+		      \f Les Hoskuld n'ont point la Roche.
+			  \g"
+		{
+// @@@ CHANGE F G
+			bark("They had it, I think. Just lost it, they did.
+			Such brainless boobs they are. As told you I did, the last time
+			seen the stone was, with that woman who wanted to take
+			the test it was. Killed her the Hoskulds must have!
+
+			\f Ils l'avoient. Mais, ils l'ont perdue. Des crestins, voil…
+			ce qu'ils sont. Je te le r‚pŠte, la derniŠre fois qu'on a vu
+			la Roche, c'estoit avec cette femme qui vouloit passer l'espreuve.
+
+			\g");
+			askList-=<<"The Hoskuld's don't have the Stone.
+			            \f Les Hoskuld n'ont point la Roche.
+						\g">>;
+			askList+=<<"Where was the body found?
+			            \f O— le corps a-t'il ‚t‚ retrouv‚?
+						\g",
+					   "When did this happen?
+					    \f Quand cela s'est-il pass‚?
+						\g">>;
+		}
+
+		case "I will speak to the Hoskulds.
+		      \f Je parlerois aux Hoskulds.
+			  \g"
+		{
+			bark("Well, watch your back. Murdering, theiving
+			worthless animals they are.
+			\f Bon, et bien garde toujours un oeil dans le dos. Ils assassinent
+			et pillent, bien pire que des bestes.
+			\g");
+			exitConvo();
+			return;
+		}
+
+		case "I will find the stone.
+		      \f Je retrouverois la Roche.
+			  \g"
+		{
+			bark("Start at that morass they call home, I suggest.
+
+			\f Je te conseille de commencer tes recherches … ce mar‚cage
+			qu'ils appellent maison.
+
+			\g");
+
+			askList-=<<"I will find the stone.
+		      			\f Je retrouverois la Roche.
+			  			\g">>;
+
+			if (thordisMet = true) or (tyorviMet = true) or (ragnarMet = true)
+			{
+// @@@ CHANGE F G
+				askList+=<<"I will return to the Hoskulds, then.
+				            \f Puis, je retournerois chez eux.
+							\g">>;
+			}
+			else
+			{
+				askList+=<<"Where will I find them?
+				            \f O— les trouverois-je?
+							\g">>;
+			}
+		}
+
+// @@@ CHANGE F G
+		case "I will return to the Hoskulds, then.
+		      \f Puis, je retournerois chez eux.
+			  \g"
+		{
+			bark("Very well then. Goodbye.
+			      \f TrŠs bien. Salut.
+				  \g");
+			exitConvo();
+			return;
+		}
+
+		case "Where are the Hoskulds?"
+		{
+			bark("Told you I already have! Near the
+			southern most water hole they are. Once again, careful
+			you must be. Thieves and murderers they are.
+
+			\f Je te l'ai desj… dit! Ils sont prŠs de cette fosse d'eau au
+			sud. Encor une fois, sois prudent. Ce ne sont que des assassins
+			et des pilleurs.
+			\g");
+			askList-=<<"Where are the Hoskulds?
+			            \f O— sont les Hoskulds?
+						\g">>;
+
+		}
+
+		case "Where will I find them?
+		      \f O— les trouverois-je?
+			  \g"
+		{
+			bark("Your nose follow. Lead you to
+			the southern water hole, it should. Good luck.
+
+			\f Suis ton instinct. Il devroit te mener … la fosse d'eau, au sud.
+			Et que la chance soit avec toy!
+			\g");
+			exitConvo();
+			return;
+		}
+
+			case "I've met Ingyald.
+			      \f J'ai rencontr‚ Ingyald.
+				  \g"
+			{
+				bark("You have, I bet. Probably some of his liquor you bought
+				too, haven't you? Know what to do about him, I just do not.
+				Admit I have to, rather resourceful he is. But caused so many
+				problems his liquor has. But, maybe the death of Tyorvi
+				cause it will. A good thing that would be.
+
+				\f Ah, ouais. Tu as probablement achet‚ de sa liqueur. Je ne
+				sais vraiment point quoi faire de luy. Je dois reconnaistre
+				qu'il est assez ingesnieux. Mais, sa liqueur a caus‚ moultes
+				problŠmes. La mort de Tyorvi est peut estre l'unique bonne
+				chose qu'elle ait produit.
+				\g");
+				askList-=<<"I've met Ingyald.
+				            \f J'ai rencontr‚ Ingyald.
+							\g">>;
+				askList+=<<"He sent me to you.
+				            \f Il m'a dit de venir te voir.
+							\g">>;
+				if tyorviMet
+				{
+					askList+=<<"I've met Tyorvi.
+					            \f J'ai rencontr‚ Tyorvi.
+								\g">>;
+				}
+				if tyorviMet=false
+				{
+					askList+=<<"Who is Tyorvi?
+					            \f Qui est Tyorvi?
+								\g">>;
+				}
+			}
+
+			case "He sent me to you.
+			      \f Il m'a dit de venir te voir.
+				  \g"
+			{
+				bark("Did he? Well saved you the trouble he could have.
+				Just sent you away he should have. Leave here you must.
+
+				\f Vraiment? Il auroit pu t'espargner cette peine. Et juste
+				t'envoyer promener. Tu dois partir d'icy.
+				\g");
+				askList+=<<"Why must I leave?
+				            \f Pourquoi devrois-je partir?
+							\g">>;
+			}
+
+			case "I've met Tyorvi.
+			      \f J'ai rencontr‚ Tyorvi.
+				  \g"
+			{
+				bark("Have you? Wretched creature. Drunken slob. Always
+				crying on about his dead friend he is. Put him out of
+				his misery only death would. Be happy to give it to him
+				I would. Only one worse then him, that bitch
+				sister of his is. Thordis -- curse her name Ancients should.
+
+				\f Ah, oui. Cette mis‚rable cr‚ature. Ce soulard, qui passe
+				son temps … pleurer son amy disparu. Seule la mort pourroit
+				le tirer de ce mauvais pas. Je serois ravi de la lui offrir.
+				Mais, il existe pire que luy, sa sorciŠre de soeur, Thordis --
+				les Anciens maudissent son nom.
+				\g");
+				askList-=<<"I've met Tyorvi.
+				            \f J'ai rencontr‚ Tyorvi.
+							\g">>;
+				askList+=<<"Give him death?
+				            \f Luy donner la mort.
+							\g",
+						   "Dead friend?
+						    \f Son amy disparu?
+							\g">>;
+				if thordisMet
+				{
+					askList+=<<"I've met Thordis.
+					            \f J'ai rencontr‚ Thordis.
+								\g">>;
+				}
+				else if thordisMet = false
+				{
+					askList+=<<"Who is Thordis?
+					            \f Qui est Thordis?
+								\g">>;
+				}
+			}
+
+			case "Who is Tyorvi?
+			      \f Qui est Tyorvi?
+				  \g"
+			{
+				bark("Tyorvi? Why the lowlife scum that bitch
+				Thordis calls a brother, he is. A drunken slob he is. Always
+				crying on about his dead friend he is. Only death would
+				put him out of his misery I think. He wishes it I think.
+				Personally, happy to oblige him I would be.
+
+				\f Tyorvi? C'est ce pauvre abruti que cette sorciŠre de Thordis
+				nomme comme son frŠre. Une vesritable esponge imbib‚e d'alcool,
+				voil… ce qu'il est. Il passe sa vie … pleurer son amy disparu.
+				Seule la mort pourroit le tirer de son malheur. Il se la
+				souhaite, je crois. Je serois ravi de l'obliger personnellement.
+				\g");
+				askList-=<<"Who is Tyorvi?
+				            \f Qui est Tyorvi?
+							\g">>;
+				askList+=<<"Oblige him?
+				            \f De l'obliger?
+							\g", 
+				           "Dead friend?
+				            \f Son amy disparu?
+							\g">>;
+				if not thordisMet
+				{
+					askList+=<<"Who is Thordis?
+					            \f Qui est Thordis?
+								\g">>;
+				}
+				else if thordisMet
+				{
+					askList+=<<"I've met Thordis.
+					            \f J'ai rencontr‚ Thordis.
+								\g">>;
+				}
+			}
+
+			case "Dead friend?
+			      \f Son amy disparu?
+				  \g"
+			{
+				bark("Stupid, drunken fools. Into their
+				heads they took it, one night to climb the cliffs. After
+				drunk alot of Ingyald' brew they had. Take something
+				as serious as the Cloud City and make it
+				into a drunken lark, only the Hoskulds would.
+				What they deserved they got, if me you ask.
+
+				\f Pauvres crestins d'ivrognes. Une nuit, il leur est pass‚
+				par la teste d'aller escalader la falaise. AprŠs bien s–r
+				avoir ingurgit‚ la mixture d'Ingyald. Seuls les Hoskulds
+				sont assez foldingues pour faire de la Cit‚ Nesbuleuse une
+				plaisanterie de comptoir. Si tu veux mon avis, ils n'ont eu
+				que ce qu'ils m‚ritoient.
+				\g");
+				askList-=<<"Dead friend?
+				            \f Son amy disparu?
+							\g">>;
+			}
+
+			case "Give him death?
+			      \f Luy donner la mort.
+				  \g",
+				 "Oblige him?
+				  \f De l'obliger?
+				  \g"
+			{
+				bark("Like to give him the death apparently he
+				wants I would. Always going on about how he should have
+				died instead of his friend, he is. I say too
+				bad they didn't both die it is.
+
+				\f J'aimerois lui donner de ma propre main la mort qu'il
+				resclame. Il passe son temps … se lamenter sur pourquoi
+				ce n'est point luy, mais son amy qui a p‚ri. Et ben, moy
+				j'dis, pourquoi qu'ils ont point tous les deux cass‚ leur
+				pipe.
+				\g");
+				askList-=<<"Give him death?
+				            \f Luy donner la mort.
+							\g",
+						   "Oblige him?
+						    \f De l'obliger?
+							\g">>;
+			}
+
+			case "I've met Thordis.
+			      \f J'ai rencontr‚ Thordis.
+				  \g"
+			{
+				bark("Ah, a chance to meet that troll-
+				spawned bitch personally you have had.
+
+				\f Ah, tu as eu l'occasion de rencontrer personnellement
+				cette satan‚e sorciŠre troll.
+				\g");
+				askList-=<<"I've met Thordis.
+				            \f J'ai rencontr‚ Thordis.
+							\g">>;
+				askList^=<<"Why do you hate her so?
+				            \f Pourquoi fichtre la d‚testes-tu tant?
+							\g">>;
+			}
+
+			case "Who is Thordis?
+			      \f Qui est Thordis?
+				  \g"
+			{
+				bark("The dirt-eating, fly-bitten leader of those
+				Pagan-loving Hoskulds she is. Curse them, I say, curse
+				them all!
+
+				\f La mangeuse de mouise, la meneuse de ce troupeau d'
+				Hoskulds adorateurs des Pagans, voil… qui elle est. Maudits
+				soient-ils! Oui, tous, maudits!
+				\g");
+				askList-=<<"Who is Thordis?
+				            \f Qui est Thordis?
+							\g">>;
+				askList+=<<"Why do you hate her so?
+				            \f Pourquoi fichtre la d‚testes-tu tant?
+							\g">>;
+			}
+
+			case "Why do you hate her so?
+			      \f Pourquoi fichtre la d‚testes-tu tant?
+				  \g"
+			{
+				bark("Hate her? Hate!? Strong enough
+				a word hate is not, my friend! The leader of those that
+				caused the death of my wife she is. If she and those
+				skum-born, pagan whelps here were not, still alive
+				my wife would be!
+
+				\f La d‚tester? Elle, la d‚tester. Mais, mon amy, le verbe est
+				moult trop faible. Elle est … la teste de ceux qui ont provoqu‚
+				la mort de ma chŠre espouse. Si elle, et ces maudits avortons
+				de Pagan n'estoient point de ce monde, ma mie seroit encor
+				vivante!
+				\g");
+				askList-=<<"Why do you hate her so?
+				            \f Pourquoi fichtre la d‚testes-tu tant?
+							\g">>;
+				askList+=<<"What did they do?
+				            \f Qu'ont-ils fait?
+							\g",
+						   "How did she die?
+						    \f Pourquoi est-elle morte?
+							\g">>;
+			}
+
+			case "What did they do?
+			      \f Qu'ont-ils fait?
+				  \g"
+			{
+				bark("Theives they are! If stolen the shield from
+				the High Priestess their ancestors had not, here my
+				wife would be! In fact, here green and good life would
+				be! All their fault it is!
+
+				\f Des voleurs! Si leurs ancestres n'avoient point vol‚ l'Escu
+				de la Grande Prestresse, ma femme seroit toujours l…! En fait,
+				la Vall‚e seroit verte et la vie douce et paisible! Tout ‡a,
+				c'est leur faute!
+				\g");
+				askList-=<<"What did they do?
+				            \f Qu'ont-ils fait?
+							\g">>;
+			}
+
+			case "How did she die?
+			      \f Pourquoi est-elle morte?
+				  \g"
+			{
+				bark("Trying to climb the cliffs she died! Believe
+				that can you? Loved her above my very life I did.
+				Married we were and a child, a son, we had. I thought
+				happy forever we would be. Then took our boy a sickness
+				did. When died he did, she died too it seemed.
+				Sit for hours she would. Stare at nothing she would.
+				Then one morning awoke to find her missing I did.
+				A note on her pillow there was. Said gone she had
+				to ask the Ancient Ones to bring our child back to us.
+				Found her broken body lying on the rocks
+				below the cliffs we did.
+
+				\f En essayant d'escalader la falaise, elle a trespass‚!
+				Peux-tu y croire? Je l'aimois au-del… de ma propre existence.
+				Nous nous estions pris en espousailles, et avions un fils.
+				Il me sembloit que nous serions esternellement heureux. D'abord,
+				la maladie emporta notre fils. A sa mort, ma douce perdit tout
+				goust pour la vie. Elle restoit assise durant des heurs, le
+				regard dans le vide. Et puis un matin, quand je me suis esveill‚,
+				elle avoit disparu. Il y avoit une note sur son oreiller. Elle
+				disoit qu'elle estoit partie demander aux Anciens de nous rendre
+				notre enfant. Et puis, nous avons retrouv‚ son corps bris‚ sur
+				rochers en bas de la falaise.
+				\g");
+				askList-=<<"How did she die?
+				            \f Pourquoi est-elle morte?
+							\g">>;
+				askList+=<<"How is this the Hoskuld's fault?
+				            \f Et pourquoi est-ce la faute des Hoskulds?
+							\g">>;
+			}
+
+			case "How is this the Hoskuld's fault?
+			      \f Et pourquoi est-ce la faute des Hoskulds?
+				  \g"
+			{
+				bark("How ask that can you? In the old days, when
+				desired the wisdom of the Ancient Ones a Zealan did, talk to
+				the High Priestess he would. Now, felt my wif did that
+				climb the cliffs she must to speak to the Ancient Ones.
+				All because stole the shield so long ago a Hoskuld did!
+				If the shield Ezrekal had, gone there my wife would have.
+				Instead to her death on the cliffs she fell! The
+				Hoskuld's fault it is! All turned to water zombies
+				may they be!
+
+				\f Comment oses-tu demander cela? Avant, quand un Zealan vouloit
+				connoistre la sagesse des Anciens, il allair parler … la Grande
+				Prestresse. Alors, comme les Hoskulds avoient vol‚ l'Escu, mon
+				espouse a d– escalader la falaise pour aller parler aux Anciens.
+				Si Ezrekal avoit eu l'Escu en sa possession, ma femme seroit all‚e
+			    l…-bas. Au lieu de cela, elle a courru … sa mort sur la falaise!
+				Et tout cela, par la faute des Hoskulds! Qu'ils soient chang‚s
+				en morts-vivants des marais!
+				\g");
+				askList-=<<"How is this the Hoskuld's fault?
+				            \f Et pourquoi est-ce la faute des Hoskulds?
+							\g">>;
+			}
+
+			case "Thordis told me of the Rite.
+			      \f Thordis m'a parl‚ du Rite.
+				  \g"
+			{
+// @@@ CHANGE F G
+				bark("She did, did she? Also tell you they
+				stole the Passage Stone as well, did she?
+
+				\f Vraiment? T'a-t'elle dit aussy qu'ils ont vol‚ la
+				Pierre-Qui-Parle?
+				\g");
+				askList-=<<"Thordis told me of the Rite.
+				            \f Thordis m'a parl‚ du Rite.
+							\g">>;
+				askList+=<<"Passage Stone?
+				            \f La Pierre-Qui-Parle?
+							\g",
+						   "Stole the Stone?
+						    \f Vol‚ la Pierre?
+							\g",
+						   "I seek the Stone.
+						    \f Je recherche la Pierre.
+							\g">>;
+			}
+
+// @@@ CHANGE F G
+			case "Passage Stone?
+			      \f La Pierre-Qui-Parle?
+				  \g"
+			{
+				bark("Yes, yes. Allows a candidate into the Rite
+				that stone does. A very dangerous test it is, you see.
+				Have children wandering in we could not.
+
+				\f Oui, oui. Cette pierre permet … un candidat de rentrer dans le
+				Rite. Une espreuve moulte dangereuse. Pas pour les gamins.
+				\g");
+				askList-=<<"Passage Stone?
+				            \f La Pierre-Qui-Parle?
+							\g">>;
+				askList+=<<"The Rite is dangerous?
+				            \f Le Rite est dangereux?
+							\g">>;
+			}
+
+			case "The Rite is dangerous?
+			      \f Le Rite est dangereux?
+				  \g"
+			{
+				bark("Of course dangerous it is! Not much
+				of a test it would be if it were not, would it?
+
+				\f Evidemment que c'est dangereux! Cela ne seroit point une
+				espreuve si ce ne l'estoit point!
+				\g");
+				askList-=<<"The Rite is dangerous?
+				            \f Le Rite est dangereux?
+							\g">>;
+				askList+=<<"What kind of danger?
+				            \f Quelle sorte de danger?
+							\g">>;
+			}
+
+			case "What kind of danger?
+			      \f Quelle sorte de danger?
+				  \g"
+			{
+				bark("Ah ah ah. Now, if told you I did, an unfair
+				advantage it would be. All tell you I can is enter the Rite
+				you must. Then return with the fruit of the plant
+				that grows there you must.
+				\f Ah ah ah! Mais, si je te le disois, tu serois injustement
+				avantag‚. Tout ce que je peux te dire, c'est d'entrer dans le
+				Rite et de revenir avec le fruit de la plante qui pousse l…-bas.
+				\g");
+				askList-=<<"What kind of danger?
+				            \f Quelle sorte de danger?
+							\g">>;
+			}
+
+			case "Stole the Stone?
+			      \f Vol‚ la Pierre?
+				  \g"
+			{
+				bark("No other explanation I can see. Never got there the last
+				person to try the test did. Found beside that shallow
+				lake to the east of here her body was. Bludgeoned to death
+				she had been and missing the Passage Stone was.
+
+				\f Je ne vois d'aultre explication. La derniŠre personne … 
+				tenter l'espreuve n'y est oncques parvenue. On a retrouv‚ sa
+				despoille … cost‚ du petit lac … l'est d'icy. Elle avoit ‚t‚
+				battue … mort, et la Roche Magique avoit disparu.
+				\g");
+				askList-=<<"Stole the Stone?
+				            \f Vol‚ la Pierre?
+							\g">>;
+			}
+
+			case "I seek the Stone.
+			      \f Je recherche la Pierre.
+				  \g"
+			{
+				bark("And search since it
+				disappeared all my ancerstor have. Sorry I am help you
+				I can not.
+
+				\f Et depuis qu'elle a disparue, chacun de mes ancestres l'a
+				recherch‚e. D‚sol‚ de ne pouvoir t'aider.
+				\g ");
+				askList-=<<"I seek the Stone.
+				            \f Je recherche la Pierre.
+							\g">>;
+				askList+=<<"Who might be able to help me?
+				            \f Qui pourroit me venir en aide?
+							\g">>;
+			}
+
+			case "Who might be able to help me?
+			      \f Qui pourroit me venir en aide?
+				  \g",
+				 "Who might know where to look for it?
+				  \f Qui sauroit de quel cost‚ chercher?
+				  \g"
+			{
+				bark("Although hate I do to send you to those garbage-eating
+				Hoskulds for anything. The best aquainted with
+				the Vale their hunter, Ragnar, is. Knows every inch of
+				the Vale he does. Talk to him why don't you?
+
+				\f Bien que je d‚teste t'envoyer pour rien chez ces mangeurs
+				de destritus d'Hoskulds. Le plus familer avec la Vall‚e est
+				Ragnar, leur chasseur. Il connoit chaque centimŠtre carr‚
+				de la Vall‚e. Pourquoi n'irois-tu point lui causer?
+				\g");
+				askList-=<<"Who might be able to help me?
+				            \f Qui pourroit me venir en aide?
+							\g">>;
+
+			}
+
+
+			case "I am no longer poisoned!
+			      \f Je ne souffre plus de l'empoisonnement.
+				  \g"
+			{
+				bark("That I know! There I was! Want know what you
+				found in the Cloud City, I do.
+
+				\f Je sais! J'y estois! Je voudrois savoir ce que tu as
+				trouv‚ dans la Cit‚ Nesbuleuse.
+				\g");
+				askList-=<<"I am no longer poisoned!
+				            \f Je ne souffre plus de l'empoisonnement.
+							\g">>;
+				askList+=<<"I found the Shield.
+				            \f J'ai trouv‚ l'Escu.
+							\g",
+						   "I found beautiful buildings.
+						    \f J'ai trouv‚ des bastisses fabuleuses.
+							\g",
+						   "I found terrible monsters.
+						    \f J'ai trouv‚ de terribles monstres.
+							\g",
+						   "I found	nothing.
+						    \f Je n'ai rien trouv‚.
+							\g">>;
+			}
+
+			case "I found beautiful buildings.
+			      \f J'ai trouv‚ des bastisses fabuleuses.
+				  \g"
+			{
+				bark("Oh, imagine I can. A wonderful experience for
+				you it was! Oh, the majesty of the Ancients!
+
+				\f Oh, j'imagine. Quelle exp‚rience mervoilleuse c'estoit
+				pour toy! Ah, la majest‚ des Anciens!
+				\g");
+				askList-=<<"I found beautiful buildings.
+				            \f J'ai trouv‚ des bastisses fabuleuses.
+							\g">>;
+			}
+
+			case "I found terrible monsters.
+			      \f J'ai trouv‚ de terribles monstres.
+				  \g"
+			{
+				bark("Terrible monsters?! In the Cloud City? Where
+				were the Ancient Ones? Find them did you?
+
+				\f De terribles monstres?! Dans la Cit‚ Nesbuleuse? O—
+				estoient les Anciens? Les as-tu trouv‚s?
+				\g");
+				askList=<<"Yes.
+				           \f Oui.
+						   \g",
+						  "No.
+						   \f Non.
+						   \g">>;
+			}
+
+			case "I found nothing.
+			      \f Je n'ai rien trouv‚.
+				  \g"
+			{
+				bark("Nothing? Nothing at all? No Cloud
+				City there is? Believe you I do not! Why, brought back
+				the Shield you did. Something there, there has to be.
+				Find the Ancient Ones did you?
+
+				\f Rien? Rien du tout? Il n'y a point de Cit‚ Nesbuleuse?
+				Je ne te crois point. Pourquoi donc as-tu rapport‚ l'Escu
+				alors? S'il y a quelque chose l…-bas, c'est bien ‡a. Tu as
+				trouv‚ les Anciens, n'est-ce point?
+				\g");
+				askList=<<"Yes.
+				           \f Oui.
+						   \g",
+						  "No.
+						   \f Non.
+						   \g">>;
+			}
+
+			case "I found the Shield.
+			      \f J'ai trouv‚ l'Escu.
+				  \g"
+			{
+				bark("Yes, yes, that I saw. But find the
+				Ancient Ones did you?
+				\f Oui, oui, je vois. Mais, as-tu trouv‚ les Anciens?
+				\g");
+				askList=<<"Yes.
+				           \f Oui.
+						   \g",
+						  "No.
+						   \f Non.
+						   \g">>;
+			}
+
+			case "Yes.
+			      \f Oui.
+				  \g"
+			{
+				bark("You did? Hmmmm, if found them you did and the
+				shield is fixed, contacted us they would. I think
+				perhaps not remembering quite right you are.
+
+				\f Vraiment? Hmmmm, si tu les avoit trouv‚s et que l'Escu
+				estoit r‚par‚, ils nous auroient signal‚ leur pr‚sence.
+				Peut estre aurois-tu l‚g‚rement perdu la mesmoire?
+				\g");
+				askList-=<<"Yes.
+				            \f Oui.
+							\g">>;
+			}
+
+			case "No.
+			      \f Non.
+				  \g"
+			{
+				bark("No? Empty the City was? Where possibly
+				could they be? The last time saw them anyone did,
+				in the Temple they were. Surely not still there they are!
+				Maybe kidnapped them the Ancient ones did!
+
+				\f Non? La Cit‚ estoit d‚serte? O— pouvoient-ils bien estre?
+				La derniŠre fois qu'on les a vus, ils estoient au Temple.
+				Ils n'y sont certainement plus! Quelqu'un auroit-il
+				enlev‚ les Anciens!
+				\g");
+				askList-=<<"Yes.
+				            \f Oui.
+							\g",
+						   "No.
+						    \f Non.
+							\g">>;
+				askList+=<<"Where is the Temple?
+				            \f O— est le Temple?
+							\g">>;
+			}
+
+			case "Where is the Temple?
+			      \f O— est le Temple?
+				  \g"
+			{
+
+// @@@ CHANGE F G
+				bark("On the north side of the Vale it is. But not
+				much to see there is. Destroyed in the Great Cataclysm it
+				was.
+
+				\f Du cost‚ ouest de la Vall‚e. Mais, il n'y a point grand
+				chose … voir. Tout fust destruit lors du Grand Cataclysme.
+				\g");
+				askList-=<<"Where is the Temple?
+				            \f O— est le Temple?
+							\g">>;
+			}
+
+			case "I have opened your Temple!
+			      \f J'ai ouvert ton Temple!
+				  \g"
+			{
+				bark("Yes, yes! Heard I did! But now find a way to
+				free our Ancient Ones you must! Hurry!
+				\f Oui, oui! J'ai entendu cela! Mais, … pr‚sent trouve
+				donc un moyen pour lib‚rer nos Anciens! Allez, vite!
+				\g");
+				exitConvo();
+				return;
+			}
+
+
+			case "I have freed the Ancient Ones!
+			      \f J'ai lib‚r‚ les Anciens!
+				  \g"
+			{
+				bark("Oh, saved the Vale you have, for surely
+				dying a slow death when you arrived it was. Breathed
+				life back into our people you have. Always welcome
+				here you will be! Why, so much to do now there is,
+				fields to till,	crops to sow. Think our land will
+				be green again, do you?	Hope so, I do! So much to do...
+
+				\f Oh, tu as sauv‚ la Vall‚e. Oh, oui! Elle s'esteignoit 
+				doucement lors de ton arriv‚e. Tu as redonn‚ le souffle de
+				la vie … nos gens. Tu seras toujours le bienvenu icy!
+				Il y a maintenant moult … faire, les champs … cultiver, les
+				r‚coltes … semer. Tu crois que notre terre verdoyera … 
+				nouveau? Oh, de tout mon coeur, je l'espŠre! Il y a tant
+				… faire...
+				\g");
+				exitConvo();
+				return;
+			}
+
+			case "You didn't say it was poisoned!
+			      \f Tu n'as point mentionn‚ que c'estoit empoisonn‚!
+				  \g"
+			{
+				bark("Stopped you would it have? No, I think.
+				Seen your kind before I have. You think immortal you are.
+				Charge into a troll's lair without a second
+				thought you would, just to get what wanted you did. How
+				you may stay in the Vale you asked? Well, the only way
+				this is. Now, stay you may as long as you like,....or as
+				long as live you do.
+
+				\f Cela t'auroit arrest‚? Non, je ne crois pas. J'ai desj…
+				vu des gens de ton espŠce. Tu te crois immortel. Sans
+				resfl‚chir, tu foncerois tout droit dans une taniŠre de
+				troll pour obtenir ce que tu veux. Tu as demand‚ comment tu
+				pouvois rester dans la Vall‚e, et bien, c'est la seule
+				fa‡on. Maintenant, tu peux rester ici aussy longtemps que
+				tu le d‚sires...ou bien aussy longtemps que tu restes en
+				vie.
+				\g ");
+				askList-=<<"You didn't say it was poisoned!
+				            \f Tu n'as point mentionn‚ que c'estoit empoisonn‚!
+							\g">>;
+				askList+=<<"Thordis said to find Ezrekal.
+				            \f Thordis a dit de trouver Ezrekal.
+							\g",
+						   "How long do I have?
+						    \f Combien de temps me reste-t'il?
+							\g">>;
+			}
+
+			case "How long do I have?
+			      \f Combien de temps me reste-t'il?
+				  \g"
+			{
+				bark("Depends upon how strong you are it does. A stout fellow
+				you seem. Guess I would last several days you may,
+				but then only a few hours it may be. Just never know, you do.
+
+				\f Cela despend de ta force. Tu m'as l'air costaud. Je 
+				dirois quelques jours, mais il se peut que ce soient quelques 
+				heures aussy. Oncques ne sait.
+				\g");
+				askList-=<<"How long do I have?
+				            \f Combien de temps me reste-t'il?
+							\g">>;
+			}
+
+			case "Thordis said to find Ezrekal.
+			      \f Thordis a dit de trouver Ezrekal.
+				  \g"
+			{
+				bark("To her leave it, false hope to give.
+				200 years ago what you would do, that is. Well,
+				suit yourself. If you choose, find her. Think I do not
+				that crazy old woman can any good for you do.
+
+				\f Laisse tomber ce faux espoir. Elle a 200 ans
+				de retard. Alors, fais ton choix. Et va la trouver, si cela
+				est ton d‚sir. Mais, je doute que cette vieille folle
+				te soit d'une grande utilit‚.
+				\g");
+				askList-=<<"Thordis said to find Ezrekal.
+				            \f Thordis a dit de trouver Ezrekal.
+							\g">>;
+			}
+
+			case "I have been poisoned!
+			      \f On m'a empoisonn‚!
+				  \g"
+			{
+				bark("Ah, I guess taking effect already the poison is.
+				The one who told you, you were poisoned I am, remember?
+				Well, better get on your way you had and Ezrekal find.
+				Your only chance it is, although a tiny one.
+
+				\f Ah, il me semble que le poison fait desj… effet. Je
+				suis celuy qui t'ai dit que tu avois ‚t‚ empoisonn‚, te
+				souviens-tu? Bon, tu ferois mieux de te mettre en chemin
+				et de trouver Ezrekal. C'est ta seule chance, et elle est
+				bien mince.
+				\g");
+				askList-=<<"I have been poisoned!
+				            \f On m'a empoisonn‚!
+							\g">>;
+				askList+=<<"Where did you say she is?
+				            \f O— as-tu dit qu'elle estoit?
+							\g">>;
+			}
+
+			case "Where did you say she is?
+			      \f O— as-tu dit qu'elle estoit?
+				  \g"
+			{
+// @@@ CHANGE F G
+				bark("Really affected your mind the poison has. Well,
+				find her you will at that shack home she calls. To the
+				east of the southern-most lake in the Vale it is. Better hurry
+				you had. By the looks of you, much time you have not.
+
+				\f €a te torture vraiment l'esprit, hein? Et bien, tu la
+				trouveras chez elle dans cette cabane qu'elle appelle maison.
+				Elle habite	… l'ouest du lac le plus au nord de la Vall‚e.
+				Tu ferois bien de te haster. A te regarder, il ne te reste
+				plus beaucoup de temps.
+				\g");
+				askList-=<<"Where did you say she is?
+				            \f O— as-tu dit qu'elle estoit?
+							\g">>;
+			}
+
+			case "I have spoken with Ezrekal.
+			      \f J'ai parl‚ … Ezrekal.
+				  \g"
+			{
+				bark("Have you? What tell you did that crazy old
+				woman? I know, I bet sent you to the Cliffs
+				she did, didn't she? Yes, always that she does.
+				Tries to get strong young Zealans to climb the cliffs
+				for her, she does.
+
+				\f Vraiment? Avec quelle idiotie, cette vieille folle
+				t'a-t'elle bourr‚ le crasne? Ah, si, je sais, je parie
+				qu'elle t'a envoy‚ … la Falaise, hein? Elle fait toujours
+				‡a. Elle prend souvent de jeunes et forts Zealans 
+				pour leur faire grimper la Falaise … sa place.
+				\g");
+				askList-=<<"I have spoken with Ezrekal.
+				            \f J'ai parl‚ … Ezrekal.
+							\g">>;
+				askList+=<<"What cliffs?
+				            \f Quelle Falaise?
+							\g",
+						   "Why does she send them to the cliffs?
+						    \f Pourquoi est-ce qu'elle les envoie … la Falaise?
+							\g">>;
+			}
+
+			case "What cliffs?
+			      \f Quelle Falaise?
+				  \g"
+			{
+// @@@ CHANGE F G
+				bark("What, blind are you? See the giant
+				cliffs to the west can you not? Called the Cloud Cliffs
+				they are. The gateway to the Cloud City they are.
+
+				\f Tu es aveugle ou quoi? Tu ne vois donc point cette immense
+				Falaise au nord? On l'appelle la Falaise Embrum‚e. C'est
+				l'entr‚e de la Cit‚ Nesbuleuse.
+				\g");
+				askList-=<<"What cliffs?
+				            \f Quelle Falaise?
+							\g">>;
+				askList+=<<"Cloud City?
+				            \f La Cit‚ Nesbuleuse?
+							\g">>;
+			}
+
+			case "Tell me about the Cloud Cliffs.
+			      \f Parle moy de la Falaise Embrum‚e.
+				  \g"
+			{
+				bark("The Cloud Cliffs? Why the gateway
+				to the Cloud City they are. Sends foolish young
+				Zealans there to do her dirty work, Ezrekal often does.
+
+				\f La Falaise Embrum‚e? C'est l'entr‚e de la Cit‚ Nesbuleuse.
+				Ezrekal y envoie souvent des jeunes ‚cervel‚s Zealans pour
+				faire son sale boulot.
+				\g");
+				askList+=<<"Cloud City?
+				            \f La Cit‚ Nesbuleuse?
+							\g",
+						   "Foolish Zealans?
+						    \f Des Zealans ‚cervel‚s?
+							\g",
+			               "Her dirty work?
+						    \f Son sale boulot?
+							\g">>;
+			}
+
+			case "Cloud City?
+			      \f La Cit‚ Nesbuleuse?
+				  \g"
+			{
+				bark("Yes, the Cloud City. The home of the Ancient
+				Ones it is. Some say the place where our people
+				originally came	from it is. Said it is that
+				a place of wonderful beauty it is.
+				Also said it is that comprehend such beauty
+				mortal eyes can not. Go blind they would if gazed upon it
+				they did.
+
+				\f Oui, la Cit‚ Nesbuleuse. O— vivent les Anciens. D'aucuns
+				disent que notre peuple vient de l…. On dit que c'est un 
+				petit paradis o— la vie est merveilloise. Aussy, on dit que
+				les yeux des mortels ne sont point capables de voir une
+				telle beaut‚. Et qu'ils perdroient la vue si oncques ils la
+				contemploient.
+				\g");
+				cloudCity = true;
+				askList-=<<"Cloud City?
+				            \f La Cit‚ Nesbuleuse?
+							\g">>;
+			}
+
+			case "Why does she send them to the cliffs?
+			      \f Pourquoi est-ce qu'elle les envoie … la Falaise?
+				  \g"
+			{
+				bark("Sends them to awaken the Ancient Ones in their Cloud
+				City she does. Too old to do it herself she is so
+				sends other foolish youngsters to do her dirty work she does.
+
+				\f Elle les envoie pour resveiller les Anciens dans leur
+				Cit‚ Nesbuleuse. Elle est trop vieille pour le faire
+				elle-mesme, alors, elle envoie de jeunes ‚cervel‚s pour faire
+				son sale boulot.
+				\g");
+				askList+=<<"Foolish Zealans?
+				            \f Des Zealans ‚cervel‚s?
+							\g",
+						   "Her dirty work?
+						    \f Son sale boulot?
+							\g">>;
+				if cloudCity=false
+				{
+					askList+=<<"Cloud City?
+					            \f La Cit‚ Nesbuleuse?
+								\g">>;
+				}
+			}
+
+			case "Foolish Zealans?
+			      \f Des Zealans ‚cervel‚s?
+				  \g"
+			{
+				bark("Foolish because certain death it is. Sucessfully
+				climbed the Cliffs and reached the Cloud City no one
+				ever has.
+
+				\f Des ‚cervel‚s oui, car leur mort est certaine. Personne
+				n'a oncques r‚ussi … grimper la Falaise et … atteindre la
+				Cit‚ Nesbuleuse.
+				\g");
+				askList-=<<"Foolish Zealans?
+				            \f Des Zealans ‚cervel‚s?
+							\g">>;
+			}
+
+			case "Her dirty work?
+			      \f Son sale boulot?
+				  \g"
+			{
+				bark("Thinks she does, if someone could climb the Cliffs, they
+				would be able the Ancient Ones to wake.
+				Believes she does if awake the Ancient Ones were, the
+				condition of their Vale they would see. Return it
+				to its former beauty they would.
+
+				\f Elle croit que si quelqu'un arrivoit … grimper la Falaise,
+				il pourroit tirer les Anciens de leur sommeil. Et, elle pense
+				qu'une fois les Anciens resveill‚s, en voyant l'estat de leur
+				Vall‚e, ils pourroient lui rendre sa beaut‚ originelle.
+				\g");
+				askList-=<<"Her dirty work?
+				            \f Son sale boulot?
+							\g">>;
+				askList+=<<"Do you think this is true?
+				            \f Tu crois que c'est vrai?
+							\g",
+						   "Former beauty?
+						    \f Sa beaut‚ originelle?
+							\g">>;
+			}
+
+			case "Do you think this is true?
+			      \f Tu crois que c'est vrai?
+				  \g"
+			      
+			{
+				bark("Well, if it is, then change her ways 'ol Hrodny should.
+
+				\f Si c'est vrai, Hrodny devroit alors changer son fusil
+				d'espaule.
+				\g");
+				askList-=<<"Do you think this is true?
+				            \f Tu crois que c'est vrai?
+							\g">>;
+				if hrodnyMet
+				{
+					askList+=<<"Hrodny change her ways?
+					            \f Hrodny, changer son fusil d'espaule?
+								\g">>;
+												}
+				else
+				{
+					askList+=<<"Who is Hrodney?
+					            \f Qui est Hrodny?
+								\g">>;
+				}
+			}
+
+			case "Hrodny change her ways?
+			      \f Hrodney, changer son fusil d'espaule?
+				  \g"
+			{
+				bark("The major cause for the Ancient Ones turning
+				their backs on us she is. Her and her blasphemous beliefs
+				and actions. Spoken with her you have! Know how she
+				feels about the Ancient Ones you do. Understand I do
+				not how look at this Vale anyone can and not believe
+				in the Ancient Ones. Oh sure, seem anything of them in our
+				lifetime we have not, but our lifetime to them what is?
+				A mere eye blink, that's what.
+
+				\f Elle est la principale raison des Anciens de tourner le
+				dos. Elle-mesme et ses croyances et actions blasph‚matoires.
+				Tu as parl‚ avec elle! Tu sais ce qu'elle pense des Anciens.
+				Je ne comprends point comment quiconque peut regarder cette
+				Vall‚e et ne point croire aux Anciens. Oh, bien s–r, de toute
+				notre existence, nous n'avons rien d'eux, mais, qu'est-ce
+				que notre vie … leurs yeux? Un faible battement de paupiŠres,
+				c'est tout.
+				\g");
+				askList-=<<"Hrodny change her ways?
+				            \f Hrodney, changer son fusil d'espaule?
+							\g">>;
+				askList+=<<"Blasphemous beliefs?
+				            \f Des croyances blasph‚matoires?
+							\g",
+						   "Blasphemous actions?
+						    \f Des actions blasph‚matoires?
+							\g">>;
+			}
+
+			case "Who is Hrodny?
+			      \f Qui est Hrodny?
+				  \g"
+			{
+				bark("That strange, twisted individual that lives
+// @@@ CHANGE F G
+				in the southenr most house she is. She says a
+				Gunnar she is, but hardly believe it I can. Such
+				a good man, a devout man, her father was. How have
+				such blasphemous ideas and actions his daughter
+				can, know I do not.
+
+				\f Cet estrange individu tordu vit dans sa maison au bout
+				de ce chemin. Elle dit qu'elle est du clan Gunnar, mais j'ai
+				du mal … le croire. Son pŠre estoit un homme tellement bon
+				et si pieux. Je ne comprends point o— sa fille est all‚e
+				pˆcher de telles id‚es et actions blasph‚matoires?
+				\g");
+				askList-=<<"Who is Hrodney? 
+				            \f Qui est Hrodny?
+							\g">>;
+				askList^=<<"Blasphemous beliefs?
+				            \f Des croyances blasph‚matoires?
+							\g",
+						   "Blasphemous actions?
+						    \f Des actions blasph‚matoires?
+							\g">>;
+			}
+
+			case "Blasphemous beliefs?
+			      \f Des croyances blasph‚matoires?
+				  \g"
+			{
+				bark("No Ancient Ones there are, she believes. They
+				A figment of our imaginations they are, she sayd.
+				Thought up to give us a reason to continue living, she says.
+				Learn to live for living's sake we should, she says.
+				Believe such brazen words, can you? If merely sleeping
+				the Ancient Ones are, I hope not here I am when
+				awaken they do. Blast her they will and us too!
+
+				\f Elle ne croit point aux Anciens. Elle dit qu'ils ne sont
+				que des fragments de notre imagination, cr‚‚s uniquement
+				dans le but de nous donner une raison de vivre. Peux-tu
+				croire de telles impudences? Si les Anciens ne sont point
+				totalement endormis, je ne voudrois point estre l… lors de
+				leur resveil. Ils la resduiront en miettes, et nous avec.
+				\g");
+				askList-=<<"Blasphemous beliefs?
+				            \f Des croyances blasph‚matoires?
+							\g">>;
+			}
+
+			case "Blasphemous actions?
+			      \f Des actions blasph‚matoires?
+				  \g"
+			{
+				bark("Trying to change the course of the waters
+				she is!	Tinkering with work of our creators she is.
+				Understand I do not. Believe she is as great as they are,
+				does she? She must! When their attention back to us
+				the Ancients turn, Afraid I am severly disappointed
+				they will be. Even turn their faces from us forever
+				they may. Wish I do there was more I could do to
+				stop her, but killing her out of the question is.
+
+				\f Elle essaie de changer le cours d'eau qui alimente nos
+				petits lacs! Elle ose tripatouiller l'oeuvre de nos cr‚ateurs.
+				Je ne comprends point. Elle croit qu'elle est de leur trempe?
+				C'est s–r! Lorsque les Anciens vont nous revenir, ils vont
+				estre sacr‚ment d‚‡us, j'en ai bien peur. Ils d‚cideront
+				peut estre de nous tourner le dos … jamais, pour avoir
+				permis … cet estre de vivre parmi nous. Que j'aimerois trouver
+				quelque chose pour l'arrester, mais, la tuer est hors de 
+				question!
+				\g");
+				askList-=<<"Blasphemous actions?
+				            \f Des actions blasph‚matoires?
+							\g">>;
+				askList+=<<"More to stop her?
+				            \f Quelque chose pour l'arrester?
+							\g",
+						   "Kill her?
+						    \f La tuer?
+							\g">>;
+			}
+
+			case "More to stop her?
+			      \f Quelque chose pour l'arrester?
+				  \g"
+			{
+				bark("Yes more to stop her. Done what I can, I have.
+				Pulled up her silly little hollow reeds I have and
+				destroyed I have what I can of her 'experiments', as she calls
+				them.  Heresy, them I call. They will bring
+				life back to our Vale, she says. They will bring nothing
+				but death when the Ancient Ones return I say.
+
+				\f Oui, quelque chose pour l'arrester. J'ai fait ce que
+				j'ai pu. J'ai desj… arrach‚ ses insignifiants petits roseaux
+				et destruit ce qu'elle appelle ses 'exp‚riences'. Je les
+				appelle h‚r‚sies. Ils feront revenir … la vie notre Vall‚e,
+				dit-elle. Et moi, je dis qu'ils n'apporteront rien d'aultre
+				que la mort au retour des Anciens.
+				\g");
+				askList-=<<"More to stop her?
+				            \f Quelque chose pour l'arrester?
+							\g">>;
+			}
+
+			case "Kill her?
+			      \f La tuer?
+				  \g"
+			{
+				bark("Think I haven't thought about it do you? If
+				a Gunnar she weren't, done it long ago I would have!
+				even believe she is Gunnar I would not if know her father
+				I did not. Good man he was. Devout, serious. Oh,
+				angry he would be, if see what she is doing he could!
+				I just keep hoping hook up with Ragnar she will.
+				Able to set her straight, he might. get her mind on the
+				other things it might. Important things, such as
+				children raising so continue Clan Gunnar can!
+
+				\f Tu crois que je n'y ai point song‚? Si elle n'estoit point 
+				une Gunnar,	je l'aurois fait depuis longtemps! Si je ne
+				connaissois point son pŠre, je ne pourrois croire que
+				c'est une Gunnar. Un brave homme. Et si pieux. Oh, il doit se
+				retourner dans sa tombe, en voyant ce qu'elle fait! J'espŠre
+				juste qu'un de ces jours, elle tombera sur Ragnar. Il lui
+				remettroit les id‚es en place. Elle apprendroit par exemple …
+				‚lever des enfants, comme ‡a le Clan Gunnar pourroit 
+				continuer … se reproduire.
+				\g");
+				askList-=<<"Kill her?
+				            \f La tuer?
+							\g">>;
+				if ragnarMet
+				{
+					askList+=<<"But Ragnar is a Hoskuld!
+					            \f Mais, Ragnar est un Hoskuld!
+								\g">>;
+				}
+				else
+				{
+					askList+=<<"Who is Ragnar?
+					            \f Qui est Ragnar?
+								\g">>;
+				}
+			}
+
+
+			case "But Ragnar is a Hoskuld!
+			      \f Mais, Ragnar est un Hoskuld!
+				  \g"
+			{
+				bark("I know, I know. However, improve one of those
+				troll-born Hoskulds to marry a Gunnar, it would.
+				Besides, so crazy she is, have her no Gunnar would!
+				Too stupid to know better a Hoskuld would be.
+				Ancients know, fresh meat he could supply.
+
+				\f Je sais, je sais. Mais, espousailler une Gunnar ne 
+				pourroit faire que du bien … cette stupide race d'Hoskulds.
+				En plus, elle est trop folle pour qu'un Gunnar veuille d'elle
+				et trop stupide pour voir comment un Hoskuld pourroit
+				devenir. Les Anciens savent bien que nous pourrions utiliser la
+				chair fraŒche qu'il pourroit nous obtenir.
+				\g");
+				askList-=<<"But Ragnar is a Hoskuld!
+				            \f Mais, Ragnar est un Hoskuld!
+							\g">>;
+				askList=<<"Fresh meat?
+				           \f La chair fraŒche?
+						   \g">>;
+			}
+
+			case "Who is Ragnar?
+			      \f Qui est Ragnar?
+				  \g"
+			{
+				bark("Well, shamed to say it I am, but a Hoskuld he is.
+
+				\f Hmmm, j'ai bien honte de le dire, mais c'est un Hoskuld.
+				\g");
+				askList-=<<"Who is Ragnar?
+				            \f Qui est Ragnar?
+							\g">>;
+				askList+=<<"A Hoskuld?!
+				            \f Un Hoskuld?!
+							\g">>;
+
+			}
+
+			case "A Hoskuld?!
+			      \f Un Hoskuld?!
+				  \g"
+			{
+				bark("Yes, yes, a Hoskuld. However, improve one of those
+				troll-born Hoskulds to marry a Gunnar, it would.
+				Besides, so crazy she is have her no Gunnar would!
+				Too stupid to know better a Hoskuld would be.
+				Ancients know use the fresh meat we could.
+
+				\f Oui, oui, un Hoskuld. Mais, espousailler une Gunnar ne 
+				pourroit faire que du bien … cette stupide race d'Hoskulds.
+				En plus, elle est trop folle pour qu'un Gunnar veuille d'elle
+				et trop stupide pour voir comment un Hoskuld pourroit
+				devenir. Les Anciens savent bien que nous pourrions utiliser la
+				chair fraŒche qu'il pourroit nous obtenir.
+				\g");
+				askList-=<<"A Hoskuld?!
+				            \f Un Hoskuld?!
+							\g">>;
+				askList+=<<"Fresh meat?
+				            \f La chair fraŒche?
+							\g">>;
+			}
+
+			case "Fresh meat?
+			      \f La chair fraŒche?
+				  \g"
+			{
+				bark("Yes, a great hunter he is. Also, if married him she did,
+				then go live in the woods with him she would. Then
+				not have to see her or her crazy contraptions we would.
+
+				\f Oui, c'est un grand chasseur. Aussy, si elle
+				l'espousailloit, alors elle iroit vivre avec luy dans les bois.
+				Et nous n'aurions plus … supporter ni elle, ni ses folles
+				machinations.
+				\g");
+				askList-=<<"Fresh meat?
+				            \f La chair fraŒche?
+							\g">>;
+				askList+=<<"Crazy contraptions?
+				            \f Ses folles machinations?
+							\g">>;
+			}
+
+			case "Crazy contraptions?
+			      \f Ses folles machinations?
+				  \g"
+			{
+// @@@ CHANGE F G
+				bark("Always working on Ancients-be-damned
+				creations she is. From her place the strangest noises and
+				smellas come, and at the damnest times. A blight on this
+				Clan, she is.");
+				askList-=<<"Crazy contraptions.
+				            \f Ses folles machinations?
+							\g">>;
+			}
+
+			case "I have come for the Passage Stone.
+			      \f Je suis venu chercher la Roche Magique.
+				  \g"
+
+			{
+				bark("You what?! The Passage Stone?! Why missing for
+				almost 200 years that has been!
+
+				\f Tu quoi?! La Roche magique?! Cela fait presque 200 ans
+				qu'elle a disparu!
+				\g");
+				askList-=<<"I have come for the Passage Stone.
+				            \f Je suis venu chercher la Roche Magique.
+							\g">>;
+				askList+=<<"How was it lost?
+				            \f Comment a-t'elle ‚t‚ perdue?
+							\g",
+						   "The Hoskulds say you have it.
+						    \f Les Hoskulds disent que c'est toy qui l'a.
+							\g">>;
+				gunnarSpokeStone = true;
+			}
+
+			case "How was it lost?
+			      \f Comment a-t'elle ‚t‚ perdue?
+				  \g"
+			{
+
+				bark("A woman the last person to have it was. Chosen to take
+				the Rite Of Passage she had. Never made it to
+				the test she did. Found in the shallow lake to the
+				east of here her body was. Bludgeoned to death she had been.
+				Missing the Passage Stone was. If me you ask, killed her
+				the Hoskulds did.
+
+				\f Par une femme, la derniŠre personne qui a choisi de passer
+				l'espreuve du Rite de Passage. Elle n'a mesme point commenc‚
+				l'espreuve. On a retrouv‚ son corps dans le petit lac … l'est
+				d'icy. Elle avait ‚t‚ battue … mort et la Roche Magique
+				avait disparu. Si tu veux tout savoir, ce sont les Hoskulds
+				qui	ont fait cela.
+				\g");
+				askList-=<<"How was it lost?
+				            \f Comment a-t'elle ‚t‚ perdue?
+							\g">>;
+			}
+
+			case "The Hoskulds say you have it.
+			      \f Les Hoskulds disent que c'est toy qui l'a.
+				  \g"
+			{
+				bark("They what?! Lying, grub-eating scum
+				who aren't even worth a troll's spit they are!
+				The ones who have the stone they are! If the stone the Clan
+				Gunnar had, hold a great place of honor
+				it would. Displayed with pride it would be! No, certainly
+				have it	we do not. If hiding it anyone is, the
+				Hoskulds it would be. Just the sort of thing those
+				drooling, mushroom-snorting	troodle lovers would do, it is!
+
+				\f Quoi?! Ils mentent, ces mangeurs de bouse, qui ne valent
+				mesme point un crachat de troll. Ce sont eux qui ont la Roche!
+				Si les Gunnar avoient la Roche, elle seroit expos‚e dans un
+				lieu digne de l'honneur qu'on lui porte! Non, nous ne la
+				poss‚dons certainement point. Si quelqu'un la cache, il ne
+				s'agit que des Hoskulds. Une chose que ces immondes vermisseaux
+				sont bien capables de faire.
+				\g");
+				askList-=<<"The Hoskulds say you have it.
+				            \f Les Hoskulds disent que c'est toy qui l'a.
+							\g">>;
+				askList+=<<"Who might know where to look for it?
+				            \f Qui sauroit de quel cost‚ chercher?
+							\g">>;
+			}
+
+			case "bye \f Adieu \g"
+			{
+				bark("Farewell. \f Adieu \g");
+				exitConvo();
+				return;
+			}
+
+			case ""
+			{
+				bark("What? Want to talk to me any more you do not?
+				Fine!
+				\f Quoi? Tu ne d‚sires plus me parler? TrŠs bien!
+				\g");
+				exitConvo();
+				return;
+			}
+		}
+	}
+}
+
+
+
+
+/**************
+FLAG LIST
+
+cloudCity
+
+*************/
+

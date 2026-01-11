@@ -1,0 +1,1526 @@
+uses "flags";
+uses "free";
+uses "npc";
+
+
+npcclass Bentic inherits Npc 
+{
+	process use();
+	process look();
+	process schedule(currentTime:Long);
+	process enterFastArea();
+	process leaveFastArea();
+	process cast(ref:Referent);
+	process AvatarStoleSomething(ref:Referent);
+
+	process readBook();
+	process randomWisdom();
+}
+
+
+process Bentic::look() 
+{
+
+	if isDead()
+	{
+		bark("Bentic the dead librarian
+			\f Bentic le biblioth‚caire, mort.
+			\g Bentic, der tote Bibliothekar");
+		return;
+	}
+
+	if benticName and benticJob 
+	{
+		bark("Bentic the Librarian
+			 \f Bentic le biblioth‚caire.
+			 \g Bentic, der Bibliothekar");
+		return;
+	}
+
+	else if benticName 
+	{
+		bark("Bentic");
+	}
+
+	else if benticJob 
+	{
+		bark("librarian \f biblioth‚caire \g Bibliothekar");
+	}
+
+	else
+	{
+		bark("man \f homme \g Mann");
+	}
+}
+
+
+process Bentic::schedule(currentTime:Long) 
+{
+
+	if isDead() 
+	{
+		return;
+	}
+
+
+	point : WorldPoint;
+	map : MapNum = MapEastTenebrae;
+
+	// In the Library...
+
+	if (getPeriod() = threemoons) or (getPeriod() = daytide) 
+	{
+		point.x = 13407;
+		point.y = 2623;
+		point.z = 48;
+	}
+
+	// Other side of Library.
+
+	if (getPeriod() = firstebb) or (getPeriod() = lastebb) 
+	{
+		point.x = 14431;
+		point.y = 2015;
+		point.z = 48;
+	}
+
+
+	// time for a nap.
+
+	if (getPeriod() = eventide) or (getPeriod() = bloodwatch) 
+	{
+		point.x = 15199;
+		point.y = 2047;
+		point.z = 96;
+	}
+
+	safeTeleport(point,map); 
+
+}
+
+
+
+
+process Bentic::enterFastArea() 
+{
+	if isDead() 
+	{
+		return;
+	}
+
+	killProcess(referent,PT_ACTIVITY);
+	spawn readBook() -> return;
+}
+
+
+
+
+process Bentic::leaveFastArea()
+{
+
+	killProcess(referent,PT_ACTIVITY);
+
+	if isDead() 
+	{
+		teleport(urandom(1000),urandom(1000),0,0);
+	}
+}
+
+
+
+process Bentic::AvatarStoleSomething(ref:Referent)
+{
+
+	item:Item;
+	item.referent = ref;
+	spawn realDoAnim(AS_CLIMB_2,getDir()) -> return;
+
+	if ((item.getType() = TypeBook) or (item.getType() = TypeGrimoire)) 
+	{
+		resetRef(referent,PT_BARK);
+		resetRef(referent,PT_ACTIVITY);
+
+		bark("Please return that within two weeks!
+			\f Aies l'amabilit‚ de le rapporter dans deux semaines!
+			\g Bitte bringt das Buch sp„testens in zwei Wochen zurck!");
+		enterFastArea();
+		return;
+	}
+}
+
+
+
+process Bentic::cast(ref:Referent)
+{
+	count:Number;
+	count = 10;
+
+	// TEST TO MAKE SURE THAT THE NPC HAS A TARGET
+	// -------------------------------------------
+	while (not getTarget()) and (count) {
+		wait(1);
+		count--;
+	}
+
+	ref = getTarget();
+
+
+	if ref = Avatar:Referent
+	{
+		spawn callTheGuards(NULL_REF) -> return;
+
+		if (urandom(100) > 50)
+		{
+
+			bark("I am attacked! Help!
+					\f A l'aide! On m'attaque!
+					\g Hilfe! Ich werde angegriffen!");
+		}
+		else
+		{
+			bark("Help! Sorcerer!
+						\f Sorcier! A l'aide!
+						\g Hilfe! Hexer!");
+		}
+
+
+	}
+}
+
+
+
+
+process Bentic::use() 
+{
+	mentionedPagan = false;
+
+	if not benticMet 
+	{
+		Avatar.bark("Greetings! \f Salutations! \g Seid gegrát!");
+	}
+	else
+	{
+		Avatar.bark("Greetings, Bentic!
+			\f Salutations, Bentic!
+			\g Seid gegrát, Bentic!");
+	}
+
+
+// MUST BE ENTERCONVO2
+	enterConvo2();
+	answer,sentence,nameStr:String;
+	askList:String List;
+	
+	#if English 
+	{
+		nameStr = "My name is "+getName()+".";
+	}
+	#if French 
+	{
+		nameStr = "Mon nom est "+getName()+".";
+	}
+	#if German 
+	{
+		nameStr = "Ich heiáe "+getName()+".";
+	}
+
+	if benticMet
+	{
+		if haveAvaName
+		{
+			#if English 
+			{
+				bark("Hello, hello, "+getName()+".");
+			}
+			#if French 
+			{
+				bark("Salut,  "+getName()+".");
+			}
+			#if German
+			{
+				bark("Na, guten Tag, "+getName()+". Wie geht's?");
+			}
+		}
+		else
+
+		{
+			#if English
+			{
+				bark("Hello! I am glad to see you again.");
+			}
+			#if French
+			{
+				bark("Salut! Je suis ravi de te revoir.");
+			}
+			#if German
+			{
+				bark("Seid gegrát! Es freut mich, Euch wiederzusehen.");
+			}
+		}
+		askList=<<"How are you? \f Comment vas-tu? \g Wie geht es Euch?",
+		"What do you do? 
+			\f Que fais-tu? 
+			\g Was ist Euer Beruf?",
+		"bye \f Adieu \g Lebt wohl.">>;
+	}
+
+	else
+	{
+		bark("Greetings, stranger. \f Salutations, estranger.
+		\g Seid gegrát, Fremder.");
+		askList^=<<"What is your name?
+		\f Quel est ton nom? 
+		\g Wie heiát Ihr?",
+		"What do you do?
+		\f Que fais-tu?
+		\g Was ist Euer Beruf?",
+		"bye \f Adieu \g Lebt wohl.">>;
+	}
+
+	while answer!="bye \f Adieu \g Lebt wohl."
+	{
+		askList-=<<"bye \f Adieu \g Lebt wohl.">>;
+		askList+=<<"bye \f Adieu \g Lebt wohl.">>;
+		answer=ask(askList);
+		switch answer
+		{
+			case "What do you do? 
+				\f Que fais-tu? 
+				\g Was ist Euer Beruf?"
+			{
+				benticJob = true;
+				bark("By trade, I am the librarian of this city, however,
+					I prefer to think of myself as a student of life. One who
+					spends his time observing all facets of life. I am
+					a great studier of people. You would be amazed at the things
+					you may learn by simply observing your neighbors in their
+					everyday life.
+
+					\f Officiellement, je suis le biblioth‚caire de cette ville,
+					mais je pr‚fŠre me consid‚rer comme un estudiant de 
+					la condition humaine. Quelqu'un qui consacre son temps … observer
+					toutes les facettes de la gente humaine. Tu ne peux imaginer 
+					tout ce qu'on peut apprendre en estudiant ainsy ses semblables 
+					dans leur vie quotidienne.
+			
+					\g Von Beruf bin ich Bibliothekar dieser Stadt, aber ich ziehe
+					es vor, mich als Schler des Lebens zu sehen. Einer, der
+					seine Zeit damit verbringt, das Leben aus allen Blickwinkeln
+					zu betrachten. Ihr w„rt erstaunt, wieviel man bei der Beobachtung
+					seiner Nachbarn im t„glichen Leben lernen kann.");
+				askList=<<"Tell me of the library.
+					\f Parle-moy de la bibliothŠque.
+					\g Erz„hlt mir von der Bibliothek.",
+				"Tell me of the people.
+					\f Parle-moy des gens.
+					\g Erz„hlt mir mehr ber die Menschen.",
+				"Tell me of your neighbors.
+					\f Parle-moy de tes semblables.
+					\g Erz„hlt mir mehr ber Eure Nachbarn.">>;
+				if benticStoryTold
+				{
+					askList^=<<"Orlok says you have a treasure map.
+					\f Orlok dit que tu as une carte du tr‚sor.
+					\g Orlok sagt, Ihr h„ttet eine Schatzkarte.">>;
+				}
+			}
+
+			case "What is your name?
+				\f Quel est ton nom?
+				\g Wie heiát Ihr?"
+			{
+				benticMet = true;
+				benticName = true;
+
+				bark("My name is Bentic. It is a word of Pagan derivation.
+				I think it originally meant 'he who toils hard', but
+				that is not for certain. I have found a number of references
+				to 'Ventac' in several older texts and feel that this may
+				be the root of the name 'Bentic.' And what is your name,
+				friend?
+				
+					\f Mon nom est Bentic. C'est un nom qui d‚rive du Pagan. Je crois
+					qu'… l'origine, il signifiait 'celuy qui travaille dur' mais
+					ce n'est point certain. J'ai trouv‚ moultes r‚f‚rences sous
+					'Ventac' dans des textes anciens et je crois que c'est la vraie racine du
+					nom 'Bentic'. Et toy, quel est ton nom, l'amy?
+					
+					\g Mein Name ist Bentic, ein Wort paganischen Ursprungs. Ich glaube,
+					es bedeutete ursprnglich 'er, der hart arbeitet', aber dessen bin
+					ich mir nicht ganz sicher. Ich bin auf mehrere alte Texte gestoáen,
+					in denen 'Ventac' erw„hnt wird und ich meine, daá 'Bentic' sich von
+					diesem Namen ableiten k”nnte. Wie heiát Ihr, mein Freund?");
+				askList-=<<"What is your name?
+						 \f Quel est ton nom?
+						 \g Wie heiát Ihr?",
+						 "How are you?
+						 \f Comment vas-tu?
+						 \g Wie geht es Euch?">>;
+				askList^=<<"What is 'Pagan'? 
+							\f Que veut dire 'Pagan'?
+							\g Was ist 'Pagan'?", nameStr >>;
+				if not benticGivenBook
+				{
+					askList+=<<"What are you reading?
+							\f Que lis-tu?
+							\g Was lest Ihr da?">>;
+				}
+			}
+
+			case "How are you?
+				\f Comment vas-tu?
+				\g Wie geht es Euch?"
+			{
+
+				if haveAvaName
+				{
+					bark("I am quite well. You know, since I saw you last I
+					have done a little more reading into the meaning of
+					various names. I am more certain now that my name
+					does stem from the ancient 'Ventac' as I also found one
+					very old reference where it was spelled 'Bentac'.
+
+						\f Je vais bien, je te remercie. DerniŠrement,
+						je me suis pench‚ sur la signification de certains noms. Je suis
+						persuad‚ maintenant que mon nom vient de l'ancien 'Ventac' car j'ai
+						trouv‚ une ancienne r‚f‚rence o— on l'escrivoit aussy
+						'Bentac'.
+
+						\g Ich bin so froh, daá Ihr mir diese Frage gestellt habt. Seit unserem
+						letzten Treffen habe ich noch mehr ber die Bedeutung verschiedener
+						Namen nachgelesen. Ich bin mir jetzt ziemlich sicher, daá mein Name
+						seinen Ursprung in dem alten Namen 'Ventac' findet. Ich bin n„mlich
+						auf eine alte Quelle gestoáen, in der dieser Name 'Bentac' 
+						buchstabiert wurde.");
+
+					bark("Now, the interesting point is that I did some
+					research on your name and found that, in one case,
+					it actually comes from the very old Pagan word for
+					'champion' or, a better translation, 'avatar'.
+
+						\f Bon, ce qui est int‚ressant, c'est que j'ai fait des
+						recherches sur ton nom, et j'ai descouvert qu'il venoit
+						d'un trŠs vieux terme Pagan pour 'champion' ou mesme mieux, 'avatar'.
+
+
+						\g Noch eine interessante Sache: Ich stellte einige Nachforschungen
+						zu Eurem Namen an und entdeckte, daá der Name sich in einer Quelle
+						von dem alten paganischen Wort fr 'Held' ableitet. Eine bessere
+						šbersetzung dafr w„re 'Avatar'.");
+					askList-=<<"What is your name?
+						\f Quel est ton nom?
+						\g Wie heiát Ihr?",
+					"How are you?
+						\f Comment vas-tu?
+						\g Wie geht es Euch?" >>;
+				}
+
+				else
+				{
+
+					bark("I'm so glad you asked. I'm actually doing quite
+					well. Since I last spoke to you, I've done a little more
+					research into names. I did, indeed, find a very old
+					reference to 'Ventac' and I intend to do a little
+					more research in the origin of names. I would love to
+					do some research on your name. What is your name, friend?
+
+					\f Je vais assez bien, mercy. DerniŠrement, j'ai approfondi
+					mes recherches sur les noms. J'ai en effet trouv‚ une trŠs
+					vieille r‚f‚rence … 'Ventac' et j'ai l'intention
+					de pousser mes recherches sur l'origine des noms. Je serois
+					ravi de me pencher sur le tien. Quel est ton nom, mon amy?
+					
+					\g Ich freue mich, daá Ihr mir diese Frage gestellt habt. 
+					Mir geht es sehr gut. Seit unserem letzten Treffen habe ich 
+					noch einige Nachforschungen zu verschiedenen Namen angestellt.
+					Ich bin in einer sehr alten Quelle auf den Namen 'Ventac' 
+					gestoáen. Ich m”chte gerne noch mehr ber den Ursprung 
+					verschiedener Namen herausfinden. Wie heiát Ihr, mein 
+					Freund? Vielleicht l„át sich Euer Name ebenfalls von 
+					einem alten paganischen Wort ableiten.");
+					askList-=<<"What is your name?
+						\f Quel est ton nom?
+						\g Wie heiát Ihr?",
+					"How are you?
+						\f Comment vas-tu?
+						\g Wie geht es Euch?" >>;
+					
+					askList^=<<"What is 'Pagan'? \f Que veut dire 'Pagan'?
+					\g Was ist 'Pagan'?", nameStr>>;
+				}
+				if not benticGivenBook
+				{
+					askList+=<<"What are you reading?
+							\f Que lis-tu?
+							\g Was lest Ihr da?">>;
+				}
+			}
+
+			case nameStr 
+			{
+				haveAvaName = true;
+				#if English 
+				{
+					bark("Well met, "+getName()+". I am pleased to meet you.");
+				}
+				#if French
+				{
+					bark("Bien le bonjour, "+getName()+". Je suis ravi de te 
+					rencontrer.");
+				}
+				#if German 
+				{
+					bark("Guten Tag, "+getName()+". Ich freue mich sehr, 
+					Euch kennenzulernen.");
+				}
+					askList-=<<nameStr>>;
+			}
+			
+
+			case "What are you reading?
+					\f Que lis-tu?
+					\g Was lest Ihr da?"
+			{
+				bark("Ah, I am so glad you asked. This is a treatise on the
+				world of Pagan. It covers the idiosyncrasies of the various
+				lands and people of our world. From the first chapter it takes
+				an in depth look at what motivates the people of this world,
+				and challenges the reader to make up his own mind about the
+				condition of this world in which we live. Perhaps you would
+				like to read it.
+				\f Je suis ravi que tu me poses cette question. C'est un trait‚
+				sur Pagan. L'auteur se penche sur divers pays et peuples
+				du monde. Il s'int‚resse … ce qui motive les humains et invite
+				le lecteur … se forger sa propre opinion sur le monde, tel
+				que nous le connoissons. Aimerois-tu le lire? 
+				\g Ach, ich freue mich, daá Ihr Euch dafr interessiert. Ich 
+				lese gerade eine Abhandlung ber Pagan. Der Autor befaát sich 
+				sowohl mit den verschiedenen Menschen dieser Welt als auch mit 
+				ihren unterschiedlichen Br„uchen und Religionen. 
+				Womit verdienen sich die Paganen ihren Lebensunterhalt und womit 
+				verbringen sie ihre Freizeit? Worin bestehen die religi”sen Unterschiede? 
+				Auáerdem wird der Leser geradezu herausgefordert, selbst zu 
+				entscheiden, wie es um das heutige Pagan steht. Wollt Ihr das Buch lesen? 
+				Es ist wirklich sehr interessant.");
+				askList-=<<"What are you reading?
+					\f Que lis-tu?
+					\g Was lest Ihr da?">>;
+				askList^=<<"Yes, thank you.
+					\f Oui, volontiers.
+					\g Ja, gerne.",
+				"No, thank you. 
+					\f Non, je te remercie.
+					\g Nein, danke.",
+				"Who is the author?
+					\f Quel est le nom de cet auteur?
+					\g Wie heiát der Autor?">>;
+			}
+
+			case "Yes, thank you.
+				\f Oui, volontiers.
+				\g Ja, gerne."
+			{
+				bark("Ah, I knew you were a well read person who appreciates
+				fine literature. Perhaps after you have read it, we could
+				get together and discuss your opinion of it.
+				\f Ah, je savois que tu estois un esrudit qui sait appr‚cier
+				la bonne litt‚rature. Tiens, voicy. J'espŠre que tu le
+				trouveras … ton goust. Quand tu auras fini de le lire, nous pourrions
+				peut-estre nous retrouver pour en parler. 
+				\g Ah, ich wuáte, daá Ihr ein gebildeter Mann seid, der gute Literatur 
+				zu sch„tzen weiá. Hier, nehmt es mit und lest es. Viel Spaá 
+				damit! Vielleicht k”nnen wir uns darber unterhalten, 
+				nachdem Ihr es gelesen habt.");
+				askList-=<<"Yes, thank you.
+					\f Oui, volontiers.
+					\g Ja, gerne.",
+				"No, thank you.
+					\f Non, je te remercie.
+					\g Nein, danke.">>;
+
+				if give(Avatar:Referent,TypeBook,2,104,1)
+				{
+					bark("I hope you enjoy it!
+						\f J'espŠre que tu en tireras grand plaisir.
+						\g Ich hoffe, es gef„llt Euch!");
+					benticGivenBook = true;
+				}
+				else
+				{
+					bark("Oh my, you are carrying a lot of things. I'll
+					just keep this 'til you have more room.
+					\f Oh, tu m'as l'air bien charg‚. Je veux bien te le garder
+					pour plus tard.
+					\g Ihr habt so viel Gep„ck dabei. Ihr k”nnt es Euch 
+					abholen, wenn Ihr weniger zu tragen habt.");
+				}
+			}
+
+			case "No, thank you.
+				\f Non, je te remercie.
+				\g Nein, danke."
+			{
+				bark("Well, perhaps when you have more time.
+					\f Eh bien une aultre fois, quand tu seras plus disponible.
+					\g Nun, vielleicht k”nnt Ihr es Euch ausleihen, wenn Ihr 
+					mehr Zeit habt.");
+				askList-=<<"Yes, thank you.
+					\f Oui, volontiers.
+					\g Ja, gerne.",
+				"No, thank you.
+					\f Non, je te remercie.
+					\g Nein, danke.",
+				"Who is the author?
+					\f Quel est le nom de cet auteur?
+					\g Wie heiát der Autor?">>;
+			}
+
+			case "Who is the author? 
+				\f Quel est le nom de cet auteur?
+				\g Wie heiát der Autor?"
+			{
+				bark("Well ... ummm, you see ... well, I am.
+				\f Eh bien, euh... tu vois, je... c'est moy.
+				\g Nun ja... wiát Ihr... der Autor bin ich.");
+				askList-=<<"Who is the author? 
+							\f Quel est le nom de cet auteur?
+							\g Wie heiát der Autor?">>;
+			}
+
+			case "Tell me of the library.
+					\f Parle-moy de la bibliothŠque.
+					\g Erz„hlt mir von der Bibliothek."
+			{
+				#if English 
+				{
+				bark("The library is my joy. It is where I spend all my time,
+				studying the words left by our predecessors. You can not
+				believe what is in these books. They contain
+				the wisdom of many ages in them. Too many people overlook
+				the knowledge of our past generations, because of this, we
+				are doomed to repeat the same mistakes over and over again.");
+				}
+
+				#if French 
+				{
+				bark("La bibliothŠque est toute ma vie. C'est l… que
+				je consacre tout mon temps … estudier les manuscripts laiss‚s par 
+				nos ancestres. Tu ne peux imaginer l'estendue des connoissances 
+				et de la sagesse qui sont enferm‚es dans ces livres."
+
+				+" Trop nombreux sont ceux qui passent …
+				cost‚ du savoir de nos g‚n‚rations pass‚es, et c'est … cause
+				de cela que nous sommes condamn‚s … refaire, toujours et
+				toujours, les mesmes erreurs.");
+				}
+
+				#if German 
+				{
+				bark("Die Bibliothek ist mein ganzer Stolz. Ich verbringe
+				all meine Zeit damit, die Worte unserer Vorfahren zu studieren. Das Wissen,
+				das in diesen Bchern verborgen liegt, ist einfach unglaublich."
+				
+				+" Die gesammelte Weisheit vieler Jahrhunderte ist hier zu finden. Zu viele 
+				Menschen ignorieren das Wissen vergangener Generationen und sind deshalb
+				dazu verdammt, dieselben Fehler immer wieder aufs neue zu wiederholen.");
+				}
+
+				askList-=<<"Tell me of the library.
+							\f Parle-moy de la bibliothŠque.
+							\g Erz„hlt mir von der Bibliothek.">>;
+				askList+=<<"Tell me of the books.
+						\f Parle-moy des livres.
+						\g Erz„hlt mir mehr ber die Bcher.">>;
+			}
+
+			case "Tell me of the people.
+				\f Parle-moy des gens.
+				\g Erz„hlt mir mehr ber die Menschen."
+			{
+					#if English 
+					{
+						bark("Ah, are you a student of life as well? I do so enjoy 
+						finding someone who shares the same passions as I do. The
+						people here in Tenebrae are a varied and fascinating lot."
+	
+						+" They go about their daily toils, laboring under the yoke of
+						a somewhat ... restrictive government and yet still find the
+						time to enjoy themselves occasionally.");
+					}
+				
+					#if French 
+					{
+						bark("Ah! Es-tu, toy aussy, un estudiant de la vie? J'aime
+						rencontrer ceux qui ont les mesmes passions que moy.
+						Icy … Tenebrae, les gens sont assez diff‚rents. J'avoue
+						que je les trouve fascinants.
+						Ils vaquent … leurs tƒches quotidiennes, vivent sous"
+	
+						+" le joug d'un gouvernement que je qualifierois volontiers de... restrictif
+						 et cependant ils trouvent plaisir … leur existence.");
+					}
+
+					#if German 
+					{
+						bark("Ach! Ihr seid ebenfalls ein Schler des Lebens? Es 
+						bereitet mir so viel Freude, mit jemandem zu sprechen, der meine
+						Interessen teilt. Die Menschen von Tenebrae sind ein 
+						vielf„ltiger und faszinierender Schlag. "
+	
+						+"Sie erledigen ihre t„glichen Arbeiten und leiden unter dem
+						Joch einer... etwas strengen Regierung. Und doch nehmen sie sich
+						hin und wieder Zeit, das Leben zu genieáen.");
+					}
+				askList-=<<"Tell me of the people.
+						\f Parle-moy des gens.
+						\g Erz„hlt mir mehr ber die Menschen.">>;
+				askList+=<<"A restrictive government?
+						\f Un gouvernement restrictif?
+						\g Eine strenge Regierung?">>;
+			}
+
+			case "Tell me of your neighbors.
+				\f Parle-moy de tes semblables.
+				\g Erz„hlt mir mehr ber Eure Nachbarn."
+			{
+
+				bark("I think the one I like to spend the most time with
+				is Devon. He is such a sharp fellow. I think he
+				has far more potential than even he realizes.
+				
+				\f Celuy avec lequel j'aime passer le plus de temps est Devon.
+				Un homme bien fut‚. Je crois qu'il a bien plus de potentiel
+				qu'il ne le pense.
+				
+				\g Am meisten genieáe ich es, Zeit mit 
+				Devon zu verbringen. Er ist ein so begabter Mann. Ich glaube,
+				in ihm steckt weit mehr Talent, als er selbst glaubt.");
+				askList-=<<"Tell me of your neighbors.
+							\f Parle-moy de tes semblables.
+							\g Erz„hlt mir mehr ber Eure Nachbarn.">>;
+				askList+=<<"Devon has potential?
+						\f Devon a du potentiel?
+						\g Devon hat Talent?">>;
+				if devonSaidBentic
+				{
+					askList^=<<"I've met Devon.
+						\f J'ai rencontr‚ Devon.
+						\g Ich habe Devon kennengelernt.">>;
+				}
+			}
+
+			case "I've met Devon.
+				\f J'ai rencontr‚ Devon.
+				\g Ich habe Devon kennengelernt."
+			{
+
+				bark("Have you? Oh, he is such a nice fellow. We've
+				spent hours in conversation here. He is really quite sharp.
+				Loves books almost as much as I do. In some ways he knows
+				more about Pagan than I.
+
+				\f Ah oui? C'est un homme fort int‚ressant. J'ai pass‚ des heures …
+				converser avec luy. Il aime presque
+				autant les livres que moy.
+
+				\g Wirklich? Oh, er ist ein so netter Mann. Wir waren 
+				hier viele Stunden lang in unsere Unterhaltungen vertieft. 
+				Er ist sehr begabt. Er liebt Bcher fast so sehr wie ich.");
+				askList-=<<"I've met Devon.
+						\f J'ai rencontr‚ Devon.
+						\g Ich habe Devon kennengelernt.">>;
+				if not mentionedPagan
+				{
+					askList^=<<"Does he know how I may leave Pagan?
+							\f Sait-il comment je pourrois partir de Pagan?
+							\g Weiá er, wie ich Pagan verlassen kann?">>;
+				}
+			}
+
+			case "Devon has potential?
+					\f Devon a du potentiel?
+					\g Devon hat Talent?"
+			{
+				bark("Yes, I can't put my finger on it, but there is something
+				there. Call it a hunch, if you will. I just seem to feel that
+				there is something about him that suggests great things.
+				He does love to read. Maybe he is destined to be a great
+				scholar.
+				
+				\f Oui, je ne puis t'expliquer pourquoi, mais j'ai le sentiment
+				qu'il deviendra quelqu'un d'important, qu'il fera de grandes choses. 
+				Il aime lire. Peut-estre est-il destin‚ … devenir un grand esrudit.
+				
+				\g Ja, ich kann nicht genau sagen, weshalb, aber in dem Jungen
+				steckt etwas. Es ist mehr eine Ahnung. Ich habe einfach das Gefhl,
+				daá er das Talent hat, um groáe Taten zu vollbringen. Er liest fr 
+				sein Leben gerne. Vielleicht ist er dazu bestimmt, eines Tages ein
+				groáer Gelehrter zu werden.");
+				if not mentionedPagan
+				{
+					askList^=<<"Does he know how I may leave Pagan?
+							\f Sait-il comment je pourrois partir de Pagan?
+							\g Weiá er, wie ich Pagan verlassen kann?">>;
+				}
+
+				askList-=<<"Devon has potential?
+					\f Devon a du potentiel?
+					\g Devon hat Talent?">>;
+			}
+
+			case "Tell me of the books.
+				\f Parle-moy des livres.
+				\g Erz„hlt mir mehr ber die Bcher."
+			{
+				bark("My library is full of many books. Are you a scholar
+				as well? Oh, I am so happy to have met you.
+				Please feel free to make use of my library and books. We
+				shall have many interesting discussions, I am sure.
+				
+				\f Ma bibliothŠque est truff‚e d'excellents ouvrages. Es-tu, toy aussy,
+				un esrudit? Oh, je suis si content d'avoir fait ta connoissance.
+				Je t'en prie, fais icy comme chez toy. Nous aurons moultes conversations 
+				passionnantes, j'en suis certain.
+				
+				\g Meine Bibliothek beherbergt so viele Bcher. Seid Ihr ebenfalls
+				ein Gelehrter? Oh, ich freue mich so, Eure Bekanntschaft gemacht
+				zu haben. Bitte habt keine Hemmungen, jederzeit meine Bibliothek und meine
+				Bcher zu benutzen. Wir werden sicher viele interessante Diskussionen
+				haben.");
+				askList-=<<"Tell me of the books.
+					\f Parle-moy des livres.
+					\g Erz„hlt mir mehr ber die Bcher.">>;
+			}
+
+			case "A restrictive government?
+				\f Un gouvernement restrictif?
+				\g Eine strenge Regierung?"
+			{
+
+
+				bark("Hmmm, it is not quite the safe thing to discuss here.
+				Even my interest in knowledge and books can not protect me
+				from Lady Mordea. You might say she has a rather...short
+				temper. Why, just recently her guards confiscated my personal
+				diary, though I don't have any idea why.
+				
+				\f Hmmm, ce n'est point vraiment prudent de discuter d'un tel sujet 
+				icy. J'ai beau puiser beaucoup de savoir de tous ces livres, je ne suis
+				point pour autant … l'abri du courroux de Dame Mordea. Elle a 
+				vraiment... mauvais caractŠre. Figure-toy que ses gardes viennent de me
+				confisquer mon journal personnel. Je me demande bien pourquoi!
+				
+				\g Hmmm, es ist nicht gerade klug, solche Dinge hier zu besprechen.
+				Selbst mein Wissensdurst und meine Bcher k”nnen mich nicht vor dem
+				Zorn der Herrin Mordea schtzen. Sie ist ziemlich... launisch. Vor 
+				ein paar Tagen kamen ihre Wachen hier vorbei und beschlagnahmten mein 
+				Tagebuch. Ich habe jedoch keine Ahnung weshalb. 
+				");
+				askList-=<<"A restrictive government?
+					\f Un gouvernement restrictif?
+					\g Eine strenge Regierung?">>;
+			}
+
+
+			case "I wish to leave Pagan.
+				\f J'aimerois partir de Pagan.
+				\g Ich m”chte Pagan verlassen.",
+				"Does he know how I may leave Pagan?
+				\f Sait-il comment je pourrois partir de Pagan?
+				\g Weiá er, wie ich Pagan verlassen kann?"
+			{
+				mentionedPagan = true;
+				bark("Leave Pagan? My goodness, I don't think I've ever
+				had anyone ask for that, but then again, you
+				don't act, talk or dress like anyone I've ever seen
+				before. Let's see, I can only suggest you speak to
+				someone with more magic abilities than I. Mythran could
+				help you or, though I dread to suggest it,
+				perhaps the Necromancer could help you.
+				
+				\f Partir de Pagan? Juste ciel! Quelle drosle d'id‚e.
+				Tu es bien le premier. Mais il faut dire que tu
+				ne fais rien comme les aultres, tes vestements, tes fa‡ons de faire...
+				Voyons, je peux seulement te sugg‚rer de parler …
+				quelqu'un ayant plus de pouvoirs magiques que moy. Mythran
+				pourroit t'aider. Ou encore...  J'h‚site
+				… te les recommander, mais les N‚cromanciers pourroient peut-estre
+				te venir en aide.
+				
+				\g Pagan verlassen? Gtiger Himmel, eine solche Frage habe ich 
+				hier noch nie geh”rt. Andererseits sind Euer Benehmen, Eure Sprache und Eure
+				Kleider auch fremdartig und anders als alles, was ich bisher
+				gesehen habe. Mal sehen... ich kann Euch nur raten, jemanden
+				aufzusuchen, der ber mehr magische F„higkeiten verfgt als ich.
+				Vielleicht kann Mythran Euch helfen. Ihr k”nntet auch die Nekromanten 
+				um Hilfe bitten, obwohl ich diesen Vorschlag nur ungerne mache.");
+				askList-=<<"I wish to leave Pagan.
+					\f J'aimerois partir de Pagan.
+					\g Ich m”chte Pagan verlassen.",
+				"Does he know how I may leave Pagan?
+					\f Sait-il comment je pourrois partir de Pagan?
+					\g Weiá er, wie ich Pagan verlassen kann?">>;
+				askList+=<<"Who is Mythran? \f Qui est Mythran? \g Wer ist Mythran?",
+				"Necromancer? \f N‚cromanciers? \g Die Nekromanten?">>;
+				benticSaidMythran = true;
+			}
+
+			case "Necromancer? \f N‚cromanciers? \g Die Nekromanten?"
+			{
+				bark("Oh, they're not as bad as many of the people in this
+				city make out. Their magic is a little macabre, I suppose,
+				but they do have quite a bit of magic at their call. They
+				serve Lithos, you know.
+				
+				\f On les appelle aussy les N‚cromanciens ou les
+				N‚cromans, selon la r‚gion. Ils ne sont point aussy mauvais que
+				certains le pr‚tendent en cette ville. 
+				Leur magie est un tantinet macabre, mais ils
+				sont trŠs puissants. Ils v‚nŠrent Lithos, tu sais.
+				
+				\g Oh, sie sind nicht so schlecht, wie viele Leute in dieser
+				Stadt meinen. Ihre Magie ist ein wenig makaber, aber sie 
+				k”nnen sich ziemlich m„chtiger magischer Kr„fte bedienen.
+				Sie dienen Lithos.");
+				askList-=<<"Necromancer? \f N‚cromanciers? \g Die Nekromanten?">>;
+				askList+=<<"Who is Lithos?
+						\f Qui est Lithos?
+						\g Wer ist Lithos?",
+						 "How many are there?
+						 \f Combien y en a-t-il?
+						 \g Wie viele Nekromanten gibt es denn?">>;
+			}
+
+			case "How many are there?
+				 \f Combien y en a-t-il?
+				 \g Wie viele Nekromanten gibt es denn?"
+			{
+				bark("There used to be many, but, the sentiment
+				here in Tenebrae is against them so they have very few new
+				recruits. I believe there are only one or two of them
+				left. It's too bad, really. Their magic is so very different
+				from the Tempest.
+				
+				\f Il avait un temps o— ils estoient nombreux, mais aujourd'huy,
+				il y a un tel ressentiment envers
+				eux en ville qu'ils n'ont que peu de nouvelles recrues.
+				Je crois qu'il n'en reste qu'un ou deux. C'est dommage, vraiment.
+				Leur magie est trŠs diff‚rente de celle des Tempestes.
+				
+				\g Es gab einmal viele von ihnen, aber jetzt werden sie von allen 
+				gehaát. Es finden sich nur noch sehr wenige
+				neue Schler. Ich glaube, heute gibt es nur noch ein oder zwei Nekromanten. 
+				Eigentlich schade. Ihre Magie ist ganz anders als die 
+				der Gezeitenmacht.");
+				askList-=<<"How many are there?
+						 \f Combien y en a-t-il?
+						 \g Wie viele Nekromanten gibt es denn?">>;
+				askList+=<<"How is the magic different?
+						\f Diff‚rente en quoi?
+						\g Wodurch unterscheidet sich ihre Magie?">>;
+			}
+
+			case "How is the magic different?
+					\f Diff‚rente en quoi?
+					\g Wodurch unterscheidet sich ihre Magie?"
+			{
+
+				bark("The magic of the Tempest is hereditary, while the magic
+				of the Necromancers may be learned and gained through tests
+				and trials. Not that everyone can be a Necromancer, mind you.
+				Not everyone has the stomach for it.
+				
+				\f La magie des Tempestes est h‚r‚ditaire, alors que celle des
+				N‚cromanciers doit estre apprise et m‚rit‚e par des tests et des
+				examens. Ne crois point que n'importe qui puisse devenir
+				N‚cromancier. Cela demande beaucoup de courage et d'abn‚gation.
+
+				\g Die Magie der Gezeitenfrsten ist erblich, w„hrend die
+				Magie der Nekromanten durch Prfungen und Versuche erlernt werden
+				kann. Aber merkt Euch: Nicht jeder kann ein Nekromant werden.
+				Die Arbeit l„át sich nur schwer verkraften.");
+				askList-=<<"How is the magic different?
+					\f Diff‚rente en quoi?
+					\g Wodurch unterscheidet sich ihre Magie?">>;
+			}
+
+			case "Who is Mythran? \f Qui est Mythran? \g Wer ist Mythran?"
+			{
+
+				bark("Mythran lives in a small house on the Plateau. He
+				has been known to dabble in the various magical arts and
+				is a scholar. He often makes magical scrolls and things
+				and sells them.
+				
+				\f Mythran vit dans une petite demeure sur le plateau.
+				Il a la r‚putation de s'int‚resser … toutes sortes de magies.
+				C'est aussy un esrudit. Il fait souvent des objets ou des parchemins
+				magiques qu'il vend.
+				
+				\g Mythran lebt in einem kleinen Haus auf dem Plateau. Er ist
+				ein Gelehrter und ist auáerdem dafr bekannt, daá er sich in
+				verschiedenen magischen Knsten versucht. Auáerdem stellt er 
+				magische Gegenst„nde und Schriftrollen her und bietet sie zum Verkauf an.");
+				askList-=<<"Who is Mythran? \f Qui est Mythran? \g Wer ist Mythran?">>;
+				askList=<<"Mythran practices magical arts?
+					\f Mythran pratique la magie?
+					\g Mythran bt Zauberknste aus?",
+				 "Mythran is a scholar?
+					\f Mythran est un esrudit?
+					\g Mythran ist ein Gelehrter?",
+				"Where is the Plateau? 
+				\f O— se trouve le Plateau?
+				\g Wo ist das Plateau?">>;
+				mythranScrolls = true;
+			}
+
+			case "Where is the Plateau? 
+				\f O— se trouve le Plateau?
+				\g Wo ist das Plateau?"
+			{
+				bark("From the palace in the center of Tenebrae, head north
+				out of the city. Follow the path through the Valley to
+				a cave entrance. Go through the cave. It opens on the other
+				side of the mountain on the Plateau.
+
+				\f En partant du palais, au Centre de Tenebrae, dirige-toy vers
+				le Nord de la ville. Prends le chemin qui traverse la Vall‚e
+				jusqu'… l'entr‚e d'une grotte. Traverse cette grotte. Elle s'ouvre
+				sur l'aultre flanc de la montagne et le Plateau.
+				
+				\g Geht vom Palast in der Mitte Tenebraes gen Norden aus 
+				der Stadt. Folgt dem Pfad durch das Tal, bis Ihr 
+				einen H”hleneingang erreicht. Geht durch die H”hle hindurch. 
+				Der H”hlenausgang fhrt direkt zum Plateau auf der anderen Seite des 
+				Berges.");
+				askList-=<<"Where is the Plateau? 
+					\f O— se trouve le Plateau?
+					\g Wo ist das Plateau?">>;
+			}
+
+			case "Mythran practices magical arts?
+					\f Mythran pratique la magie?
+					\g Mythran bt Zauberknste aus?"
+			{
+				bark("Yes, though I'm not sure what school he follows.
+					\f Oui, mais j'ignore de quelles escoles il suit les pr‚ceptes.
+					\g Ja, aber ich bin mir nicht sicher, welcher Schule er
+					angeh”rt.");
+				askList-=<<"Mythran practices magical arts?
+					\f Mythran pratique la magie?
+					\g Mythran bt Zauberknste aus?">>;
+				askList+=<<"What schools? \f Quelles escoles? \g Welcher Schule?">>;
+			}
+
+			case "What schools? \f Quelles escoles? \g Welcher Schule?"
+			{
+				#if English
+				{
+				bark("Why the four elemental schools, of course. There
+				are those who follow Lithos and practice his magic. These
+				spells are mostly earth-based spells. They require long
+				hours of study and practice to cast correctly, or so I've"
+
+				+" read. The Tempestual magics of Hydros are only available
+				through heredity and so are unavailable to the majority. Now
+				the magics of Pyros, the fire elemental are quite spectacular
+				to watch, but very dangerous to the caster. Stratos, on the
+				other hand provides healing magics, although she requires
+				strict obedience to her tenets.");
+				}
+				
+				#if French
+				{
+				bark("Mais les quatre escoles El‚mentales, bien s–r. Il y a ceux qui
+				suivent celle de Lithos et pratiquent sa magie. Ce sont surtout des
+				sortilŠges li‚s … la terre. Ils exigent, paraist-il, de longues heurs 
+				d'estude et d'entraisnement pour estre jet‚s correctement. Les magies
+				Tempestuelles d'Hydros ne sont accessibles que par h‚r‚dit‚. Elles sont donc"
+
+				+" inaccessibles … la majorit‚ d'entre nous. La magie de Pyros,
+				l'El‚mental du feu, est spectaculaire et trŠs dangereuse 
+				… manipuler. Stratos, en revanche, procure une magie gu‚rissante, 
+				tout en exigeant une ob‚issance totale de la part de ses adeptes.");
+				}
+
+				#if German
+				{
+				bark("Wir kennen vier unterschiedliche Schulen der Magie. Da
+				gibt es diejenigen, die Lithos folgen und seine Magie ausben.
+				Dabei handelt es sich vor allem um Zauberformeln der Erde. Diese
+				Beschw”rungen erfordern langes Studium und viel šbung, bevor man sie
+				richtig aussprechen kann. Das habe ich zumindest in einem 
+				meiner Bcher gelesen. "
+				
+				+"Hydros' Gezeitenmacht ist erblich und daher nur einer 
+				kleinen Minderheit zug„nglich. Die Magie des Pyros, des Herrn
+				des Feuers, ist hinreiáend anzusehen, aber sehr gef„hrlich fr
+				den, der die Zauberformeln ausspricht. Stratos' Magie konzentriert 
+				sich ganz auf das Heilen. Ihre Lehren erfordern v”lligen 
+				Gehorsam und absolute Hingabe.");
+				}
+				askList-=<<"What schools? 
+							\f Quelles escoles?
+							\g Welcher Schule?">>;
+			}
+
+			case "Mythran is a scholar? 
+				\f Mythran est un esrudit?
+				\g Mythran ist ein Gelehrter?"
+			{
+				#if English
+				{
+				bark("Well, of sorts. He enjoys studying and reading books
+				as I do, but he will form an opinion and tout it as
+				perfect. He will even cite his own writings as examples
+				of perfect creative thinking. This makes talking to him
+				a bit ... tedious. But he is a good source of information.");
+				}
+
+				#if French
+				{
+				bark(" En quelque sorte, oui. Tout comme moy, il a plaisir … estudier
+				et … lire, mais il est toujours persuad‚ d'avoir raison. 
+				Il cite mesme ses propres oeuvres comme exemples de
+				parfaite cr‚ativit‚ spirituelle. Cecy rend les conversations
+				avec luy un peu... p‚nibles. 
+				Mais il reste une bonne source de renseignements.");
+				}
+
+				#if German
+				{
+				bark("Nun ja, das k”nnte man sagen. Er versucht st„ndig, sich weiterzubilden 
+				und genieát es ebenso wie ich, Bcher zu lesen. Ich muá mich jedoch 
+				oft ber ihn „rgern. Er preist die Erkenntnisse, die er sich bei seinen 
+				Studien bildet, gerne als unfehlbar an. Er zitiert sogar
+				seine eigenen Schriften als Beispiele makellosen logischen
+				Denkens. Aus diesem Grund ist es etwas... ermdend, eine 
+				Unterhaltung mit ihm zu fhren. Aber er ist eine gute 
+				Informationsquelle.");
+				}
+				askList-=<<"Mythran is a scholar? 
+							\f Mythran est un esrudit?
+							\g Mythran ist ein Gelehrter?">>;
+			}
+
+			case "Who is Lithos? \f Qui est Lithos? \g Wer ist Lithos?"
+			{
+				bark("The Earth Titan, or Mountain King as he is sometimes
+				called. He is a very powerful Titan, has the ability to 
+				make the very ground shake. The Necromancers still serve 
+				him, though I understand they have very few applicants to
+				be an apprentice these days.
+				
+				\f Le Titan de la Terre ou le Roy Montagne, comme on l'appelle parfois.
+				C'est un Titan trŠs puissant, qui a le pouvoir de faire trembler la terre.
+				Les N‚cromanciers le servent depuis fort longtemps, mais j'ai cru comprendre
+				qu'ils ont fort peu de candidats Apprentis, ces jours-cy.
+				
+				\g Er ist der Titan der Erde. Manchmal wird er auch 'Der Bergk”nig'
+				genannt. Er ist ein sehr m„chtiger Titan und 
+				vermag sogar, die Erde beben zu lassen. Die Nekromanten dienen ihm,
+				aber heutzutage finden sich nur noch wenige Schler.");
+				askList-=<<"Who is Lithos? \f Qui est Lithos? \g Wer ist Lithos?">>;
+			}
+
+			case "What is 'Pagan'? 
+				\f Que veut dire 'Pagan'?
+				\g Was ist 'Pagan'?"
+			{
+				bark("Pagan? Why, that is the name of this place.
+					\f Pagan? Mais c'est le nom de ce lieu.
+					\g Pagan? Wir leben in Pagan.");
+				askList-=<<"What is 'Pagan'?
+					\f Que veut dire 'Pagan'?
+					\g Was ist 'Pagan'?">>;
+				askList+=<<"I thought this place was 'Tenebrae'.
+						\f Je croyois estre … 'Tenebrae'?
+						\g Ich dachte, dies w„re 'Tenebrae'?">>;
+			}
+
+			case "I thought this place was 'Tenebrae'.
+					\f Je croyois estre … 'Tenebrae'?
+					\g Ich dachte, dies w„re 'Tenebrae'?"
+			{
+				bark("No, no. That is the name of this city. 'Pagan' is
+				the name of this land, this all encompassing world upon
+				which we all live out our meager lives.
+				
+				\f Non, non. Tenebrae est le nom de cette ville. 'Pagan' est le nom
+				de ce monde, le royaume sur lequel nous menons nos insignifiantes existences.
+				
+				\g Nein, nein, so heiát diese Stadt. 'Pagan' ist 
+				der Name dieser Welt, auf der wir alle unser armseliges
+				Leben fristen.");
+				askList-=<<"I thought this place was 'Tenebrae'.
+							\f Je croyois estre … 'Tenebrae'?
+							\g Ich dachte, dies w„re 'Tenebrae'?">>;
+				askList+=<<"I wish to leave Pagan.
+					\f J'aimerois partir de Pagan.
+					\g Ich m”chte Pagan verlassen.",
+				"Your meager lives? 
+					\f Pourquoi insignifiantes?
+					\g Euer armseliges Leben?">>;
+			}
+
+			case "Your meager lives?
+				\f Pourquoi insignifiantes?
+				\g Euer armseliges Leben?"
+			{
+				bark("When you take into consideration the scope of this
+				world and its history, anything we do or accomplish
+				becomes virtually meaningless. We are but a fraction of
+				the blink of an eye in the history of Pagan.
+				
+				\f A l'‚chelle de ce monde et de son histoire, tout ce que nous sommes, 
+				ce que nous accomplissons, n'est qu'un grain de sable, perdu dans l'histoire
+				de Pagan.
+				
+				\g Wenn Ihr die Gr”áe dieses Landes und den Reichtum seiner Geschichte bedenkt,
+				verlieren alle unsere Taten an Bedeutung. Unser Leben kommt nur einem
+				Bruchteil einer Sekunde in der Geschichte von Pagan gleich.");
+				askList-=<<"Your meager lives?
+					\f Pourquoi insignifiantes?
+					\g Euer armseliges Leben?">>;
+			}
+
+ 
+			case "Orlok says you have a treasure map.
+			\f Orlok dit que tu as une carte du tr‚sor.
+			\g Orlok sagt, Ihr h„ttet eine Schatzkarte."
+			{
+				bark("A treasure map? \f Une carte du tr‚sor? \g Eine Schatzkarte?");
+				askList-=<<"Orlok says you have a treasure map.
+					\f Orlok dit que tu as une carte du tr‚sor.
+					\g Orlok sagt, Ihr h„ttet eine Schatzkarte.">>;
+				askList+=<<"Yes, tattooed on your chest.
+					\f Oui, tatou‚e sur ta poitrine.
+					\g Ja, auf Eurer Brust eint„towiert.">>;
+			}
+
+			case "Yes, tattooed on your chest.
+				\f Oui, tatou‚e sur ta poitrine.
+				\g Ja, auf Eurer Brust eint„towiert."
+			{
+				bark("What?! Oh, that is so silly. Of course I don't have
+				a map tattooed on my chest! I don't know why he'd even say
+				such a thing. Oh well, I will have to go straightened that
+				out. No, no I don't have a map tattooed on my chest. Now,
+				tattoos are another interesting subject.
+				\f Quoi?! Quelle sottise! Bien s–r que je n'ai point de carte
+				tatou‚e sur ma poitrine! Quelle id‚e saugrenue! 
+				Non, non, moy, un tatouage? Ha, ha!
+				Cecy dit, le tatouage est un sujet digne d'int‚rest.
+				\g Was?! Das ist ja l„cherlich. Ich habe natrlich keine 
+				T„towierung auf meiner Brust. Ich kann mir nicht vorstellen, 
+				weshalb er so etwas behaupten wrde. T„towierungen sind aber 
+				an und fr sich ein sehr interessantes Thema.");
+				askList-=<<"Yes, tattooed on your chest.
+							\f Oui, tatou‚e sur ta poitrine.
+							\g Ja, auf Eurer Brust eint„towiert.">>;
+		
+							askList+=<<"Tell me of tattoos.
+							\f Parle-moy des tatouages.
+							\g Was wiát Ihr ber T„towierungen?", 
+				
+						"Do you know of any treasure maps?
+						\f As-tu entendu parler de cartes de tr‚sor?
+						\g Existieren solche Schatzkarten?">>;
+			}
+
+
+			case "Tell me of tattoos.
+				\f Parle-moy des tatouages.
+				\g Was wiát Ihr ber T„towierungen?"
+			{
+				bark("Well, you know where they come from, don't you? They
+				were sailors' method of identifying themselves. If a sailor
+				was washed overboard, it might be days or weeks before anyone
+				found his body. When they did find it, it would be very likely
+				any non-permanent form of identification would be gone. So
+				tattoos became popular as a permanent method of identification.
+				While tattoos have never been my style, a great number of
+				people find them very attractive and adorn themselves with
+				all sorts of pictures.
+				\f Sais-tu d'o— vient cette tradition? Les marins s'en servoient
+				comme signe d'identification. Quand l'un d'entre eux tomboit 
+				par-dessus bord, il passoit des jours, voire des semaines, avant
+				que son corps ne soit repˆch‚. Lorsque d'aventure on retrouvoit une
+				despouille en mer, il estoit souvent impossible de l'identifier. 
+				Les tatouages sont ainsy devenus une m‚thode d'identification
+				permanente. Ils ne sont point de mon goust, mais nombreux sont ceux
+				qui les trouvent trŠs s‚duisants et s'en font mettre de diverses formes, 
+				sur plusieurs endroits de leur corps.
+				\g Ihr wiát, wozu T„towierungen ursprnglich dienten, nicht wahr? 
+				Matrosen lieáen sich anhand ihrer T„towierungen identifizieren. Wenn 
+				ein Matrose auf dem offenen Meer ber Bord ging, konnte es Wochen dauern, 
+				bis der K”rper gefunden wurde. Und wenn die Leiche erst einmal irgendwo 
+				an Land geschwemmt wurde, dann waren zumeist alle anderen Formen der 
+				Identifizierung bereits verschwunden. Die T„towierungen waren ein 
+				Erkennungsmerkmal fr die Angeh”rigen des Verstorbenen. Mein Geschmack sind sie ja nicht, 
+				aber es gibt viele Menschen, die T„towierungen sehr sch”n finden und ihren 
+				K”rper mit allen m”glichen Bildern verzieren lassen.");
+				askList-=<<"Tell me of tattoos.
+							\f Parle-moy des tatouages.
+							\g Was wiát Ihr ber T„towierungen?">>;
+				askList+=<<"What sort of pictures?
+							\f Quelles sortes de formes?
+							\g Was fr Bilder?">>;
+			}
+
+
+			case "What sort of pictures?
+			\f Quelles sortes de formes?
+			\g Was fr Bilder?"
+			{
+				bark("While many choose the traditional anchor or skull and
+				dagger, there are others who prefer more unusual things such
+				as bats or intricate knot work.
+				\f Certains choisissent par tradition des crasnes, des ancres ou des
+				dagues, d'aultres pr‚fŠrent des images plus originales comme
+				des noeuds entrelac‚s ou des chauves-souris.
+				\g Die meisten entscheiden sich fr den eher traditionsgem„áen Anker, 
+				Totensch„del oder Dolch. Andere bevorzugen eher ungew”hnliche T„towierungen, 
+				wie zum Beispiel Flederm„use oder Efeu.");
+				askList-=<<"What sort of pictures?
+						\f Quelles sortes de formes?
+						\g Was fr Bilder?">>;
+				askList^=<<"Bats?
+						\f Des chauves-souris?
+						\g Flederm„use?", 
+						"Intricate knotwork?
+						\f Des noeuds entrelac‚s?
+						\g Efeu?">>;
+			}
+
+
+			case "Bats
+				\f Des chauves-souris?
+				\g Flederm„use?"
+			{
+				bark("In some cultures, the bat tattoo is a symbol of
+				royalty. However, it is normally worn in a place that is
+				covered by clothing, so that the monarch may go in disguise
+				if necessary.
+				\f Dans certaines civilisations, le tatouage de la chauve-souris
+				est un symbole de royaut‚. Cependant, on le porte g‚n‚ralement
+				en un endroit couvert par les vestements, afin que le monarque
+				en question puisse se d‚guiser, si n‚cessaire.
+				\g In manchen Kulturen ist die Fledermaus ein k”nigliches Symbol. Fr 
+				gew”hnlich wird diese T„towierung jedoch an einer unauff„lligen Stelle 
+				getragen und von Kleidern verdeckt. Auf diese Weise kann sich der Monarch 
+				auch einmal unbemerkt unter die Menschen mischen.");
+				askList-=<<"Bats?
+							\f Des chauves-souris?
+							\g Flederm„use?">>;
+			}
+
+
+			case "Intricate knotwork?
+				\f Des noeuds entrelac‚s?
+				\g Efeu?"
+			{
+				bark("This sort of tattoo can usually be found around the
+				top of the biceps or around the ankle. The ankle is the
+				area preferred by women, the biceps by men.
+				\f Ce genre de tatouage peut g‚n‚ralement estre trouv‚ autour
+				d'un biceps ou d'une cheville. La cheville est
+				l'emplacement pr‚f‚r‚ des femmes, le biceps celuy des hommes.
+				\g Diese T„towierung wird fr gew”hnlich am Bizeps oder am 
+				Kn”chel getragen. Im allgemeinen bevorzugen Frauen den 
+				Kn”chel, M„nner hingegen eher den Bizeps.");
+				askList-=<<"Intricate knotwork?
+						\f Des noeuds entrelac‚s?
+						\g Efeu?">>;
+			}
+
+
+			case "Do you know of any treasure maps?
+				\f As-tu entendu parler de cartes de tr‚sor?
+				\g Existieren solche Schatzkarten?"
+			{
+				bark("No, no maps. Wait a minute, now I do recall a story
+				about a magical hammer named 'Bone Crusher.' Had
+				something to do with the undead skeletons. Hmmmm, perhaps
+				you might find it if you looked through some of the books
+				here in my library.
+				
+				\f Non, point du tout. Attends, je me souviens maintenant d'une
+				histoire au sujet d'un marteau magique appel‚ 'Brisos'.
+				Une histoire concernant des squelettes de mort-vivants. Tu
+				trouveras peut-estre des renseignements sur luy dans ma bibliothŠque.
+				
+				\g Nein, ich glaube kaum. Aber wartet; ich erinnere mich dunkel 
+				an eine Geschichte ber einen magischen Hammer, den 
+				Knochenschmetterer oder so „hnlich. Die Geschichte hatte irgendetwas 
+				mit untoten Skeletten zu tun. Hmmmm, vielleicht solltet Ihr in den 
+				Bchern in der Bibliothek nachsehen.");
+				askList-=<<"Do you know of any treasure maps?
+						\f As-tu entendu parler de cartes de tr‚sor?
+						\g Existieren solche Schatzkarten?">>;
+			}
+
+			case "bye \f Adieu \g Lebt wohl."
+			{
+				if haveAvaName
+				{
+					#if English
+					{
+						bark("Come back anytime, "+getName()+". I so love a good
+						conversation!");
+					}
+					#if French
+					{
+						bark("Reviens quand tu veux, "+getName()+". J'appr‚cie tant nos 
+						conversations!");
+					}
+					#if German
+					{
+						bark("Ihr k”nnt jederzeit gerne hereinschauen, "+getName()+". Ich 
+						liebe anregende Unterhaltungen!");
+					}
+				}
+ 
+				else
+				{
+					#if English
+					{
+						bark("Thank you for dropping by, and come visit me
+						any time.");
+					}
+
+					#if French
+					{
+					 	bark("Mercy d'estre pass‚, et reviens me voir quand tu veux.");
+					}
+
+					#if German
+					{
+						bark("Ich freue mich, daá Ihr vorbeigekommen seid. 
+						Besucht mich doch bald wieder.");
+					}
+				}
+				exitConvo();
+				return;
+			}
+
+			default
+			{
+
+				bark("Yes, well, I guess I'll get back to my research now.
+				\f Bon, eh bien je vais retourner … mes recherches, pour l'heur.
+				\g Jetzt muá ich mich aber wieder meiner Forschungsarbeit widmen.");
+				exitConvo();
+				return;
+			}
+		}
+	}
+
+	exitConvo();
+}
+
+process Bentic::readBook()
+{
+	[[PT_ACTIVITY, referent]];
+
+	startup
+		{
+		counter:Number = 0;
+		}
+	process
+		{
+		realDoAnim(AS_CLIMB_2,2);
+		wait(60 + urandom(100));
+		randomWisdom();
+		wait(60 + urandom(100));
+		}
+}
+
+
+process Bentic::randomWisdom()
+{
+	[[PT_ACTIVITY, referent]];
+
+	ran:Number = urandom(10);
+
+	if ran = 1 
+	{
+		realDoAnim(AS_FIDGET,2);
+		bark("I never knew that!
+			\f Mais j'ignorois cela!
+			\g Das ist mir neu!");
+		return;
+	}
+
+	if ran = 2 
+	{
+		bark("Ah, yes...
+			\f Ah, oui...
+			\g Ach, ja...?");
+		realDoAnim(AS_FIDGET,2);
+		return;
+	}
+
+	if ran = 3 
+	{
+		bark("Fascinating!
+			\f Fascinant!
+			\g Faszinierend!");
+		return;
+	}
+
+	if ran = 4 
+	{
+		bark("Very interesting.
+			\f TrŠs int‚ressant.
+			\g Sehr interessant.");
+		realDoAnim(AS_FIDGET,2);
+		return;
+			}
+
+	if ran = 5 
+	{
+		bark("Such a good book.
+			\f Un excellent manuscript.
+			\g Ein ausgezeichnetes Buch.");
+		return;
+	}
+
+	if ran = 6 
+	{
+		bark("hummm... \f Hmmmm.... \g Hmmmm...");
+		realDoAnim(AS_FIDGET,2);
+		return;
+	}
+
+
+	if ran = 7
+	{
+		bark("I must make a note of this.
+			\f Il faut que je m'en souvienne.
+			\g Das muá ich mir merken.");
+		realDoAnim(AS_FIDGET,2);
+		return;
+	}
+
+	if ran = 8
+	{
+		bark("I wonder if Devon knows this?
+			\f Je me demande si Devon le sait.
+			\g Ich frage mich, ob Devon das weiá.");
+			wait(100);
+		return;
+	}
+
+	else
+	{
+		realDoAnim(AS_FIDGET,2);
+		bark("I will have to read more on this.
+			\f Il faut que j'approfondisse ce sujet.
+			\g Damit muá ich mich unbedingt noch n„her befassen.");
+		return;
+	}
+}
+
+

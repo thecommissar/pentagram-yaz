@@ -1,0 +1,326 @@
+// @@@ READY TO TRANSLATE F & G 8-11-94
+
+
+uses "free";
+uses "flags";
+uses "npc";
+
+
+
+
+typeclass TypePoisonPlant inherits Item
+{
+	process look();
+	process use();
+	process poisonAvatar();
+}
+
+process TypePoisonPlant::look()
+{
+	bark("Strange plant");
+}
+
+
+process TypePoisonPlant::use()
+{
+	item:Item;
+	plant,wind:Item;
+	counter:Number;
+	myMan:WorldPoint;
+
+	
+	setAvatarInStasis(true);
+	spawn safePlaySFX(EXPLODE1,200) -> return;
+	setFrame(1);
+	wait(10);
+	setFrame(2);
+	plant.destroy();
+
+
+	Avatar.realDoAnim(AS_FALL_DOWN,0);
+	FadeToBlack();
+	Avatar.teleport(13055,30079,64,Avatar.getMap());
+	plantScene = true;
+	if thordisToldTest = true
+	{
+	 	killProcess(Atli:Referent,PT_ACTIVITY);
+		Atli.teleport(12927,29823,64,Avatar.getMap());
+		killProcess(Atli:Referent,PT_ACTIVITY);
+		Atli.turnToFace(Atli.getDirToItem(Avatar:Referent),false,10);
+	}
+
+	else // if atliToldTest = true
+	{
+		killProcess(Thordis:Referent,PT_ACTIVITY);
+		Thordis.teleport(12927,29823,64,Avatar.getMap());
+		killProcess(Thordis:Referent,PT_ACTIVITY);
+		Thordis.turnToFace(Thordis.getDirToItem(Avatar:Referent),false,10);
+	}
+
+	FadeFromBlack();
+	spawn safePlaySFX(MAGIC2,100) -> return;
+	if thordisToldTest = true
+	{
+		spawn Atli.bark("Oh my. Look good he does not.
+		Try to take the test did he? Certainly not! Oh my, I think
+		waking up he is.") -> return;
+	}
+	else // if atliToldTest = true
+	{
+		spawn Thordis.bark("Oh my. Look good he does not. Try
+		to take the test did he? Certainly not! Oh my, I think
+		waking up he is.") -> return;
+	}
+
+	wind.create(TypeMiniAirTitan,0);
+	wind.pop(12777,29801,64);
+	for counter = 0 to 9
+	{
+		wind.setFrame(counter);
+		wait(10);
+	}
+	plant.create(TypeShortmushroom,0);
+	plant.pop(12767,29791,64);
+	spawn safePlaySFX(MAGIC1,200) -> return;
+	for counter = 25 to 34
+	{
+		wind.setFrame(counter);
+		wait(10);
+	}
+	wind.destroy();
+
+
+	wind.create(TypeMiniAirTitan,0);
+	wind.pop(12873,29737,64);
+	for counter = 0 to 9
+	{
+		wind.setFrame(counter);
+		wait(10);
+	}
+	plant.create(TypeShortmushroom,0);
+	plant.pop(12863,29727,64);
+	spawn safePlaySFX(MAGIC1,200) -> return;
+	for counter = 25 to 34
+	{
+		wind.setFrame(counter);
+		wait(10);
+	}
+	wind.destroy();
+
+
+	wind.create(TypeMiniAirTitan,0);
+	wind.pop(12745,29673,64);
+	for counter = 0 to 9
+	{
+		wind.setFrame(counter);
+		wait(10);
+	}
+	plant.create(TypeShortmushroom,0);
+	plant.pop(12735,29663,64);
+	spawn safePlaySFX(MAGIC1,200) -> return;
+	for counter = 25 to 34
+	{
+		wind.setFrame(counter);
+		wait(10);
+	}
+	wind.destroy();
+
+	wind.create(TypeMiniAirTitan,0);
+	wind.pop(12649,29705,64);
+	for counter = 0 to 9
+	{
+		wind.setFrame(counter);
+		wait(10);
+	}
+	plant.create(TypeShortmushroom,0);
+	plant.pop(12639,29695,64);
+	spawn safePlaySFX(MAGIC1,200) -> return;
+	for counter = 25 to 34
+	{
+		wind.setFrame(counter);
+		wait(10);
+	}
+	wind.destroy();
+
+	wind.create(TypeMiniAirTitan,0);
+	wind.pop(12777,29577,64);
+	for counter = 0 to 9
+	{
+		wind.setFrame(counter);
+		wait(10);
+	}
+	plant.create(TypeShortmushroom,0);
+	plant.pop(12767,29567,64);
+	spawn safePlaySFX(MAGIC1,200) -> return;
+	for counter = 25 to 34
+	{
+		wind.setFrame(counter);
+		wait(10);
+	}
+	wind.destroy();
+
+
+	if thordisToldTest = true
+	{
+		Atli.bark("Heard Thordis sent you here, I had. That scum-sucking
+		torax whelp! Tell you the test was poisonous did she?");
+		Avatar.bark("No!");
+
+		Atli.bark("No, of course not. A Hoskuld she is and the worst of them
+		at that! Lying, mud eating filth! Well, sorry I am to be the one to
+		tell you, but poisonous the test is. No antidote there is.");
+
+		Avatar.bark("No antidote?!");
+
+		Atli.bark("No. In the days before the Great Cataclysm given to
+		teach our youngsters about their own mortality this test was.
+		From the Ancient Ones the only antidote was. Now that
+		reach the Ancient Ones the High Priestess can not, 
+		afraid you are doomed I am.");
+
+		Avatar.bark("This can not be!");
+
+		Atli.bark("Sad to say it I am. But give you the Zealan
+		Mark I will. With it recognized as a full Zealan you will be,
+		for the short time you have.");
+
+		Avatar.bark("Is there no shred of hope?");
+
+		Atli.bark("Well, speak to Ezrekal you can, but afraid I am no good
+		it will do. Leave you alone now I will.");
+
+		Atli.cSetActivity(ACT_LOITER);
+	}
+	
+	else //if atliToldTest = true
+	{
+		Thordis.bark("Oh my, terrible this is. Send you here Atli did?");
+
+		Avatar.bark("Yes.");
+
+		Thordis.bark("So cruel those Gunnar's are! Tell you did he
+		poisonous the plant is and no antidote there is?");
+
+		Avatar.bark("No!");
+
+		Thordis.bark("As much I thought. In the days before
+		the Great Cataclysm given to teach our youngsters about
+		their own mortality this test was. From the Ancient
+		Ones the only antidote was. Now that reach the Ancient
+		Ones the High Priestess can not, afraid you are doomed I am.");
+
+		Avatar.bark("This can not be!");
+
+		Thordis.bark("Sad to say it I am. But give you the Zealan
+		Mark I will. With it recognized as a full Zealan you will be,
+		for the short time you have.");
+
+		Avatar.bark("Is there no shred of hope?");
+
+		Thordis.bark("Well, speak to Ezrekal you can, but afraid I am no good
+		it will do. Leave you alone now I will.");
+
+		Thordis.cSetActivity(ACT_LOITER);
+	}
+
+	myMan.x = Avatar.getX();
+	myMan.y = Avatar.getY();
+	myMan.z = Avatar.getZ();
+
+	if give(Avatar:Referent,TypeZealMark,0,0,1)
+	{
+	}
+	else if createNear(myMan,TypeZealMark,0,0,1)
+	{
+
+	}
+
+	haveMark = true;
+	spawn poisonAvatar() -> return;
+	setAvatarInStasis(false);
+}
+
+process TypePoisonPlant::poisonAvatar()
+{
+	[[PT_DEFAULT,NUL_REF]];
+
+	startup
+	{
+		hitCounter:Number=0;
+		avatarPoisoned = true;
+		firstPoisoned = true;
+	}
+
+	process
+	{
+		if avatarPoisoned = false
+		{
+			return;
+		}
+
+		if firstPoisoned
+		{
+			wait(80);
+			Avatar.bark("I haven't felt this bad since Lydia poisoned
+			me!");
+			firstPoisoned = false;
+		}
+		else
+		{
+			ran:Number;
+			ran = urandom(10);
+			if ran = 1
+			{
+				Avatar.bark("I think I'm feverish!");
+			}
+			if ran = 2
+			{
+				Avatar.bark("I don't feel good.");
+			}
+
+			if ran = 3
+			{
+				Avatar.bark("Oh, my stomach!");
+			}
+			if ran = 4
+			{
+				Avatar.bark("My head really hurts.");
+			}
+			if ran = 5
+			{
+				Avatar.bark("I feel terrible!");
+			}
+			if ran = 6
+			{
+				Avatar.bark("All my joints hurt!");
+			}
+			if ran = 7
+			{
+				Avatar.bark("I feel so weak!");
+			}
+			if ran = 8
+			{
+				Avatar.bark("I've never felt so bad!");
+			}
+			if ran = 9
+			{
+				Avatar.bark("I feel sick.");
+			}
+		}
+
+		Avatar.receiveHit(referent, nodir, 1, DMG_FULL);
+		hitCounter++;
+		if (hitCounter = 3)
+		{
+			if (Avatar.getStr()>10) and (Avatar.getDex()>10)
+			{
+			Avatar.setStr( Avatar.getStr() - 1);
+			Avatar.setDex( Avatar.getDex() - 1);
+			hitCounter = 0;
+			}
+		}
+
+		wait(10000);
+	}
+}
+

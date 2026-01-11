@@ -1,0 +1,209 @@
+
+
+routine zzflagsRoutine()  //This is a nightmarish hack to get this file to link
+{
+   b:Word;
+   b = 1;
+}
+
+//LOST VALE FLAGS
+//=======================
+
+globalflag lbSpoke:2; //Lord British has appeared and spoken...
+globalflag avatarPoisoned;
+globalflag climbedCliffs;
+globalflag ezToTemple;
+globalflag shieldFixed;
+globalflag firstPoisoned;
+globalflag zealanMark;
+globalflag toldAboutAddiction;
+globalflag hasBag;
+globalflag godsFree;
+globalflag attemptedCliffs;
+globalflag ragnarMet;
+globalflag ragnarPissed;
+globalflag toldCliffs;
+globalflag haveMark;
+globalflag templeOpen;
+globalflag limitTornado:3;
+globalflag ActivateAirPuzzle:1;
+globalflag sentToTyorvi;
+globalflag sentToRagnar;
+globalflag ragnarToldStone;
+globalflag gunnarSpokeStone;
+globalflag plantScene;
+globalflag endOfPlantScene;
+globalflag candlesCorrect;
+globalflag monolithSucks;
+globalflag candleOne;
+globalflag candleTwo;
+globalflag candleThree;
+globalflag candleFour;
+globalflag candleFive;
+globalflag candleSix;
+globalflag avX:16;
+globalflag avY:16;
+globalflag avZ:16;
+globalflag avMap:16;
+globalflag beganConvo;
+globalflag godsSpoke;
+globalflag stormsOn;
+globalflag ragnarName;
+globalflag spokeOfThordis;
+globalflag likeThordis;
+
+
+// Elemental Column Destroyed Flags
+//---------------------------------
+globalflag WaterColumnDestroyed:1;
+globalflag FireColumnDestroyed:1;
+globalflag EarthColumnDestroyed:1;
+globalflag AirColumnDestroyed:1;
+globalflag allColumnsDestroyed;
+
+
+
+
+// EZREKAL CONVERSATION FLAGS
+//===========================
+
+globalflag toldValeThree;
+globalflag toldValeTwo;
+globalflag toldValeOne;
+globalflag spokeOfAwaken;
+globalflag testFromAtli;
+globalflag testFromThordis;
+globalflag mentionShield;
+globalflag ezrekalJob;
+globalflag ezrekalName;
+globalflag ezrekalMet;
+globalflag yelledAtAvatar;
+globalflag spokeOfCataclysm;
+globalflag askedAboutAncients;
+globalflag spokeOfOpenTemple;
+globalflag toldOfShield;
+globalflag givenRoot;
+globalflag justGotRoot;
+globalflag hasRoot;
+globalflag spokeOfClouds;
+
+// TYORVI CONVERSATION FLAGS
+//==========================
+
+globalflag tyorviDrunk;
+globalflag tyorviMet;
+globalflag tyorviName;
+globalflag tyorviJob;
+globalflag tyorviPissed;
+globalflag spokeOfVale;
+globalflag spokeDrunk;
+globalflag spokeDrunkOne;
+globalflag spokeDrunkTwo;
+globalflag spokePoison;
+globalflag spokeFuneral;
+globalflag spokeOnce;
+globalflag toldOfPoison;
+globalflag agreeToClimb;
+globalflag hasTea;
+globalflag givenTea;
+globalflag tyorviDreams;
+globalflag toldOfDreams;
+
+
+// THORDIS CONVERSATION FLAGS
+// ==========================
+
+globalflag thordisMet;
+globalflag thordisToldTest;
+globalflag hoskuldSpokeStone;
+globalflag thordisName;
+globalflag thordisJob;
+globalflag toldMyTribe;
+globalflag toldOthers;
+globalflag toldSelf;
+globalflag toldTyorvi;
+globalflag toldRagnar;
+globalflag toldAtli;
+globalflag toldHrodny;
+globalflag toldIngyald;
+globalflag toldEzrekal;
+globalflag saidGrandmother;
+globalflag saidWomen;
+globalflag inShadeScene;
+globalflag thordisSchedule:2;
+
+
+// ATLI CONVERSATION FLAGS
+// =======================
+
+globalflag atliMet;
+globalflag atliName;
+globalflag atliJob;
+globalflag atliToldTest;
+globalflag cloudCity;
+
+
+// HRODNY CONVERSATION FLAGS
+// ==========================
+
+globalflag hrodnyMet;
+globalflag hrodneyMet;
+globalflag hrodnyName;
+globalflag hrodneyName;
+globalflag hrodnyJob;
+globalflag hrodneyJob;
+globalflag hrodnySchedule:2;
+globalflag spokeVale;
+globalflag toldPoison;
+globalflag spokeTemple;
+
+
+// INGYALD CONVERSATION FLAGS
+// ==========================
+
+globalflag ingyaldMet;
+globalflag ingyaldName;
+globalflag ingyaldJob;
+globalflag ingyaldSchedule:2;
+globalflag spokeVail;
+
+// Random flags
+// ==========================
+
+// LORDBRIT.UNK
+globalflag lbStarted;
+globalflag lbDone;
+
+// BAGOREAG.UNK
+globalflag bagHasBlood;
+globalflag bagHasBone;
+globalflag bagHasWood;
+globalflag bagHasDirt;
+globalflag bagHasExecutionersHood;
+globalflag bagHasBlackmoor;
+globalflag bagHasAsh;
+globalflag bagHasPumice;
+globalflag bagHasObsidian;
+globalflag bagHasIron;
+globalflag bagHasBrimstone;
+globalflag bagHasDaemonBone;
+globalflag bagHasEyeOfNewt;
+globalflag bagHasBatwing;
+globalflag bagHasSerpentScale;
+globalflag bagHasDragonBlood;
+
+// EAPUZL.UNK
+globalflag pedZeroDone;
+globalflag pedOneDone;
+globalflag pedTwoDone;
+
+// AGENTHAT.UNK
+globalflag tokens:8;
+globalflag doneOne;
+globalflag doneTwo;
+globalflag doneThree;
+globalflag doneFour;
+globalflag doneFinal;
+
+
+

@@ -1,0 +1,28 @@
+uses "free";
+uses "item";
+
+typeclass TypeMonskul inherits Item
+{
+	process look();
+	process use();
+}
+
+process TypeMonskul::look()
+{
+	bark("Strange skull");
+}
+
+process TypeMonskul::use()
+{
+	bark("To my brothers, Odion and Apathas, and my sister, Amoras,
+	A great emergency has occured in our Vale. As our beloved Priestess
+	prepares herself for the ceremonies,the Titans draw near. I fear"
+
+	+"they plan to attack! You must return to us quickly as only united
+	can we hope to stop them. Even now I can feel the very ground
+	trembling. Felicitas, Timyra and I will go now to the Temple
+	and attempt to hold them off until you arrive. Hurry,
+	my siblings, our time is short!");
+}
+
+

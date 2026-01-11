@@ -1,0 +1,1230 @@
+uses "flags";
+uses "free";
+uses "npc";
+uses "door";
+
+
+
+npcclass Salkind inherits Npc 
+{
+	process use();
+	process look();
+	process schedule(currentTime:Long);
+	process enterFastArea();
+	process leaveFastArea();
+	process cast(ref:Referent);
+	process AvatarStoleSomething(ref:Referent);
+
+	process atHome();
+	process atCourt();
+	process answerMordea();
+	process randomBarkAtHome();
+	process closeDoor();
+}
+
+
+
+
+process Salkind::look() 
+{
+
+	if salkindName and salkindJob
+	{
+		if isDead()
+		{
+			bark("Salkind the late Seneschal
+				\f Salkind, le S‚n‚chal d‚c‚d‚
+				\g Salkind, der verstorbene Majordomus");
+		}
+		else
+		{
+			bark("Salkind the Seneschal
+				\f Salkind, le S‚n‚chal
+				\g Der Majordomus Salkind");
+		}
+	}
+	else if salkindName
+	 {
+		if isDead()
+		{
+			bark("the very late Salkind
+				\f Salkind, le d‚c‚d‚
+				\g Der l„ngst verstorbene Salkind");
+		}
+		else
+		{
+			bark("Salkind");
+		}
+	}
+	else if salkindJob
+	{
+		if isDead()
+		{
+			bark("dead Seneschal \f S‚n‚chal mort \g Der tote Majordomus");
+		}
+		else
+		{
+			bark("Seneschal \f S‚n‚chal \g Majordomus");
+		}
+	}
+	else
+	{
+		if isDead()
+		{
+			bark("corpse \f cadavre \g Leiche");
+		}
+		else
+		{
+			bark("man \f homme \g Mann");
+		}
+	}
+}
+
+
+
+process Salkind::schedule(currentTime:Long) { 
+}
+
+
+process Salkind::enterFastArea()
+{
+
+	if (toranDead = false) or (isDead() = true) or (secondexecution = true)
+	{
+		return;
+	}
+
+	resetRef(referent,PT_ACTIVITY);
+	resetRef(referent,PT_PATHFIND);
+	resetRef(referent,PT_ANIM);
+	resetRef(referent,PT_BARK);
+
+	if (SalkindSchedule = at_court) 
+	{
+		spawn atCourt() -> return;
+	}
+
+	else if (SalkindSchedule = at_home) 
+	{
+		spawn atHome() -> return;
+	}
+}
+
+
+
+
+process Salkind::leaveFastArea() 
+{
+	resetRef(referent,PT_ACTIVITY);
+	resetRef(referent,PT_PATHFIND);
+	resetRef(referent,PT_ANIM);
+	resetRef(referent,PT_BARK);
+}
+
+
+
+
+
+process Salkind::AvatarStoleSomething(ref:Referent)
+{
+
+	if (SalkindSchedule != at_home) or (isDead() = true)
+	{
+		return;
+	} 
+
+	item:Item;
+	item.referent = ref;
+	resetRef(referent,PT_ACTIVITY);
+	resetRef(referent,PT_PATHFIND);
+	resetRef(referent,PT_ANIM);
+	resetRef(referent,PT_BARK);
+	salkindPissed = true;
+
+
+	turnToFace(getDirToItem(Avatar:Referent),false,10);
+	bark("What do you think you are doing?
+		\f Non, mais qu'est-ce que tu fais!?
+		\g Was macht Ihr da eigentlich?");
+	enterFastArea();
+	return;
+}
+
+
+
+
+
+process Salkind::cast(ref:Referent)
+{
+	count:Number;
+	count = 10;
+
+	// TEST TO MAKE SURE THAT THE NPC HAS A TARGET
+	// -------------------------------------------
+	while (not getTarget()) and (count) {
+		wait(1);
+		count--;
+	}
+
+	ref = getTarget();
+
+
+
+	if ref = Avatar:Referent
+	{
+
+		realDoAnim(AS_DRAW_WEAPON,getDir());
+		spawn callTheGuards(NULL_REF) -> return;
+
+		if not isDead()
+		{
+
+			if (urandom(100) > 50)
+			{
+
+				bark("Don't hurt me!
+							\f Oh, non piti‚! Ne me fais point mal!
+							\g Oh, bitte! Tut mir nichts! Ich flehe Euch an!");
+			}
+			else
+			{
+				bark("Please! I'll do anything...
+							\f Piti‚! Je feroi tout ce que tu voudras...
+							\g Ich bitte Euch! Ich will auch alles tun...");
+			}
+		}
+	}
+}
+
+
+
+
+process Salkind::atHome()
+{
+
+	[[PT_ACTIVITY, referent]];
+
+	startup 
+	{
+		pathEgg : Item;
+		counter,counter2:Number;
+		foreach	pathEgg where (type = TypePathMarker) within 10 cells of Salkind
+		{
+			counter2 = pathEgg.getFrame();
+		}
+	}
+
+	process
+	{
+		for counter = counter2 to 10
+		{
+			foreach	pathEgg where (type = TypePathMarker) and (frame = counter) within 30 cells of Salkind
+			{
+				if pathfind(pathEgg.referent,12)
+				{
+					if (counter = 5)
+					{
+						turnToFace(4,0,15);
+						closeDoor();
+						wait(100);
+					}
+					else
+					{
+						if not somebodyTalking
+						{
+							randomBarkAtHome();
+						}
+						wait(100);
+
+					}
+				}
+				else
+				{
+					wait(700);
+				}
+			}
+
+		wait(200);
+		counter2 = 0;
+
+		}
+	}
+}
+
+
+process Salkind::atCourt() 
+{
+
+	[[PT_ACTIVITY, referent]];
+
+	startup 
+	{
+		ran,dir:Number;
+		wait(300);
+	}
+
+
+	process
+	{
+		ran = urandom(10);
+		turnToFace(getDirToItem(Mordea:Referent),false,15);
+		dir=getDir();
+
+		if ran <= 3
+		{
+			turnToFace(getDirToItem(Avatar:Referent),false,15);
+			realDoAnim(AS_FIDGET,dir);
+			turnToFace(getDirToItem(Mordea:Referent),false,20);
+		}
+		else if (ran >= 4) and (ran <= 8)
+		{
+			realDoAnim(AS_FIDGET,dir);
+		}
+		else
+		{
+			realDoAnim(AS_DRAW_WEAPON,dir);
+			realDoAnim(AS_SHEATH_WEAPON,dir);
+		}
+		wait(200 + urandom(100));
+		}
+	}
+
+
+
+process Salkind::randomBarkAtHome()
+{
+	[[PT_ACTIVITY, referent]];
+
+	avaP,torP : WorldPoint;
+	ran:Number;
+
+
+	if (getDistance(Avatar:Referent,Salkind:Referent) < 300) 
+		and ((Avatar.getStatus() & INVISIBLE) = false) 
+	{
+
+		ran = urandom(4);
+
+		if ran = 1 
+		{
+			turnToFace(getDirToItem(Avatar:Referent),false,15);
+			bark("Leave me be!
+				\f Laisse-moy tranquille!
+				\g Laát mich in Ruhe!");
+				realDoAnim(AS_FIDGET,getDir());
+		}
+		if ran = 2 
+		{
+			turnToFace(getDirToItem(Avatar:Referent),false,15);
+			if not salkindMet {
+				bark("Out of my house or I shall call the guards!
+					\f Sors de ma demeure ou j'appelle les gardes!
+					\g Verlaát sofort mein Haus, oder ich rufe die Wachen!");
+			}
+			else
+			{
+ 
+				bark("Are we lost, perhaps?
+					\f Es-tu perdu, par hasard...?
+					\g Haben wir uns vielleicht verirrt...?");
+			}
+			wait(120);
+		}
+		if ran = 3 
+		{
+			turnToFace((getDirToItem(Avatar:Referent)),false,15);
+			if not torwinMet
+			{
+				realDoAnim(AS_FIDGET,getDir());
+				bark("Leave, or I shall summon the guards!
+					\f Va-t'en ou j'appelle les gardes!
+					\g Geht, oder ich hole die Wachen!");
+			}
+			else
+			{
+				realDoAnim(AS_FIDGET,getDir());
+				bark("Please, I wish to be alone.
+					\f Qu'on me laisse seul.
+					\g Bitte, ich m”chte gerne alleine sein.");
+			}
+			wait(100);
+		}
+		if ran = 4 
+		{
+			turnToFace(getDirToItem(Avatar:Referent),false,15);
+			if not torwinMet {
+				bark("Can a man have his privacy?
+					\f Il n'y a donc point moyen d'estre tranquille?
+					\g Kann man hier vielleicht einmal seine Ruhe haben?");
+			}
+			else
+			{
+				bark("Do you wish to speak to me?
+					\f D‚sires-tu me parler?
+					\g Wollt Ihr mit mir sprechen?");
+			}
+			wait(120);
+		}
+	}
+
+	else if (getDistance(Avatar:Referent,Salkind:Referent) < 700) 
+	{
+		ran = urandom(12);
+		turnToFace(urandom(7),0,10);
+
+		if ran = 1 
+		{
+			bark("Where is that girl?
+				\f O— est encore cette fille...?
+				\g Wo kann das M„dchen nur sein...?");
+			realDoAnim(AS_FIDGET,getDir());
+		}
+		else if ran = 2 
+		{
+			bark("Aramina?");
+			wait(60);
+			realDoAnim(AS_FIDGET,getDir());
+		}
+		else if ran = 3 
+		{
+			bark("Where is that logbook...?
+				\f O— est ce registre des ex‚cutions...?
+				\g Wo ist das Terminbuch...?");
+		}
+		else if ran = 4 
+		{
+			realDoAnim(AS_FIDGET,getDir());
+			bark("dum de dum... \f auprŠs de ma blonde, qu'il...
+				\g Alle meine Entchen... dada... daa");
+			return;
+			wait(100);
+		}
+
+		else if ran = 5 
+		{
+			realDoAnim(AS_DRAW_WEAPON,getDir());
+			bark("Where did I put that?
+			\f O— est-ce que j'ai bien pu mettre ‡a?
+			\g Wo kann ich das nur gelassen haben?");
+			realDoAnim(AS_SHEATH_WEAPON,getDir());
+			bark("Oh, yes... \f Oh, oui... \g Ach ja, natrlich...");
+		}
+
+		else if ran = 6 
+		{
+			bark("Where are my documents?
+				\f O— sont mes documents?
+				\g Wo sind meine Schriftstcke?");
+			wait(100);
+		}
+
+		else if ran = 7 
+		{
+			realDoAnim(AS_FIDGET,getDir());
+			bark("He will pay dearly for that.
+				\f Il paiera cher pour ‡a.
+				\g Das wird er mir teuer bezahlen.");
+			wait(100);
+		}
+
+		else if ran = 8 
+		{
+			realDoAnim(AS_DRAW_WEAPON,getDir());
+			bark("Where is my jeweled dagger...?
+				\f O— est ma dague sertie de pierres pr‚cieuses..?
+				\g Wo habe ich denn nur meinen juwelenbesetzten Dolch...?");
+			realDoAnim(AS_SHEATH_WEAPON,getDir());
+			wait(100);
+		}
+	}
+}
+
+
+process Salkind::closeDoor()
+{
+	[[PT_ACTIVITY, referent]];
+
+	sped : Item;
+	door : Door;
+
+	foreach	sped where (type = TypeDoorNS) within 10 cells of Salkind
+	{
+		door.referent = sped.referent;
+		break;
+	}
+
+	if door
+	{
+		turnToFace(getDirToItem(door.referent),false,10);
+		bark("Who keeps opening these?
+			\f Qui est-ce qui a encore ouvert ces portes?
+			\g Wer ”ffnet denn st„ndig diese Tren hier?");
+		door.doorDriver(Salkind:Referent);
+	}
+}
+
+
+
+process Salkind::use() 
+{
+
+	// if the first execution scene has not taken place...
+	// do not talk to the avatar!
+
+	if not toranDead
+	{
+		return;
+    }
+
+	ran:Number;
+	answer:String;
+	askList:String List;
+
+	if getMap() = MapDocks
+	{
+		if not devonJailed
+		{
+			bark("Out of my way! I must attend to her Ladyship!
+			\f Fiche le camp! Je dois m'occuper de Sa Majest‚!
+			\g Aus dem Weg! Ich muá mich um die Herrin kmmern!");
+			exitConvo();
+			return;
+		}
+	}
+
+	if not salkindMet
+	{
+		Avatar.bark ("Greetings stranger.
+			\f Salutations, estranger.
+			\g Seid gegrát, Fremder.");
+	}
+
+	else
+	{
+
+		Avatar.bark("One moment, Salkind...
+					\f Un instant, Salkind...
+					\g Einen Augenblick, Salkind...");
+	}
+
+	enterConvo();
+	killProcess(Avatar:Referent,PT_BARK);
+
+	if not salkindMet
+	{
+		askList=<<"May I ask your name?
+			\f Quel est ton nom?
+			\g Drfte ich nach Eurem Namen fragen?",
+			"bye \f adieu \g Lebt wohl.">>;
+	}
+
+	else
+	{
+		if salkindPissed = true
+		{
+			ran = random(2);
+			switch ran
+			{
+				case 0 
+				{
+				bark ("Oh, returned, have we? Don't we have some
+				nerve, hmmmmm?
+					\f Oh, te revoil…, toy! Tu ne manques point
+					de toupet, hmmmm?
+					\g Oh, wir sind also wieder hier? Na, wir haben ja vielleicht Nerven!");
+				askList^=<<"I would like to speak with you.
+							\f J'aimerois te parler.
+							\g Ich m”chte Euch sprechen.">>;
+				}
+				case 1 
+				{
+					bark ("We certainly were never taught manners,
+					were we?
+						\f On ne t'a jamais appris les bonnes maniŠres, hein?
+						\g Manieren hat man uns wohl nie beigebracht, was?");
+					askList^=<<"I would like to speak with you.
+						\f J'aimerois te parler.
+						\g Ich m”chte Euch sprechen.">>;
+				}
+				case 2 
+				{
+					bark ("I have no time for your nonsense.
+						\f Je n'ai point le temps d'escouter tes balivernes.
+						\g Ich habe keine Zeit, mir Euer Geschwafel anzuh”ren.");
+					askList^=<<"I would like to speak with you.
+						\f J'aimerois te parler.
+						\g Ich m”chte Euch sprechen.">>;
+				}
+			}
+		}
+		else
+		{
+			askList^=<<"Who is Lady Mordea?
+				\f Qui est Dame Mordea?
+				\g Wer ist die Herrin Mordea?",
+			"What is a Tempest?
+				\f C'est quoi, une Tempeste?
+				\g Was ist ein Gezeitenfrst?",
+			"bye \f adieu \g Lebt wohl.">>;
+			if metDevonInJail
+			{
+				askList^=<<"What do you know about Bentic?
+					\f Que sais-tu sur Bentic?
+					\g Was wiát Ihr ber Bentic?", 
+				"What do you know about Devon?
+					\f Que sais-tu sur Devon?
+					\g Was wiát Ihr ber Devon?">>;
+			}
+
+			if urandom(10) > 5
+			{
+				bark ("How may I be of assistance?
+					\f As-tu besoin de mon aide?
+					\g Womit kann ich Euch behilflich sein?");
+			}
+			else
+			{
+				bark ("Greetings. \f Salutations. \g Seid gegrát.");
+			}
+		}
+	}
+
+
+	while answer!="bye \f adieu \g Lebt wohl."
+	{
+		askList-=<<"bye \f adieu \g Lebt wohl.">>;
+		askList+=<<"bye \f adieu \g Lebt wohl.">>;
+		answer = ask(askList);
+		switch answer
+		{
+			case "May I ask your name?
+				\f Quel est ton nom? 
+				\g Drfte ich nach Eurem Namen fragen?"
+			{
+				salkindMet = true;
+				salkindName = true;
+				bark("Certainly, I am Salkind. And who might we be?
+					\f Je suis Salkind. Et toy, qui es-tu?
+					\g Mein Name ist Salkind. Und wer sind wir, junger Freund?");
+
+				#if English
+				{
+					askList+=<<"I am "+getName()+".">>;
+				}
+				#if French
+				{
+					askList+=<<"Je suis "+getName()+".">>;
+				}
+				#if German
+				{
+					askList+=<<"Ich heiáe "+getName()+".">>;
+				}
+				askList+=<<"None of your concern.
+					\f Cela ne te regarde point.
+					\g Das geht Euch nichts an.">>;
+				askList-=<<"May I ask your name?
+						\f Quel est ton nom? 
+						\g Drfte ich nach Eurem Namen fragen?">>;
+				if metDevonInJail
+				{
+					askList+=<<"What do you know about Devon?
+						\f Que sais-tu sur Devon?
+						\g Was wiát Ihr ber Devon?",
+					"What do you know about Bentic?
+						\f Que sais-tu sur Bentic?
+						\g Was wiát Ihr ber Bentic?">>;
+				}
+			}
+	
+			case "I am "+getName()+"."
+			{
+				bark("And what can I help you with today, hmmmm?");
+				askList-=<<"I am "+getName()+".", "None of your concern.
+					\f Cela ne te regarde point.
+					\g Das geht Euch nichts an.">>;
+				askList+=<<"What do you do?
+					\f Que fais-tu?
+					\g Was ist Euer Beruf?">>;
+			}
+
+			case "Je suis "+getName()+"."
+			{
+			bark("Et en quoi puis-je t'estre utile aujourd'hui, hmmmm?");
+			askList-=<<"Je suis "+getName()+".", "None of your concern.
+					\f Cela ne te regarde point.
+					\g Das geht Euch nichts an.">>;
+			askList+=<<"What do you do?
+				\f Que fais-tu?
+				\g Was ist Euer Beruf?">>;
+			}
+
+			case "Ich heiáe "+getName()+"."
+			{
+			bark("Ah, wirklich ein sch”ner Name, den wir da haben. Und? 
+			Was gibt es noch zu fragen?");
+			askList-=<<"Ich heiáe "+getName()+".", "None of your concern.
+					\f Cela ne te regarde point.
+					\g Das geht Euch nichts an.">>;
+			askList+=<<"What do you do?
+				\f Que fais-tu?
+				\g Was ist Euer Beruf?">>;
+			}
+
+			case "What do you do?
+				\f Que fais-tu? 
+				\g Was ist Euer Beruf?"
+			{
+				bark("What do I do? My, we are a nosy little thing, aren't we?
+				Well, if you must know, I am the Seneschal to Lady Mordea.
+				
+				\f Ce que je fais? Tu ne serois point un peu indiscret, des fois?
+				Je suis le S‚n‚chal de Dame Mordea, Tempeste de Tenebrae.
+				
+				\g Mein Beruf? Meine Gte, wir sind aber wirklich ein neugieriger kleiner 
+				Tropf, nicht wahr? Nun, wenn wir's wirklich wissen mssen: Ich bin 
+				der Majordomus der Herrin Mordea, der Gezeitenfrstin von Tenebrae.");
+				askList-=<<"What do you do?
+						\f Que fais-tu? 
+						\g Was ist Euer Beruf?">>;
+				askList+=<<"What is a seneschal?
+					\f C'est quoi, un s‚n‚chal?
+					\g Was ist ein Majordomus?",
+					"Who is Lady Mordea?
+					\f Qui est Dame Mordea?
+					\g Wer ist die Herrin Mordea?">>;
+			}
+
+ 
+			case "Who is Lady Mordea?
+					\f Qui est Dame Mordea?
+					\g Wer ist die Herrin Mordea?"
+			{
+				bark("Lady Mordea?! Why, out of what torax field did we crawl?
+				She is only our Tempest. Perhaps we should go lie down
+				and have a little rest. It seems our mind is a bit addled.
+
+				\f Dame Mordea? De quelle Toraxerie t'es-tu donc ‚chapp‚?
+				Il se trouve qu'elle est nostre Tempeste. Alors, on est un peu
+				fatigu‚ des m‚ninges, hein? On a besoin de prendre du repos?
+				
+				\g Die Herrin Mordea?! Ja, junger Freund, aus welchem 
+				Toraxschuppen sind wir denn hervorgekrochen? Mordea muá man 
+				nicht kennen, wie? Sie ist ja nur unsere Gezeitenfrstin. 
+				Vielleicht solltet wir gehen und uns ein wenig hinlegen. 
+				Es scheint, als ob wir im Augenblick nicht ganz bei Sinnen 
+				w„ren.");
+				askList-=<<"Who is Lady Mordea?
+					\f Qui est Dame Mordea?
+					\g Wer ist die Herrin Mordea?">>;
+			}
+
+			case "None of your concern.
+				\f Cela ne te regarde point.
+				\g Das geht Euch nichts an."
+			{
+				bark("Apparently we were not taught our manners well at all.
+				I shall not tolerate such rudeness. Begone!
+				
+				\f Sapristi! Quel grossier personnage!
+				Je ne tolŠreroi point un tel rustre. Hors de ma vue!
+				
+				\g Nun, offensichtlich hat man uns nicht die geringsten Manieren 
+				gelehrt, nicht wahr. Ich werde solche Unversch„mtheit nicht dulden. 
+				Hinfort!");
+				salkindPissed=true;
+				exitConvo();
+				return;
+			}
+	
+			case "What is a seneschal?
+				\f C'est quoi, un s‚n‚chal? 
+				\g Was ist ein Majordomus?" 
+			{
+				salkindJob = true;
+				bark ("Oh my, we aren't too up on titles are we? Yes, I am
+				the seneschal. It is my duty to take care of running the day
+				 to day affairs of the city so that our Tempest, the Lady
+				 Mordea, can concentrate on more important things.
+				 
+				 \f Tu m'as l'air bien ignorant, hein?
+				 En tant que S‚n‚chal, il est de mon devoir de m'occuper
+				 des tƒches quotidiennes de la cit‚ afin que nostre Tempeste,
+				 Dame Mordea, puisse se concentrer sur des choses plus
+				 importantes.
+				 
+				 \g Nun, mein einf„ltiger Freund, Ihr wiát aber auch gar 
+				 nichts ber Titel, nicht wahr? Als Majordomus ist es meine 
+				 Aufgabe, mich um die allt„glichen Angelegenheiten in der Stadt 
+				 zu kmmern, so daá die Herrin Mordea sich auf wichtigere 
+				 Dinge konzentrieren kann.");
+				askList=<<"What is a Tempest?
+					\f C'est quoi, une Tempeste?
+					\g Was ist ein Gezeitenfrst?",
+				"Tell me about Lady Mordea.
+					\f Parle-moy de Dame Mordea.
+					\g Erz„hlt mir mehr ber die Herrin Mordea.", 
+				"What more important things?
+					\f Quelles choses plus importantes?
+					\g Wichtigere Dinge?">>;
+			}
+
+			case "What is a Tempest?
+					\f C'est quoi, une Tempeste?
+					\g Was ist ein Gezeitenfrst?"
+			{
+				bark("Surely you have heard of the Tempest? Oh, I see, we are
+				just a visitor to this city, eh? Well, the Tempest is the
+				handmaiden to the Great Titan of Water Hydros.
+				
+				\f Tu as certainement entendu parler des Tempestes. Oh, je vois.
+				On est nouveau dans cette cit‚, point vrai? Eh bien, la
+				Tempeste est le bras droit du Grand Titan de l'Eau, Hydros.
+				
+				\g Ihr habt doch sicherlich schon einmal von der Gezeitenmacht 
+				geh”rt. Oh, ich verstehe, Ihr seid fremd hier in der Stadt, wie?
+				Nun, die Gezeitenfrstin Mordea ist die Dienerin der m„chtigen 
+				Wassertitanin Hydros.");
+				askList-=<<"What is a Tempest?
+					\f C'est quoi, une Tempeste?
+					\g Was ist ein Gezeitenfrst?">>;
+				askList+=<<"What are the Tempest duties?
+					\f Quels sont les devoirs d'une Tempeste?
+					\g Welche Pflichten hat ein Gezeitenfrst?", 
+					"Who is Hydros?
+					\f Qui est Hydros?
+					\g Wer ist Hydros?">>;
+			}
+
+			case "What are the Tempest duties?
+				\f Quels sont les devoirs d'une Tempeste?
+				\g Welche Pflichten hat ein Gezeitenfrst?"
+			{
+				bark("How is it we don't know about the Tempest? Are we a very 
+				busy person or perhaps a little simple-minded? Well, no matter.
+				The Tempest has the ability to touch a portion of the power of
+				Hydros.
+				
+				\f Comment se fait-il que tu ne connoisses point les Tempestes?
+				La Tempeste a l'avantage de toucher une partie
+				du pouvoir d'Hydros.
+				
+				\g Wie kann es sein, daá Ihr nichts ber Gezeitenfrsten 
+				wiát? Sind wir sehr besch„ftigt oder vielleicht nur ein biáchen 
+				einf„ltig? Nun, es ist mir gleichgltig. Ein Gezeitenfrst 
+				besitzt die F„higkeit, ber einen Teil von Hydros' Macht zu 
+				verfgen.");
+				askList-=<<"What are the Tempest duties?
+					\f Quels sont les devoirs d'une Tempeste?
+					\g Welche Pflichten hat ein Gezeitenfrst?">>;
+			}
+
+			case "Who is Hydros?
+				\f Qui est Hydros? 
+				\g Wer ist Hydros?"
+			{
+				bark("Ah, the great Water Titan, the Lurker. What ever title she
+				goes by, she is the most powerful of the Titans. The Lady Mordea 
+				can use a bit of Hydro's power to control the weather
+				and all things of water.
+				
+				\f Ah, nostre v‚n‚r‚e Titan de l'Eau, La Glauque. Quel que soit son
+				titre, elle est le Titan le plus puissant. Dame Mordea a h‚rit‚
+				d'une partie du pouvoir d'Hydros afin de controsler le temps et
+				tout ce qui touche l'eau.
+				
+				\g Ah, die m„chtige Wassertitanin, die Lauernde. Sie tr„gt verschiedene 
+				Namen, aber sie ist zweifellos die M„chtigste aller Titanen. Die 
+				Herrin Mordea kann einen kleinen Teil von Hydros' Macht dazu nutzen,
+				das Wetter und die Wasser zu kontrollieren.");
+				askList-=<<"Who is Hydros?
+						\f Qui est Hydros? 
+						\g Wer ist Hydros?">>;
+			}
+	
+			case "Tell me about Lady Mordea.
+				\f Parle-moy de Dame Mordea.
+				\g Erz„hlt mir mehr ber die Herrin Mordea."
+			{
+
+				bark("She is a wise ruler and a fierce leader, most worthy of the 
+				title, 'Tempest'. So many times people say 'This thing or
+				that thing cannot be done.' and yet she does it. Do we not
+				now have much lower crime than under the previous Tempest?
+				There is your proof!
+				
+				\f C'est une souveraine pleine de sagesse mais redoutable, 
+				qui m‚rite bien le titre de 'Tempeste'. Les exploits que
+				certains considŠrent comme impossibles ne la rebutent
+				point. D'ailleurs, nous avons bien moins de criminels
+				que sous le rŠgne pr‚c‚dent? C'est bien la preuve!
+				
+				\g Sie ist eine resolute Herrscherin und tr„gt den Titel 'Gezeitenfrstin'
+				 mit Wrde. Oft haben Zweifler gesagt, daá dies und das nicht 
+				 geschehen k”nne. Und doch hat die Herrin Mordea es trotzdem 
+				 fertiggebracht. Die Kriminalit„t in Tenebrae ist unter der Fhrung 
+				 der Herrin fast auf den Nullpunkt gesunken. Das ist der Beweis 
+				 dafr, daá Mordea eine m„chtige und weise Herrscherin ist.");
+				askList-=<<"Tell me about Lady Mordea.
+					\f Parle-moy de Dame Mordea.
+					\g Erz„hlt mir mehr ber die Herrin Mordea.">>;
+				askList+=<<"Tell me about the title 'Tempest'.
+					\f Parle-moy du titre de 'Tempeste'.
+					\g Erz„hlt mir mehr ber den Titel 'Gezeitenfrst'.">>;
+			}
+
+			case "Tell me about the title 'Tempest'.
+				\f Parle-moy du titre de 'Tempeste'.
+				\g Erz„hlt mir mehr ber den Titel 'Gezeitenfrst'."
+			{
+				bark("My, my, my. We really are a bit simple, aren't we?
+				Perhaps we've been drinking a bit too much of Orlok's
+				ale, hmmmm? Well, just to humor you, I'll refresh your
+				memory. The title of Tempest is given to the leader of the
+				city of Tenebrae. To become the Tempest, one must have been
+				born of the royal family. It is only through heredity one
+				may sit upon the throne.
+
+				\f Eh bien, eh bien... On est vraiment un peu simplet, hein?
+				Aurois-tu abus‚ de la cervoise d'Orlok, hmmmm?
+				Bon, je vais tout de mesme t'‚clairer la lanterne. La position et
+				le titre de Tempeste sont h‚r‚ditaires.
+				
+				\g Sieh mal einer an... Ihr seid wirklich ein biáchen einf„ltig, nicht
+				wahr? Vielleicht habt Ihr in letzter Zeit ein biáchen 
+				ber den Durst getrunken, hmmmm? Nun, mit Eurer Erlaubnis  
+				will ich Eurem Ged„chtnis selbstverst„ndlich auf die Sprnge helfen. 
+				Die Stellung und der Titel 'Gezeitenfrst' sind erblich.");
+				askList-=<<"Tell me about the title 'Tempest'.
+					\f Parle-moy du titre de 'Tempeste'.
+					\g Erz„hlt mir mehr ber den Titel 'Gezeitenfrst'.">>;
+				askList+=<<"Why is the Tempestry hereditary?
+					\f Pourquoi la Tempestrie est-elle h‚r‚ditaire?
+					\g Weshalb ist die Gezeitenmacht erblich?">>;
+			}
+
+			case "Why is the Tempestry hereditary?
+				\f Pourquoi la Tempestrie est-elle h‚r‚ditaire?
+				\g Weshalb ist die Gezeitenmacht erblich?"
+			{
+				bark("Because the powers that are necessary to bear the
+				title are only transferred from parent to child. Lady Mordea
+				received the power from her father. Does that
+				make things a little clearer for you?
+				
+				\f Parce que les pouvoirs n‚cessaires pour porter
+				ce titre sont transmis de parent … enfant. Dame Mordea a re‡u
+				le pouvoir de son pŠre. Voil…, tu comprends un peu mieux, ainsy?
+				
+				\g Der Titel setzt eine Macht voraus, die nur von einem Elternteil an sein
+				Kind vererbt wird. Die Herrin Mordea hat diese Macht von ihrem Vater erhalten. 
+				Nun, sind wir jetzt nicht mehr ganz so verwirrt?");
+				askList-=<<"Why is the Tempestry hereditary?
+					\f Pourquoi la Tempestrie est-elle h‚r‚ditaire?
+					\g Weshalb ist die Gezeitenmacht erblich?">>;
+				askList+=<<"Who was Lady Mordea's father?
+					\f Qui estoit le pŠre de Mordea?
+					\g Wer war der Vater der Herrin Mordea?">>;
+			}
+
+			case "Who was Lady Mordea's father?
+				\f Qui estoit le pŠre de Mordea?
+				\g Wer war der Vater der Herrin Mordea?"
+			{
+
+				bark("Didn't you learn anything as a child? Lord Keldan was
+				Lady Mordea's father! And might I add that Lady Mordea is
+				twice the Tempest Lord Keldan ever was. Why, if it
+				weren't for his wife's encouragement, he would never have admitted
+				his powers and assumed the title of Tempest, and then
+				where would we be?
+				
+				\f On ne t'a donc jamais rien appris? Lord Keldan estoit le pŠre
+				de Dame Mordea! Et dois-je ajouter que Dame Mordea est doublement
+				plus Tempeste que ne l'estoit Lord Keldan? Sans les encouragements 
+				de sa femme, il n'auroit sans doute jamais voulu assumer son
+				titre de Tempeste. Et que seroit-il advenu de nous?
+				
+				\g Haben wir denn als Kind gar nichts gelernt? Lord Keldan war 
+				der Vater der Herrin Mordea! Und ich m”chte hinzufgen, daá die 
+				Herrin Mordea die Macht ihres Vaters, des Gezeitenfrsten Keldan, 
+				um das Zweifache bertrifft. Nur auf das Zureden seiner Frau hin 
+				bekannte er sich zu seinen F„higkeiten und nahm den Titel des 
+				Gezeitenfrsten an. Wo w„ren wir heute, wenn er das nicht getan h„tte?");
+				askList-=<<"Who was Lady Mordea's father?
+					\f Qui estoit le pŠre de Mordea?
+					\g Wer war der Vater der Herrin Mordea?">>;
+			}
+
+			case "What more important things?
+				\f Quelles choses plus importantes?
+				\g Wichtigere Dinge?"
+			{
+				bark("Well, if it were to be common knowledge what the Tempest
+				does, then there would be no mystery...no majestic 
+				mystique, hmmm?
+				
+				\f Si tout le monde savoit ce que fait la Tempeste, il n'y auroit
+				plus de mystŠre... plus d'aura mystique, hmmmm?
+				
+				\g Nun, wenn jeder wáte, was Gezeitenfrsten tun, dann g„be 
+				es kein Geheimnis mehr... kein k”nigliches Geheimnis. Stimmts? ");
+				askList-=<<"What more important things?
+					\f Quelles choses plus importantes?
+					\g Wichtigere Dinge?">>;
+			}
+
+			case "What do you know about Bentic?
+				\f Que sais-tu sur Bentic?
+				\g Was wiát Ihr ber Bentic?"
+			{
+				bark("That knave! He was conducting forbidden research. Why
+				I am pleased we took care of him when we did. Nipped that
+				problem right in the bud, we did.
+				
+				\f Ce fripon! Il avoit entrepris des recherches interdites.
+				Je suis bien content qu'on se soit charg‚ de luy … temps.
+				On a tu‚ le serpent dans l'oeuf.
+				
+				\g Ein Halunke! Er wagte es, verbotene Forschungen anzustellen. 
+				Nun, ich freue mich sehr, daá wir auf diese Weise mit ihm 
+				fertiggeworden sind. Wir haben die Rebellion sofort im Keim 
+				erstickt, jawohl, das haben wir.");
+				askList-=<<"What do you know about Bentic?
+					\f Que sais-tu de Bentic?
+					\g Was wiát Ihr ber Bentic?">>;
+				askList=<<"You 'took care of him?'
+					\f Vous vous estes 'charg‚s de luy'?
+					\g Ihr seid mit ihm fertiggeworden?", 
+				"What is 'forbidden research'?
+					\f Qu'appelez-vous des recherches interdites?
+					\g Was meint Ihr mit verbotenen Forschungen?">>;
+			}
+
+			case "You 'took care of him?'
+				\f Vous vous estes 'charg‚s de luy'?
+				\g Ihr seid mit ihm fertiggeworden?"
+			{
+				bark("He was executed, of course.
+					\f Il a ‚t‚ ex‚cut‚, bien s–r.
+					\g Ja, wir haben ihn selbstverst„ndlich hingerichtet.");
+				askList-=<<"You 'took care of him?'
+				\f Vous vous estes 'charg‚s de luy'?
+				\g Ihr seid mit ihm fertiggeworden?">>;
+				askList=<<"Executed?! \f Ex‚cut‚?! \g Hingerichtet?!">>;
+			}
+		
+			case "Executed?! \f Ex‚cut‚?! \g Hingerichtet?!"
+			{
+				bark("Yes, on the docks. Oh, it is the best way.
+				And we do it on the docks so that the site is easily washed
+				down. No mess, no fuss. It is my job to schedule the 
+				executions. I keep records of all executions in my log
+				book.
+				
+				\f Oui, sur le ponton. Oh, c'est la meilleure m‚thode.
+				Et on le fait … cet endroit car le nettoyage y est plus ais‚. 
+				Propre et rapide. Impeccable. C'est moy qui organise
+				les ex‚cutions. Je les note toutes dans mon registre.
+				
+				\g Ja natrlich, unten am Hafen auf dem Bootssteg. Oh, das ist die allerbeste 
+				Methode. Wir machen es auf dem Steg, weil man dort alles leicht 
+				abwaschen kann. Keine Schweinereinen und so, Ihr versteht schon. Es ist meine Aufgabe, die
+				Hinrichtungstermine anzusetzen. Ich schreibe alle Hinrichtungen 
+				in meinem Terminbuch auf.");
+				askList-=<<"Executed?! \f Ex‚cut‚?! \g Hingerichtet?!">>;
+				askList+=<<"What do you mean the 'best way'?
+					\f Que veux-tu dire par 'meilleure m‚thode'?
+					\g Was meint Ihr mit 'beste Methode?'",
+
+				"What log book?
+					\f Quel registre?
+					\g Terminbuch?">>;
+			}
+
+
+			case "What log book?
+				\f Quel registre?
+				\g Terminbuch?"
+			{
+				bark("Why, my log book. I have to keep records of
+				these sorts of things, you know. Why, how else would we
+				keep track of expenses and such? Lady Mordea requires
+				a full accounting of these things. It's all part of the
+				thankless job of the seneschal. But that's all right,
+				just knowing that I've done my job to the best
+				of my ability is all the reward I need. 
+				\f Euh... Mon registre, pardi! Il faut que je tienne … jour
+				toutes les d‚penses. Dame Mordea exige de voir les comptes
+				… jour. Cela fait partie des tƒches ingrates d'un s‚n‚chal.
+				Rien que de savoir que je fais mon devoir consciencieusement
+				m'apporte grande satisfaction.
+				\g Ich fhre das Terminbuch nur zu diesem Zweck. Wir mssen 
+				schlieálich ber unsere Unkosten Buch fhren. Die Herrin Mordea 
+				verlangt, daá ich alles bis auf den letzten Obsidian abrechne. Das geh”rt 
+				alles zur undankbaren Arbeit eines Majordomus. Aber ich will mich 
+				nicht beschweren. Ich weiá, daá ich meine Arbeit gut mache, und	
+				das ist der sch”nste Lohn, den man sich nur wnschen kann.");
+				askList-=<<"What log book?
+					\f Quel registre?
+					\g Terminbuch?">>;
+			}
+
+			case "What do you mean the 'best way'?
+					\f Que veux-tu dire par 'meilleure m‚thode'?
+					\g Was meint Ihr mit 'beste Methode?'"
+			{
+				bark("The quicker the better. Can't have prisoners
+				cluttering up the jails, costing the taxpayers' money.
+				This way we keep costs down and add a serious deterrent
+				to those who might be thinking of breaking the law.
+				
+				\f Le plus vite, c'est le mieux. Je ne peux point me permettre 
+				d'avoir des prisonniers qui encombrent les cellules, d‚pensant
+				ainsy les deniers du contribuable. De cette maniŠre, nous limitons
+				les d‚penses et d‚courageons ceux qui envisageroient d'enfreindre la loy.
+				
+				\g Je schneller, desto besser. Wir wollen schlieálich nicht, daá 
+				die Verbrecher die Gef„ngnisse berfllen und dem Steuerzahler viel 
+				Geld kosten. Auf diese Weise k”nnen wir Geld einsparen und die Leute
+				 abschrecken, die sich mit dem Gedanken tragen, das Gesetz zu brechen.");
+				askList-=<<"What do you mean the 'best way'?
+					\f Que veux-tu dire par 'meilleure m‚thode'?
+					\g Was meint Ihr mit 'beste Methode?'">>;
+			}
+
+			case "What is 'forbidden research'?
+				\f Qu'appelez-vous des recherches interdites?
+				\g Was meint Ihr mit verbotenen Forschungen?"
+			{
+				bark("If I told you what research was forbidden, then I'd just
+				be encouraging you, wouldn't I, hmmmm?
+				
+				\f Si je te disois que certaines recherches sont interdites, je t'encouragerois
+				… en faire, n'est-ce point, hmmmm?
+				
+				\g Wenn ich berall rumerz„hlen wrde, welche Forschungen verboten sind, dann 
+				wrde ich das Gelehrtengesindel ja nur ermutigen, nicht wahr?");
+				askList-=<<"What is 'forbidden research'?
+					\f Qu'appelez-vous des recherches interdites?
+					\g Was meint Ihr mit verbotenen Forschungen?">>;
+			}
+
+			case "What do you know about Devon?
+				\f Que sais-tu sur Devon?
+				\g Was wiát Ihr ber Devon?"
+			{
+				bark("That trouble maker. Well, he will be taken care of, and
+				well he deserves it.
+				
+				\f Ce fauteur de troubles. Eh bien, on va s'en charger, et il l'aura
+				bien cherch‚.
+				
+				\g Ein aufs„ssiger Mann. Aber wir werden auch mit ihm fertigwerden. 
+				Er hat es verdient.");
+				askList-=<<"What do you know about Devon?
+					\f Que sais-tu sur Devon?
+					\g Was wiát Ihr ber Devon?">>;
+				askList+=<<"What are the charges?
+					\f De quoi est-il accus‚?
+					\g Wie lautet die Anklage?">>;
+			}
+
+			case "What are the charges?
+					\f De quoi est-il accus‚? 
+					\g Wie lautet die Anklage?"
+			{
+				bark("That is privileged information. It will be
+				revealed at the execution. Good heavens, it's almost
+				time. Oh, and there is -so- much to do before
+				an execution. Arrange for the clean up crew, make
+				sure Shaana's axe is sharpened...I've enjoyed our
+				little talk, but I must leave now. Good day.
+				
+				\f C'est une information confidentielle. Elle sera r‚v‚l‚e lors
+				de l'ex‚cution. Juste ciel, il est presque l'heur! Oh, et il
+				y a -tant- … faire avant une ex‚cution. Organiser les ‚quipes de
+				nettoyage, s'assurer que la hache de Shaana soit bien aiguis‚e...
+				J'ai trouv‚ nostre petite conversation fort plaisante, mais je dois
+				partir, maintenant. Bonne journ‚e.
+				
+				\g Das sind Informationen, die wir ja nun wirklich nicht jedem 
+				Dahergelaufenen ins ™hrchen flstern k”nnen, nicht wahr? So etwas 
+				erf„hrt man bei der Hinrichtung, genau wie der Angeklagte, und 
+				das ist frh genug. Du lieber Himmel, es ist 
+				schon fast soweit. Und es gibt noch so viel zu tun: Den Putzdienst 
+				in Bereitschaft rufen, Shaanas Axt sch„rfen... Nun, es war nett, mit Euch 
+				zu plaudern, aber ich muá jetzt gehen. Auf Wiedersehen.");
+				exitConvo();
+				return;
+			}
+
+			case "I would like to speak with you.
+				\f J'aimerois te parler.
+				\g Ich m”chte Euch sprechen."
+			{
+				bark("Well, have we learned our manners?
+					\f Eh bien, a-t-on appris … estre plus civil?
+					\g Nun, haben wir mittlerweile unsere Manieren gebessert?");
+				askList=<<"yes, sir \f oui, sire \g Ja, mein Herr.", "no \f non \g Nein.">>;
+			}
+
+			case "yes, sir \f oui, sire \g Ja, mein Herr."
+			{
+				bark("Well, that's a little more like it. Perhaps there is
+				some hope for us after all, hmmmm? Now, what can I do for
+				you?
+				
+				\f Ah, j'aime mieux ‡a. Il y a peut-estre un peu d'espoir aprŠs tout, hmmmm?
+				Bon, que puis-je faire pour toy?
+				
+				\g Nun, das gef„llt mir schon eher. Vielleicht gibt es doch noch einen 
+				Funken Hoffnung fr gewisse Landeier, hmmmm? Haben wir denn ganz, 
+				ganz viele Fragen, ja?");
+				salkindPissed = false;
+				askList-=<<"yes, sir \f oui, sire \g Ja, mein Herr.", "no \f non \g Nein.">>;
+				askList+=<<"What do you do?
+						\f Que fais-tu? 
+						\g Was ist Euer Beruf?">>;
+			}
+
+			case "no \f non \g Nein."
+			{
+				bark("Don't toy with me! I won't stand for it!
+					\f Ne te fiche point de moy! Je ne le tol‚reroi point!
+					\g Gewisse Leute sollten besser gut aufpassen, daá niemand sie 
+					zu Kleinholz verarbeitet! Verschwindet!");
+				exitConvo();
+				bark ("Swine! \f Pourceau! \g Schwein!");
+				return;
+			}
+
+			default
+			{
+				ran = random(3);
+				switch ran 
+				{
+					case 0 
+					{
+						bark ("Farewell. \f Adieu, va. \g Lebt wohl.");
+					}
+					case 1 
+					{
+						bark ("Good day to you, stranger.
+								\f Bonne journ‚e … toy, estranger.
+								\g Einen sch”nen Tag wnsche ich Euch, Fremder.");
+					}
+					case 2 
+					{
+						bark ("Until we meet again. 
+							\f A la revoyure.
+							\g Auf Wiedersehen.");
+					}
+				}
+				exitConvo();
+				return;
+			}
+		}
+	}
+	exitConvo();
+}
+
