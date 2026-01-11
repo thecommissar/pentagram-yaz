@@ -27,6 +27,7 @@ jobs:
             autoconf
             automake
             libtool
+            perl
 
       - name: Bootstrap
         run: ./bootstrap
