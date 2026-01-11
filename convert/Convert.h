@@ -949,7 +949,6 @@ Node *ConvertUsecode::readOpGeneric(IDataSource *ucfile, uint32 &dbg_symbol_offs
 				uint32 elemCount = read1(ucfile);
 				n = new ListLiteralNode(opcode, offset, elemSize, elemCount);
 			}
-			n = new CreateListNode(opcode, offset, read1(ucfile));
 			break;
 		case 0x10: // call
 			n = new DCCallNode(opcode, offset, read2(ucfile));
