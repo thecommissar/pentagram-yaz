@@ -227,7 +227,7 @@ static bool readflagsfile(const std::string &flagsfile)
 			continue;
 
 		string name = line.substr(name_start, pos - name_start);
-		uint32 size = 1;
+		uint32 size_bits = 1;
 
 		while (pos < line.size() && std::isspace(static_cast<unsigned char>(line[pos])))
 			++pos;
@@ -241,16 +241,20 @@ static bool readflagsfile(const std::string &flagsfile)
 			char *num_end = 0;
 			unsigned long parsed = std::strtoul(num_start, &num_end, 10);
 			if (num_end != num_start && parsed > 0)
-				size = static_cast<uint32>(parsed);
+				size_bits = static_cast<uint32>(parsed);
 		}
+
+		uint32 size_bytes = (size_bits + 7) / 8;
+		if (size_bytes == 0)
+			size_bytes = 1;
 
 		std::map<uint32, GlobalName>::iterator existing = GlobalNames.find(offset);
 		if (existing == GlobalNames.end())
-			GlobalNames[offset] = GlobalName(offset, size, name);
+			GlobalNames[offset] = GlobalName(offset, size_bytes, name);
 		else if (existing->second.name.empty())
 			existing->second.name = name;
 
-		offset += size;
+		offset += size_bytes;
 	}
 
 	return true;
