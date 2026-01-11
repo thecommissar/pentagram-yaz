@@ -29,6 +29,7 @@ jobs:
             libtool
             perl
             make
+            mingw-w64-x86_64-make
             flex
             bison
             m4
