@@ -516,11 +516,13 @@ void DCCallNode::print_asm(Console &o) const
 				}
 				Node::print_asm(o);
 				o.Printf("calli\t\t%02Xh %04Xh", spsize, intrinsic);
+				if (!crusader && convert->intrinsics()[intrinsic]) {
+					o.Printf(" (%s)", convert->intrinsics()[intrinsic]);
+				}
 				for(std::list<DCCallPostfixNode *>::const_reverse_iterator i=freenodes.rbegin(); i!=freenodes.rend(); ++i)
 				{
 					o.Putchar('\n'); (*i)->print_asm(o);
 				}
-				//FIXME: o.Printf(" (%s)", convert->intrinsics()[op.i1]);
 				if(addSP!=0)
 				{
 					o.Putchar('\n');

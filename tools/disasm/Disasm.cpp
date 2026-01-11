@@ -351,7 +351,12 @@ void just_print(TempOp &op, IDataSource *ucfile)
 
 		// Usecode function and intrinsic calls
 		case 0x0F:
-			con_Printf("calli\t\t%02Xh %04Xh (%s)", op.i0, op.i1, convert->intrinsics()[op.i1]);
+			if (convert->intrinsics()[op.i1]) {
+				con_Printf("calli\t\t%02Xh %04Xh (%s)", op.i0, op.i1,
+					convert->intrinsics()[op.i1]);
+			} else {
+				con_Printf("calli\t\t%02Xh %04Xh", op.i0, op.i1);
+			}
 			break;
 		case 0x11:
 			con_Printf("call\t\t%04X:%04X (%s)", op.i0, op.i1,
