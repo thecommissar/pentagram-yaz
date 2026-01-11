@@ -28,6 +28,18 @@ jobs:
             automake
             libtool
             perl
+            make
+
+      - name: Bootstrap
+        shell: msys2 {0}
+        run: ./bootstrap
+
+      - name: Configure
+        shell: msys2 {0}
+        run: ./configure
+
+      - name: Build fold and disasm
+        shell: msys2 {0}
 
       - name: Bootstrap
         run: ./bootstrap
