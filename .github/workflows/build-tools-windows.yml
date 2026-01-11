@@ -45,6 +45,14 @@ jobs:
 
       - name: Build fold and disasm
         shell: msys2 {0}
+
+      - name: Bootstrap
+        run: ./bootstrap
+
+      - name: Configure
+        run: ./configure
+
+      - name: Build fold and disasm
         run: make fold disasm
 
       - name: Upload artifacts
