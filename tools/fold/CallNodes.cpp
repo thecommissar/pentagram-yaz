@@ -23,10 +23,7 @@
 #include "CallNodes.h"
 #include "Folder.h"
 #include "VarNodes.h"
-
 #include <cstdio>
-
-extern ConvertUsecode *convert;
 
 static std::string format_function_name(const uint32 uclass, const uint32 targetOffset)
 {
@@ -44,25 +41,9 @@ static std::string format_function_name(const uint32 uclass, const uint32 target
 
 static std::string format_intrinsic_name(const uint32 intrinsic)
 {
-	if(convert==0)
-	{
-		char buf[16];
-		snprintf(buf, sizeof(buf), "Intrinsic%04X", intrinsic);
-		return buf;
-	}
-	std::string name = convert->intrinsics()[intrinsic];
-	if(name.find("process ") == 0)
-		name = name.substr(8);
-	else
-	{
-		std::string::size_type pos = name.find(' ');
-		if(pos != std::string::npos)
-			name = name.substr(pos + 1);
-	}
-	std::string::size_type params = name.find('(');
-	if(params != std::string::npos)
-		name = name.substr(0, params);
-	return name;
+	char buf[16];
+	snprintf(buf, sizeof(buf), "Intrinsic%04X", intrinsic);
+	return buf;
 }
 
 // FIXME: Fix this
@@ -559,9 +540,6 @@ void DCCallNode::print_asm(Console &o) const
 				}
 				Node::print_asm(o);
 				o.Printf("calli\t\t%02Xh %04Xh", spsize, intrinsic);
-				if (!crusader && convert->intrinsics()[intrinsic]) {
-					o.Printf(" (%s)", convert->intrinsics()[intrinsic]);
-				}
 				for(std::list<DCCallPostfixNode *>::const_reverse_iterator i=freenodes.rbegin(); i!=freenodes.rend(); ++i)
 				{
 					o.Putchar('\n'); (*i)->print_asm(o);
@@ -606,16 +584,21 @@ void DCCallNode::print_asm(Console &o) const
 			{
 				for(std::deque<Node *>::const_reverse_iterator i=pnode.rbegin(); i!=pnode.rend(); ++i)
 				{
-					(*i)->print_bin(o);
+					(*i)->print_asm(o);
+					o.Putchar('\n');
 				}
-				o.write1(0x10);
-				o.write2(targetOffset);
+				Node::print_asm(o);
+				o.Printf("call\t\t%04X", targetOffset);
 				if(addSP!=0)
-					addSP->print_bin(o);
+				{
+					o.Putchar('\n');
+					addSP->print_asm(o);
+				}
 				if(rtype()!=Type::T_VOID)
 				{
 					assert(retVal!=0);
-					retVal->print_bin(o);
+					o.Putchar('\n');
+					retVal->print_asm(o);
 				}
 				break;
 			}
@@ -677,6 +660,23 @@ void DCCallNode::print_bin(ODequeDataSource &o) const
 				}
 				o.write1(0x11);
 				o.write2(uclass);
+				o.write2(targetOffset);
+				if(addSP!=0)
+					addSP->print_bin(o);
+				if(rtype()!=Type::T_VOID)
+				{
+					assert(retVal!=0);
+					retVal->print_bin(o);
+				}
+				break;
+			}
+		case CALL_LOCAL:
+			{
+				for(std::deque<Node *>::const_reverse_iterator i=pnode.rbegin(); i!=pnode.rend(); ++i)
+				{
+					(*i)->print_bin(o);
+				}
+				o.write1(0x10);
 				o.write2(targetOffset);
 				if(addSP!=0)
 					addSP->print_bin(o);
