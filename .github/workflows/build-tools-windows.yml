@@ -29,6 +29,10 @@ jobs:
             libtool
             perl
             make
+            flex
+            bison
+            m4
+            pkgconf
 
       - name: Bootstrap
         shell: msys2 {0}

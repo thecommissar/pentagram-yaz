@@ -23,6 +23,12 @@
 #include "CallNodes.h"
 #include "Folder.h"
 #include "VarNodes.h"
+#include <sstream>
+#include <iomanip>
+#include <cstdio>
+
+extern const char *const *fold_intrinsics();
+
 #include <cstdio>
 
 static std::string format_function_name(const uint32 uclass, const uint32 targetOffset)
