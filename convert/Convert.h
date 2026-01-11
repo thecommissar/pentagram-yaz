@@ -24,6 +24,10 @@
 #include "Console.h"
 #include <vector>
 #include <string>
+#include <map>
+#include <fstream>
+#include <cstdlib>
+#include <cstring>
 #include "GenericNodes.h"
 #include "LoopScriptNodes.h"
 
@@ -59,11 +63,13 @@ class ConvertUsecode
 		Node *readOpGeneric(IDataSource *ucfile, uint32 &dbg_symbol_offset, std::vector<DebugSymbol> &debugSymbols,
 			bool &done, const bool crusader);
 		void printDbgSymbols(std::vector<DebugSymbol> &debugSymbols);
+		bool LoadUsecodeClassNames(const std::string &path);
 		
 		std::string UsecodeFunctionAddressToString(const sint32 uclass, const sint32 coffset, IDataSource *ucfile, const bool crusader);
 	
 	private:
 		static const uint32 MAX_UCFUNC_NAMELEN = 256; // max usecode function name length
+		std::map<sint32, std::string> usecodeClassNames;
 };
 
 /* This needs to go into Convert*Crusader only too */
@@ -108,6 +114,67 @@ void printbytes(IDataSource *f, uint32 num)
 		con.Printf("%02X %c ", c, std::isprint(c) ? c : '.');
 		--num;
 	}
+}
+
+bool ConvertUsecode::LoadUsecodeClassNames(const std::string &path)
+{
+	usecodeClassNames.clear();
+
+	std::ifstream file(path.c_str());
+	if (!file)
+		return false;
+
+	std::string line;
+	if (!std::getline(file, line))
+		return false;
+
+	while (std::getline(file, line))
+	{
+		if (!line.empty() && line[line.size() - 1] == '\r')
+			line.erase(line.size() - 1);
+
+		std::vector<std::string> fields;
+		std::string field;
+		bool in_quotes = false;
+		for (size_t i = 0; i < line.size(); ++i)
+		{
+			char c = line[i];
+			if (c == '"')
+			{
+				if (in_quotes && i + 1 < line.size() && line[i + 1] == '"')
+				{
+					field.push_back('"');
+					++i;
+				}
+				else
+				{
+					in_quotes = !in_quotes;
+				}
+			}
+			else if (c == ',' && !in_quotes)
+			{
+				fields.push_back(field);
+				field.clear();
+			}
+			else
+			{
+				field.push_back(c);
+			}
+		}
+		fields.push_back(field);
+
+		if (fields.size() < 3)
+			continue;
+
+		char *endptr = 0;
+		long class_id = std::strtol(fields[0].c_str(), &endptr, 10);
+		if (endptr == fields[0].c_str())
+			continue;
+
+		usecodeClassNames[static_cast<sint32>(class_id)] = fields[2];
+	}
+
+	return !usecodeClassNames.empty();
 }
 
 /* This needs to be shuffled into two different readOp() functions, one in Convert*Crusader, and
@@ -1056,7 +1123,19 @@ std::string ConvertUsecode::UsecodeFunctionAddressToString(const sint32 uclass, 
 	ucfile->seek(origpos);
 
 	// Couldn't get name, just use number
-	if (!buf[0]) snprintf(buf, MAX_UCFUNC_NAMELEN, "%04X", uclass);
+	if (!buf[0])
+	{
+		std::map<sint32, std::string>::const_iterator it = usecodeClassNames.find(uclass);
+		if (it != usecodeClassNames.end())
+		{
+			std::strncpy(buf, it->second.c_str(), MAX_UCFUNC_NAMELEN - 1);
+			buf[MAX_UCFUNC_NAMELEN - 1] = '\0';
+		}
+		else
+		{
+			snprintf(buf, MAX_UCFUNC_NAMELEN, "%04X", uclass);
+		}
+	}
 
 	// String to return
 	std::string str = buf;
