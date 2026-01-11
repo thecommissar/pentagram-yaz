@@ -22,6 +22,7 @@
 
 #include <fstream>
 #include <cstdio>
+#include <cstdlib>
 
 #include <map>
 using	std::map;
@@ -41,6 +42,7 @@ using	std::string;
 #include "IDataSource.h"
 #include "FileSystem.h"
 #include "util.h"
+#include "tools/disasm/GlobalNames.h"
 
 // define to drop debugging output everywhere
 //#define DISASM_DEBUG
@@ -165,18 +167,6 @@ ConvertUsecode *convert = new ConvertUsecodeU8();
 void printoverloads(IDataSource *ucfile, uint32 endpos);
 
 
-class GlobalName
-{
-	public:
-		GlobalName(const uint32 _offset=0, const uint32 _size=0,
-			const string _name=string())
-		: offset(_offset), size(_size), name(_name) {};
-
-		uint32	offset; //the offset into the char[]
-		uint32	size; //the number of bytes stored in the global
-		string	name; //the name of the global
-};
-
 /* Additional note: The maximum size of the globals array would be 64k. */
 map<uint32, GlobalName> GlobalNames;
 
@@ -185,11 +175,91 @@ map<string, string> FuncNames;
 string	gamelanguage;
 string	gametype;
 string	outputdir;
+string	flagsfile;
 string	classmap_path;
 bool	print_globals=false;
 bool	strings_only=false;
 
 bool crusader=false;
+
+static inline void trim_whitespace(string &line)
+{
+	while (!line.empty() && std::isspace(static_cast<unsigned char>(line[0])))
+		line.erase(0, 1);
+	while (!line.empty() && std::isspace(static_cast<unsigned char>(line[line.size() - 1])))
+		line.erase(line.size() - 1, 1);
+}
+
+static bool readflagsfile(const std::string &flagsfile)
+{
+	std::ifstream file(flagsfile.c_str());
+	if (!file)
+		return false;
+
+	uint32 offset = 0;
+	string line;
+	while (std::getline(file, line))
+	{
+		size_t comment = line.find("//");
+		if (comment != string::npos)
+			line.erase(comment);
+
+		trim_whitespace(line);
+		if (line.empty())
+			continue;
+
+		if (line.compare(0, 10, "globalflag") != 0)
+			continue;
+
+		size_t pos = 10;
+		while (pos < line.size() && std::isspace(static_cast<unsigned char>(line[pos])))
+			++pos;
+
+		size_t name_start = pos;
+		while (pos < line.size())
+		{
+			char c = line[pos];
+			if (!std::isalnum(static_cast<unsigned char>(c)) && c != '_')
+				break;
+			++pos;
+		}
+
+		if (pos == name_start)
+			continue;
+
+		string name = line.substr(name_start, pos - name_start);
+		uint32 size_bits = 1;
+
+		while (pos < line.size() && std::isspace(static_cast<unsigned char>(line[pos])))
+			++pos;
+
+		if (pos < line.size() && line[pos] == ':')
+		{
+			++pos;
+			while (pos < line.size() && std::isspace(static_cast<unsigned char>(line[pos])))
+				++pos;
+			const char *num_start = line.c_str() + pos;
+			char *num_end = 0;
+			unsigned long parsed = std::strtoul(num_start, &num_end, 10);
+			if (num_end != num_start && parsed > 0)
+				size_bits = static_cast<uint32>(parsed);
+		}
+
+		uint32 size_bytes = (size_bits + 7) / 8;
+		if (size_bytes == 0)
+			size_bytes = 1;
+
+		std::map<uint32, GlobalName>::iterator existing = GlobalNames.find(offset);
+		if (existing == GlobalNames.end())
+			GlobalNames[offset] = GlobalName(offset, size_bytes, name);
+		else if (existing->second.name.empty())
+			existing->second.name = name;
+
+		offset += size_bytes;
+	}
+
+	return true;
+}
 
 void readglobals(IDataSource *ucfile)
 {
@@ -526,13 +596,25 @@ void just_print(TempOp &op, IDataSource *ucfile)
 			break;
 
 		case 0x4E:
-			con_Printf("push\t\tglobal [%04X %02X] (%s)", op.i0, op.i1,
-				GlobalNames[op.i0].name.c_str());
+		{
+			const GlobalName *global = findGlobalName(op.i0);
+			if (global && !global->name.empty())
+				con_Printf("push\t\tglobal [%04X %02X] (%s)", op.i0, op.i1,
+					global->name.c_str());
+			else
+				con_Printf("push\t\tglobal [%04X %02X]", op.i0, op.i1);
 			break;
+		}
 		case 0x4F:
-			con_Printf("pop\t\tglobal [%04X %02X] (%s)", op.i0, op.i1,
-				GlobalNames[op.i0].name.c_str());
+		{
+			const GlobalName *global = findGlobalName(op.i0);
+			if (global && !global->name.empty())
+				con_Printf("pop\t\tglobal [%04X %02X] (%s)", op.i0, op.i1,
+					global->name.c_str());
+			else
+				con_Printf("pop\t\tglobal [%04X %02X]", op.i0, op.i1);
 			break;
+		}
 
 		case 0x50:
 			con_Printf("ret");
@@ -749,11 +831,12 @@ void readfunctionnames(void)
 int main(int argc, char **argv)
 {
 	if (argc < 3) {
+		perr << "Usage: " << argv[0] << " <file> [<function number>|-a] {--game [u8|crusader]} {--lang [english|german|french|japanese]} {--odir <directory>} {--flags <file>}" << endl;
 		perr << "Usage: " << argv[0] << " <file> [<function number>|-a] {--game [u8|crusader]} {--lang [english|german|french|japanese]} {--odir <directory>} {--classmap <path>}" << endl;
 		perr << "or" << endl;
 		perr << "Usage: " << argv[0] << " <file> -l" << endl;
 		perr << "or" << endl;
-		perr << "Usage: " << argv[0] << " <file> --globals {--game [u8|crusader]}" << endl;
+		perr << "Usage: " << argv[0] << " <file> --globals {--game [u8|crusader]} {--flags <file>}" << endl;
 		// Overload Table
 		perr << "or" << endl;
 		perr << "Usage: " << argv[0] << " <file> -overload" << endl;
@@ -767,6 +850,7 @@ int main(int argc, char **argv)
 	parameters.declare("--lang",    &gamelanguage,  "unknown");
 	parameters.declare("--game",    &gametype,      "none");
 	parameters.declare("--odir",    &outputdir,     "");
+	parameters.declare("--flags",   &flagsfile,     "Shericode/UNK files/FLAGS.UNK");
 	parameters.declare("--classmap", &classmap_path, "");
 	parameters.declare("--globals", &print_globals, true);
 	#ifdef FOLD
@@ -943,6 +1027,8 @@ int main(int argc, char **argv)
 	pout << std::hex;
 
 	readglobals(ucfile);
+	if (!flagsfile.empty() && !readflagsfile(flagsfile))
+		perr << "Warning: could not read flags file \"" << flagsfile << "\"" << std::endl;
 
 	if(print_globals)
 		printglobals();
