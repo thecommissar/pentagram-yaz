@@ -33,9 +33,10 @@ class FuncMutatorNode : public Node
 			: Node(opcode, offset, Type(Type::T_INVALID)),
 			_initsize(newValue1), _linenum(newValue1)
 			{
-				assert(acceptOp(opcode, 0x5A, 0x5B));
+				assert(acceptOp(opcode, 0x5A, 0x5B) || acceptOp(opcode, 0x00));
 				switch(opcode)
 				{
+					case 0x00: mtype = INIT; break;
 					case 0x5A: mtype = INIT; break;
 					case 0x5B: mtype = LINE_NUMBER; break;
 					default: assert(false);
@@ -52,10 +53,11 @@ class FuncMutatorNode : public Node
 		FuncMutatorNode(const uint32 opcode, const uint32 offset)
 			: Node(opcode, offset, Type(Type::T_INVALID))
 			{
-				assert(acceptOp(opcode, 0x50, 0x53, 0x7A));
+				assert(acceptOp(opcode, 0x50, 0x53, 0x7A) || acceptOp(opcode, 0x3A));
 				switch(opcode)
 				{
 					case 0x50: mtype = RET; break;
+					case 0x3A: mtype = RET; break;
 					case 0x53: mtype = SUSPEND; break;
 					case 0x7A: mtype = END; break;
 					default: assert(false);
@@ -147,6 +149,22 @@ class DCFuncNode : public ColNode
 		void fold_ret(DCUnit *unit, std::deque<Node *> &nodes);
 		void fold_setinfo(DCUnit *unit, std::deque<Node *> &nodes);
 		void fold_procexclude(DCUnit *unit, std::deque<Node *> &nodes);
+};
+
+class SayNode : public UniNode
+{
+	public:
+		SayNode(const uint32 opcode, const uint32 offset)
+			: UniNode(opcode, offset, Type(Type::T_VOID))
+		{
+			assert(acceptOp(opcode, 0x38));
+		}
+		~SayNode() {};
+
+		void print_unk(Console &o, const uint32 isize) const;
+		void print_asm(Console &o) const;
+		void print_bin(ODequeDataSource &o) const;
+		bool fold(DCUnit *unit, std::deque<Node *> &nodes);
 };
 
 #endif

@@ -89,12 +89,15 @@ void AddFreeToDCCallNode(DCCallPostfixNode *cpn, Node *node)
 
 bool DCCallPostfixNode::fold(DCUnit *unit, std::deque<Node *> &nodes)
 {
-	if(acceptOp(nodes.back()->opcode(), 0x0F, 0x11, 0x57))
+	if(acceptOp(nodes.back()->opcode(), 0x0F, 0x11, 0x57) || acceptOp(nodes.back()->opcode(), 0x10))
 	{
 		switch(ptype)
 		{
 			case PUSH_RETVAL: PushRetValToDCCallNode(this, nodes.back()); break;
-			case FREESTR: AddFreeToDCCallNode(this, nodes.back()); break;
+			case FREESTR:
+			case FREESLIST:
+				AddFreeToDCCallNode(this, nodes.back());
+				break;
 			case ADDSP: AddSpToDCCallNode(this, nodes.back()); break;
 			default: assert(print_assert(this));
 		}
@@ -122,6 +125,10 @@ void DCCallPostfixNode::print_unk(Console &o, const uint32 /*isize*/, const bool
 			assert(rtype().type()==Type::T_INVALID);
 			o.Printf("free_str_NOPRINT(%s)", suc::print_sp(sp));
 			break;
+		case FREESLIST:
+			assert(rtype().type()==Type::T_INVALID);
+			o.Printf("free_slist_NOPRINT(%s)", suc::print_sp(sp));
+			break;
 		case ADDSP:
 			assert(rtype().type()==Type::T_INVALID);
 			o.Printf("addsp_NOPRINT(0x%s%02X)", sp>0x7F?"-":"", sp>0x7F?0x100-sp:sp);
@@ -148,6 +155,10 @@ void DCCallPostfixNode::print_asm(Console &o) const
 			assert(rtype().type()==Type::T_INVALID);
 			o.Printf("free string\t%s", suc::print_sp(sp));
 			break;
+		case FREESLIST:
+			assert(rtype().type()==Type::T_INVALID);
+			o.Printf("free slist\t%s", suc::print_sp(sp));
+			break;
 		case ADDSP:
 			assert(rtype().type()==Type::T_INVALID);
 			o.Printf("add sp\t\t%s%02Xh", sp>0x7F?"-":"", sp>0x7F?0x100-sp:sp);
@@ -172,6 +183,11 @@ void DCCallPostfixNode::print_bin(ODequeDataSource &o) const
 		case FREESTR:
 			assert(rtype().type()==Type::T_INVALID);
 			o.write1(0x65);
+			o.write1(sp);
+			break;
+		case FREESLIST:
+			assert(rtype().type()==Type::T_INVALID);
+			o.write1(0x67);
 			o.write1(sp);
 			break;
 		case ADDSP:
@@ -305,6 +321,7 @@ bool DCCallNode::fold(DCUnit *unit, std::deque<Node *> &nodes)
 	{
 		case CALL: unit->registerExternFunc(this); break;
 		case CALLI: unit->registerExternIntrinsic(this); break;
+		case CALL_LOCAL: unit->registerExternFunc(this); break;
 		case SPAWN: unit->registerExternFunc(this); break;
 		default: assert(print_assert(this, unit));
 	}
@@ -321,7 +338,7 @@ bool DCCallNode::fold(DCUnit *unit, std::deque<Node *> &nodes)
 	{
 		con.Printf("Op %02X %04X\n", nodes.back()->opcode(), nodes.back()->offset());
 		// we need to remove ourselves from the stack before doing anything tricky
-		assert(acceptOp(nodes.back()->opcode(), 0x0F, 0x11, 0x57));
+		assert(acceptOp(nodes.back()->opcode(), 0x0F, 0x11, 0x57) || acceptOp(nodes.back()->opcode(), 0x10));
 		Node *us=nodes.back();
 		nodes.pop_back();
 		
@@ -352,7 +369,7 @@ bool DCCallNode::fold(DCUnit *unit, std::deque<Node *> &nodes)
 		rtype(retVal->rtype());
 	else if(addSP!=0 && retVal!=0)
 		rtype(retVal->rtype());
-	else if(nodes.size()>0 && acceptOp(nodes.back()->opcode(), 0x65))
+	else if(nodes.size()>0 && (acceptOp(nodes.back()->opcode(), 0x65) || acceptOp(nodes.back()->opcode(), 0x67)))
 	{ /* do nothing... */ }
 	else if(retVal!=0 && nodes.size()>0 && acceptOp(nodes.back()->opcode(), 0x57))
 	{ /* do nothing...
@@ -398,6 +415,21 @@ void DCCallNode::print_extern_unk(Console &o, const uint32 /*isize*/) const
 					o.Print(rtype().name()); o.Putchar('\t');
 				}
 				o.Printf("%s(", format_function_name(uclass, targetOffset).c_str());
+				for(std::deque<Node *>::const_reverse_iterator i=pnode.rbegin(); i!=pnode.rend(); ++i)
+				{
+					if(i!=pnode.rbegin()) o.Print(", ");
+					o.Print((*i)->rtype().name());
+				}
+				o.Print(");");
+				break;
+			}
+		case CALL_LOCAL:
+			{
+				if(rtype().type()!=Type::T_INVALID)
+				{
+					o.Print(rtype().name()); o.Putchar('\t');
+				}
+				o.Printf("call_%04X(", targetOffset);
 				for(std::deque<Node *>::const_reverse_iterator i=pnode.rbegin(); i!=pnode.rend(); ++i)
 				{
 					if(i!=pnode.rbegin()) o.Print(", ");
@@ -466,6 +498,27 @@ void DCCallNode::print_unk(Console &o, const uint32 isize) const
 				o.Putchar(')');
 				break;
 			}
+		case CALL_LOCAL:
+			{
+				for(std::deque<Node *>::const_reverse_iterator i=pnode.rbegin(); i!=pnode.rend(); ++i)
+				{
+					(*i)->print_asm(o); o.Putchar('\n');
+				}
+				if(pnode.size()==0)
+					o.Putchar('\n');
+
+				Node::print_asm(o);
+				o.Printf("call\t\t%04X\n", targetOffset);
+				if(addSP!=0)
+					addSP->print_asm(o);
+				if(rtype()!=Type::T_VOID)
+				{
+					assert(retVal!=0);
+					o.Putchar('\n');
+					retVal->print_asm(o);
+				}
+				break;
+			}
 		case SPAWN:
 			{
 				o.Print("spawn ");
@@ -506,11 +559,13 @@ void DCCallNode::print_asm(Console &o) const
 				}
 				Node::print_asm(o);
 				o.Printf("calli\t\t%02Xh %04Xh", spsize, intrinsic);
+				if (!crusader && convert->intrinsics()[intrinsic]) {
+					o.Printf(" (%s)", convert->intrinsics()[intrinsic]);
+				}
 				for(std::list<DCCallPostfixNode *>::const_reverse_iterator i=freenodes.rbegin(); i!=freenodes.rend(); ++i)
 				{
 					o.Putchar('\n'); (*i)->print_asm(o);
 				}
-				//FIXME: o.Printf(" (%s)", convert->intrinsics()[op.i1]);
 				if(addSP!=0)
 				{
 					o.Putchar('\n');
@@ -545,6 +600,23 @@ void DCCallNode::print_asm(Console &o) const
 					retVal->print_asm(o);
 				}
 				//FIXME: o.Printf(" (%s)", convert->UsecodeFunctionAddressToString(uclass, targetOffset, ucfile).c_str());
+				break;
+			}
+		case CALL_LOCAL:
+			{
+				for(std::deque<Node *>::const_reverse_iterator i=pnode.rbegin(); i!=pnode.rend(); ++i)
+				{
+					(*i)->print_bin(o);
+				}
+				o.write1(0x10);
+				o.write2(targetOffset);
+				if(addSP!=0)
+					addSP->print_bin(o);
+				if(rtype()!=Type::T_VOID)
+				{
+					assert(retVal!=0);
+					retVal->print_bin(o);
+				}
 				break;
 			}
 		case SPAWN:

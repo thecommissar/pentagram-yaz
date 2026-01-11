@@ -25,6 +25,10 @@
 #include <vector>
 #include <string>
 #include "CallNodes.h"
+#include <map>
+#include <fstream>
+#include <cstdlib>
+#include <cstring>
 #include "GenericNodes.h"
 #include "LoopScriptNodes.h"
 #include "VarNodes.h"
@@ -61,11 +65,13 @@ class ConvertUsecode
 		Node *readOpGeneric(IDataSource *ucfile, uint32 &dbg_symbol_offset, std::vector<DebugSymbol> &debugSymbols,
 			bool &done, const bool crusader);
 		void printDbgSymbols(std::vector<DebugSymbol> &debugSymbols);
+		bool LoadUsecodeClassNames(const std::string &path);
 		
 		std::string UsecodeFunctionAddressToString(const sint32 uclass, const sint32 coffset, IDataSource *ucfile, const bool crusader);
 	
 	private:
 		static const uint32 MAX_UCFUNC_NAMELEN = 256; // max usecode function name length
+		std::map<sint32, std::string> usecodeClassNames;
 };
 
 /* This needs to go into Convert*Crusader only too */
@@ -112,6 +118,67 @@ void printbytes(IDataSource *f, uint32 num)
 	}
 }
 
+bool ConvertUsecode::LoadUsecodeClassNames(const std::string &path)
+{
+	usecodeClassNames.clear();
+
+	std::ifstream file(path.c_str());
+	if (!file)
+		return false;
+
+	std::string line;
+	if (!std::getline(file, line))
+		return false;
+
+	while (std::getline(file, line))
+	{
+		if (!line.empty() && line[line.size() - 1] == '\r')
+			line.erase(line.size() - 1);
+
+		std::vector<std::string> fields;
+		std::string field;
+		bool in_quotes = false;
+		for (size_t i = 0; i < line.size(); ++i)
+		{
+			char c = line[i];
+			if (c == '"')
+			{
+				if (in_quotes && i + 1 < line.size() && line[i + 1] == '"')
+				{
+					field.push_back('"');
+					++i;
+				}
+				else
+				{
+					in_quotes = !in_quotes;
+				}
+			}
+			else if (c == ',' && !in_quotes)
+			{
+				fields.push_back(field);
+				field.clear();
+			}
+			else
+			{
+				field.push_back(c);
+			}
+		}
+		fields.push_back(field);
+
+		if (fields.size() < 3)
+			continue;
+
+		char *endptr = 0;
+		long class_id = std::strtol(fields[0].c_str(), &endptr, 10);
+		if (endptr == fields[0].c_str())
+			continue;
+
+		usecodeClassNames[static_cast<sint32>(class_id)] = fields[2];
+	}
+
+	return !usecodeClassNames.empty();
+}
+
 /* This needs to be shuffled into two different readOp() functions, one in Convert*Crusader, and
 	the other in Convert*U8 */
 void ConvertUsecode::readOpGeneric(TempOp &op, IDataSource *ucfile, uint32 &dbg_symbol_offset, std::vector<DebugSymbol> &debugSymbols,
@@ -139,7 +206,8 @@ void ConvertUsecode::readOpGeneric(TempOp &op, IDataSource *ucfile, uint32 &dbg_
 		// Poping to variables
 		case 0x00:
 			// 00 xx
-			// pop 8 bit int into bp+xx
+			// init locals size xx (u8)
+			// pop 8 bit int into bp+xx (crusader)
 			op.i0 = read1(ucfile);
 			break;
 		case 0x01:
@@ -149,7 +217,8 @@ void ConvertUsecode::readOpGeneric(TempOp &op, IDataSource *ucfile, uint32 &dbg_
 			break;
 		case 0x02:
 			// 02 xx
-			// pop 32 bit int into bp+xx
+			// push 16 bit int at bp+xx (u8)
+			// pop 32 bit int into bp+xx (crusader)
 			op.i0 = read1(ucfile);
 			break;
 		case 0x03:
@@ -195,7 +264,10 @@ void ConvertUsecode::readOpGeneric(TempOp &op, IDataSource *ucfile, uint32 &dbg_
 			// 0E xx yy
 			// pop yy values of size xx from the stack and push the resulting list
 			op.i0 = read1(ucfile);
-			op.i1 = read1(ucfile);
+			if (crusader)
+				op.i1 = read1(ucfile);
+			else
+				op.i1 = 0;
 			break;
 
 		// Usecode function and intrinsic calls
@@ -204,6 +276,11 @@ void ConvertUsecode::readOpGeneric(TempOp &op, IDataSource *ucfile, uint32 &dbg_
 			// intrinsic call. xx is number of arguement bytes (includes this pointer)
 			op.i0 = read1(ucfile);
 			op.i1 = read2(ucfile);
+			break;
+		case 0x10:
+			// 10 xx xx
+			// call the function at offset xx xx in the current class
+			op.i0 = read2(ucfile);
 			break;
 		case 0x11:
 			// 11 xx xx yy yy
@@ -240,7 +317,8 @@ void ConvertUsecode::readOpGeneric(TempOp &op, IDataSource *ucfile, uint32 &dbg_
 		case 0x1A:
 			// 1A
 			// pop two string lists from the stack and remove the 2nd from the 1st
-			op.i0 = read1(ucfile);
+			if (crusader)
+				op.i0 = read1(ucfile);
 			break;
 		case 0x1B:
 			// 1B
@@ -319,7 +397,7 @@ void ConvertUsecode::readOpGeneric(TempOp &op, IDataSource *ucfile, uint32 &dbg_
 			break;
 		case 0x2E:
 			// 2E
-			// 'greater than or equal to'
+			// in
 			break;
 		case 0x2F:
 			// 2F
@@ -359,13 +437,14 @@ void ConvertUsecode::readOpGeneric(TempOp &op, IDataSource *ucfile, uint32 &dbg_
 			break;
 
 		case 0x38:
-			// 38 xx yy
-			// pops a list (or slist if yy==true) from the stack, then pops
-			// a value from the stack that it needs to test if it's in the
-			// list, pushing 'true' if it is, 'false' if it isn't. 'xx' is
-			// the 'size' of each list element, as is true for most list
-			// opcodes.
-			op.i0 = read1(ucfile); op.i1 = read1(ucfile);
+			// 38
+			// say (u8)
+			// list membership test (crusader)
+			if (crusader)
+			{
+				op.i0 = read1(ucfile);
+				op.i1 = read1(ucfile);
+			}
 			break;
 
 		case 0x39:
@@ -374,7 +453,8 @@ void ConvertUsecode::readOpGeneric(TempOp &op, IDataSource *ucfile, uint32 &dbg_
 			break;
 		case 0x3A:
 			// 3A
-			// bitwise or
+			// return from function (u8)
+			// bitwise or (crusader)
 			break;
 		case 0x3B:
 			// 3B
@@ -840,6 +920,12 @@ Node *ConvertUsecode::readOpGeneric(IDataSource *ucfile, uint32 &dbg_symbol_offs
 		case 0x01: // pop a word into a local var
 			n = new PopVarNode(opcode, offset, read1(ucfile));
 			break;
+		case 0x00: // init
+			n = new FuncMutatorNode(opcode, offset, read1(ucfile));
+			break;
+		case 0x02: // pushing a local word
+			n = new PushVarNode(opcode, offset, read1(ucfile));
+			break;
 		case 0x0A: // pushing a byte (1 byte)
 			n = new PushVarNode(opcode, offset, read1(ucfile));
 			break;
@@ -863,6 +949,10 @@ Node *ConvertUsecode::readOpGeneric(IDataSource *ucfile, uint32 &dbg_symbol_offs
 				uint32 elemCount = read1(ucfile);
 				n = new ListLiteralNode(opcode, offset, elemSize, elemCount);
 			}
+			n = new CreateListNode(opcode, offset, read1(ucfile));
+			break;
+		case 0x10: // call
+			n = new DCCallNode(opcode, offset, read2(ucfile));
 			break;
 		case 0x0F: // calli
 			{
@@ -880,12 +970,17 @@ Node *ConvertUsecode::readOpGeneric(IDataSource *ucfile, uint32 &dbg_symbol_offs
 			n = new PopVarNode(opcode, offset);
 			break;
 		case 0x14: // add
+		case 0x16: // concat
+		case 0x17: // append
+		case 0x1A: // remove slist
 		case 0x1C: // sub
 		case 0x1E: // mul
 		case 0x24: // cmp
+		case 0x26: // strcmp
 		case 0x28: // lt
 		case 0x2A: // le
 		case 0x2C: // gt
+		case 0x2E: // in
 			n = new BinOperatorNode(opcode, offset);
 			break;
 		case 0x30: // not
@@ -900,10 +995,22 @@ Node *ConvertUsecode::readOpGeneric(IDataSource *ucfile, uint32 &dbg_symbol_offs
 		case 0x36: // ne
 			n = new BinOperatorNode(opcode, offset);
 			break;
+		case 0x38: // say
+			n = new SayNode(opcode, offset);
+			break;
+		case 0x3A: // ret
+			n = new FuncMutatorNode(opcode, offset);
+			break;
 		case 0x3F: // pushing a word var (2 bytes)
 			n = new PushVarNode(opcode, offset, read1(ucfile));
 			break;
 		case 0x40: // pushing a dword var (4 bytes)
+			n = new PushVarNode(opcode, offset, read1(ucfile));
+			break;
+		case 0x41: // pushing a string var
+			n = new PushVarNode(opcode, offset, read1(ucfile));
+			break;
+		case 0x43: // pushing a slist var
 			n = new PushVarNode(opcode, offset, read1(ucfile));
 			break;
 		case 0x4B: // pushing an address (4 bytes)
@@ -916,6 +1023,12 @@ Node *ConvertUsecode::readOpGeneric(IDataSource *ucfile, uint32 &dbg_symbol_offs
 			{
 				uint32 tint = read2(ucfile);
 				n = new PushVarNode(opcode, offset, tint, read1(ucfile));
+			}
+			break;
+		case 0x4F: // pop global
+			{
+				uint32 tint = read2(ucfile);
+				n = new PopGlobalNode(opcode, offset, tint, read1(ucfile));
 			}
 			break;
 		case 0x50: // ret
@@ -966,11 +1079,25 @@ Node *ConvertUsecode::readOpGeneric(IDataSource *ucfile, uint32 &dbg_symbol_offs
 		case 0x5E: // push retval
 			n = new DCCallPostfixNode(opcode, offset);
 			break;
+		case 0x60: // word to dword
+		case 0x61: // dword to word
+			n = new UniOperatorNode(opcode, offset);
+			break;
+		case 0x62: // free string bp
+		case 0x63: // free slist bp
+			n = new FreeVarNode(opcode, offset, read1(ucfile));
+			break;
 		case 0x65: // free string
+			n = new DCCallPostfixNode(opcode, offset, read1(ucfile));
+			break;
+		case 0x67: // free slist sp
 			n = new DCCallPostfixNode(opcode, offset, read1(ucfile));
 			break;
 		case 0x6B: // str to ptr
 			n = new UniOperatorNode(opcode, offset);
+			break;
+		case 0x6D: // push process result
+			n = new PushProcessResultNode(opcode, offset);
 			break;
 		case 0x6E: // add sp
 			n = new DCCallPostfixNode(opcode, offset, read1(ucfile));
@@ -986,6 +1113,9 @@ Node *ConvertUsecode::readOpGeneric(IDataSource *ucfile, uint32 &dbg_symbol_offs
 		//case 0x73: // loopnext
 		//	n = new LoopNextNode(opcode, offset);
 		//	break;
+		case 0x73: // loopnext
+			n = new LoopNextNode(opcode, offset);
+			break;
 		case 0x74: // loopscr
 			n = new LoopScriptNode(opcode, offset, read1(ucfile));
 			break;
@@ -1081,7 +1211,19 @@ std::string ConvertUsecode::UsecodeFunctionAddressToString(const sint32 uclass, 
 	ucfile->seek(origpos);
 
 	// Couldn't get name, just use number
-	if (!buf[0]) snprintf(buf, MAX_UCFUNC_NAMELEN, "%04X", uclass);
+	if (!buf[0])
+	{
+		std::map<sint32, std::string>::const_iterator it = usecodeClassNames.find(uclass);
+		if (it != usecodeClassNames.end())
+		{
+			std::strncpy(buf, it->second.c_str(), MAX_UCFUNC_NAMELEN - 1);
+			buf[MAX_UCFUNC_NAMELEN - 1] = '\0';
+		}
+		else
+		{
+			snprintf(buf, MAX_UCFUNC_NAMELEN, "%04X", uclass);
+		}
+	}
 
 	// String to return
 	std::string str = buf;

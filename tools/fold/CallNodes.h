@@ -32,10 +32,11 @@ class DCCallPostfixNode : public Node
 		DCCallPostfixNode(const uint32 opcode, const uint32 offset, const uint32 newSP)
 			: Node(opcode, offset, Type(Type::T_INVALID)), sp(newSP)
 			{
-				assert(acceptOp(opcode, 0x65, 0x6E));
+				assert(acceptOp(opcode, 0x65, 0x6E) || acceptOp(opcode, 0x67));
 				switch(opcode)
 				{
 					case 0x65: ptype=FREESTR; break;
+					case 0x67: ptype=FREESLIST; break;
 					case 0x6E: ptype=ADDSP; break;
 					default: assert(false);
 				}
@@ -64,7 +65,7 @@ class DCCallPostfixNode : public Node
 		sint32 size() const { return static_cast<sint8>(sp); };
 
 	protected:
-		enum callpostfixtype { PUSH_RETVAL, FREESTR, ADDSP } ptype;
+		enum callpostfixtype { PUSH_RETVAL, FREESTR, FREESLIST, ADDSP } ptype;
 
 	private:
 		uint32 sp;
@@ -138,6 +139,14 @@ class DCCallNode : public ColNode
 					default: assert(false);
 				}
 			};
+		DCCallNode(const uint32 opcode, const uint32 offset, const uint32 newValue1)
+			: ColNode(opcode, offset, Type(Type::T_VOID)), addSP(0), retVal(0), thisP(0)
+			{
+				assert(acceptOp(opcode, 0x10));
+				ctype = CALL_LOCAL;
+				targetOffset = newValue1;
+				uclass = 0;
+			};
 		DCCallNode(const uint32 opcode, const uint32 offset, const uint32 newValue1, const uint32 newValue2, const uint32 newValue3, const uint32 newValue4)
 			: ColNode(opcode, offset, Type(Type::T_VOID)), addSP(0), retVal(0), thisP(0)
 			{
@@ -171,7 +180,7 @@ class DCCallNode : public ColNode
 		void addFree(DCCallPostfixNode *newFree) { freenodes.push_back(newFree); };
 
 	protected:
-		enum calltype { CALLI, CALL, SPAWN } ctype;
+		enum calltype { CALLI, CALL, CALL_LOCAL, SPAWN } ctype;
 
 	private:
 		uint32 uclass; // call & spawn

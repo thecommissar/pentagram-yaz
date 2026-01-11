@@ -21,6 +21,7 @@
 #include "pent_include.h"
 
 #include "Type.h"
+#include "tools/disasm/GlobalNames.h"
 
 /****************************************************************************
 	Type
@@ -40,10 +41,6 @@ void Type::print_unk(Console &o) const
 /****************************************************************************
 	DataType
  ****************************************************************************/
-//class GlobalName;
-
-//extern std::map<uint32, GlobalName> GlobalNames;
-
 void DataType::print_value_unk(Console &o) const
 {
 	switch(_dtype)
@@ -68,8 +65,15 @@ void DataType::print_value_unk(Console &o) const
 		case DT_PID:       o.Printf("pid");                            break;
 		/*case DT_PRESULT:   o.Printf("presult");                        break;
 		case DT_RESULT:    o.Printf("result");                         break;*/
-		case DT_GLOBAL:    o.Printf("global %s(%04X, %02X)",
-			"name", /*FIXME: Insert: GlobalNames[_value].name.c_str() <- here*/ _value, _valueIndex); break;
+		case DT_GLOBAL:
+		{
+			const GlobalName *global = findGlobalName(_value);
+			const char *global_name = (global && !global->name.empty())
+				? global->name.c_str()
+				: "unknown";
+			o.Printf("global %s(%04X, %02X)", global_name, _value, _valueIndex);
+			break;
+		}
 		case DT_TEMP:      o.Printf("temp");                      break;
 		default:           assert(false); /* can't happen */      break;
 	}
@@ -93,7 +97,12 @@ void DataType::print_value_asm(Console &o) const
 			switch(_vtype.type())
 			{
 				case Type::T_WORD:
-				case Type::T_DWORD: o.Printf("%s", suc::print_bp(_value)); break;
+				case Type::T_DWORD:
+				case Type::T_STRING:
+				case Type::T_LIST:
+				case Type::T_SLIST:
+					o.Printf("%s", suc::print_bp(_value));
+					break;
 				default: assert(false);
 			}
 			break;
@@ -118,7 +127,15 @@ void DataType::print_value_asm(Console &o) const
 		case DT_GLOBAL:
 			switch(_vtype.type())
 			{
-				case Type::T_WORD: o.Printf("[%04X %02X]", _value, _valueIndex); break;
+				case Type::T_WORD:
+				{
+					const GlobalName *global = findGlobalName(_value);
+					if (global && !global->name.empty())
+						o.Printf("%s", global->name.c_str());
+					else
+						o.Printf("[%04X %02X]", _value, _valueIndex);
+					break;
+				}
 				default: assert(false);
 			}
 			break;
@@ -145,7 +162,12 @@ void DataType::print_value_bin(ODequeDataSource &o) const
 			switch(_vtype.type())
 			{
 				case Type::T_WORD:
-				case Type::T_DWORD: o.write1(_value); break;
+				case Type::T_DWORD:
+				case Type::T_STRING:
+				case Type::T_LIST:
+				case Type::T_SLIST:
+					o.write1(_value);
+					break;
 				default: assert(false);
 			}
 			break;
