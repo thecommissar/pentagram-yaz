@@ -27,20 +27,38 @@
 
 static std::string format_function_name(const uint32 uclass, const uint32 targetOffset)
 {
+	std::ostringstream formatted;
 	std::map<uint32, std::string>::const_iterator found = FoldClassNames.find(uclass);
 	if(found != FoldClassNames.end())
 	{
-		char buf[16];
-		snprintf(buf, sizeof(buf), "%04X", targetOffset);
-		return found->second + "::" + buf;
+		formatted << found->second << "::" << std::hex << std::uppercase << std::setw(4)
+				  << std::setfill('0') << targetOffset;
+		return formatted.str();
 	}
-	char buf[32];
-	snprintf(buf, sizeof(buf), "class_%04X_function_%04X", uclass, targetOffset);
-	return buf;
+	formatted << "class_" << std::hex << std::uppercase << std::setw(4) << std::setfill('0')
+			  << uclass << "_function_" << std::setw(4) << targetOffset;
+	return formatted.str();
 }
 
 static std::string format_intrinsic_name(const uint32 intrinsic)
 {
+	const char *const *intrinsics = fold_intrinsics();
+	if(intrinsics == 0 || intrinsics[intrinsic] == 0)
+		return std::string();
+
+	std::string name = intrinsics[intrinsic];
+	if(name.find("process ") == 0)
+		name = name.substr(8);
+	else
+	{
+		std::string::size_type pos = name.find(' ');
+		if(pos != std::string::npos)
+			name = name.substr(pos + 1);
+	}
+	std::string::size_type params = name.find('(');
+	if(params != std::string::npos)
+		name = name.substr(0, params);
+	return name;
 	char buf[16];
 	snprintf(buf, sizeof(buf), "Intrinsic%04X", intrinsic);
 	return buf;
@@ -540,6 +558,9 @@ void DCCallNode::print_asm(Console &o) const
 				}
 				Node::print_asm(o);
 				o.Printf("calli\t\t%02Xh %04Xh", spsize, intrinsic);
+				const std::string name = format_intrinsic_name(intrinsic);
+				if(!name.empty())
+					o.Printf(" (%s)", name.c_str());
 				for(std::list<DCCallPostfixNode *>::const_reverse_iterator i=freenodes.rbegin(); i!=freenodes.rend(); ++i)
 				{
 					o.Putchar('\n'); (*i)->print_asm(o);

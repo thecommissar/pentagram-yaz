@@ -162,6 +162,11 @@ using ::snprintf;
 	default and worry about it later */
 ConvertUsecode *convert = new ConvertUsecodeU8();
 
+const char *const *fold_intrinsics()
+{
+	return convert ? convert->intrinsics() : 0;
+}
+
 
 // Overload Table
 void printoverloads(IDataSource *ucfile, uint32 endpos);
