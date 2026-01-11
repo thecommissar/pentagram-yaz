@@ -93,7 +93,12 @@ void DataType::print_value_asm(Console &o) const
 			switch(_vtype.type())
 			{
 				case Type::T_WORD:
-				case Type::T_DWORD: o.Printf("%s", suc::print_bp(_value)); break;
+				case Type::T_DWORD:
+				case Type::T_STRING:
+				case Type::T_LIST:
+				case Type::T_SLIST:
+					o.Printf("%s", suc::print_bp(_value));
+					break;
 				default: assert(false);
 			}
 			break;
@@ -145,7 +150,12 @@ void DataType::print_value_bin(ODequeDataSource &o) const
 			switch(_vtype.type())
 			{
 				case Type::T_WORD:
-				case Type::T_DWORD: o.write1(_value); break;
+				case Type::T_DWORD:
+				case Type::T_STRING:
+				case Type::T_LIST:
+				case Type::T_SLIST:
+					o.write1(_value);
+					break;
 				default: assert(false);
 			}
 			break;
