@@ -56,7 +56,11 @@ class DCUnit : public Unit
 		const bool fold(Node *n);
 		
 		void setDebugOffset(const uint32 newDebugOffset) { debugOffset=newDebugOffset; };
-		void setClassName(const std::string &newName) { name=newName; };
+		void setClassName(const std::string &newName)
+		{
+			name=newName;
+			FoldClassNames[id]=newName;
+		};
 		void registerExternIntrinsic(DCCallNode *i) { externIntrinsics.insert(i); };
 		void registerExternFunc(DCCallNode *f) { externFuncs.insert(f); };
 		

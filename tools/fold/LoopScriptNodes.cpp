@@ -156,3 +156,54 @@ bool LoopNextNode::fold(DCUnit * /*unit*/, std::deque<Node *> & /*nodes*/)
 	return true;
 }
 
+/****************************************************************************
+	ForeachNode
+ ****************************************************************************/
+
+bool ForeachNode::fold(DCUnit *unit, std::deque<Node *> &nodes)
+{
+	if(nodes.size()<2)
+	{
+		assert(print_assert(this, unit));
+		return true;
+	}
+	grab_p(nodes, 4);
+	fold_linenum(nodes);
+	return true;
+}
+
+void ForeachNode::print_unk(Console &o, const uint32 isize) const
+{
+	Node::print_linenum_unk(o, isize);
+	o.Printf("foreach %s in ", suc::print_bp(loopVar));
+	if(pnode.size()>0)
+		pnode.back()->print_unk(o, isize);
+	else
+		o.Print("/*unknown_list*/");
+	o.Printf(" /*%s*/", ftype==FOREACH_LIST ? "list" : "slist");
+}
+
+void ForeachNode::print_asm(Console &o) const
+{
+	Node::print_linenum_asm(o);
+	for(std::deque<Node *>::const_reverse_iterator i=pnode.rbegin(); i!=pnode.rend(); ++i)
+	{
+		(*i)->print_asm(o);
+		o.Putchar('\n');
+	}
+	Node::print_asm(o);
+	o.Printf("foreach\t\t%s %02X %04X", suc::print_bp(loopVar), elemSize, targetOffset);
+}
+
+void ForeachNode::print_bin(ODequeDataSource &o) const
+{
+	Node::print_linenum_bin(o);
+	for(std::deque<Node *>::const_reverse_iterator i=pnode.rbegin(); i!=pnode.rend(); ++i)
+	{
+		(*i)->print_bin(o);
+	}
+	o.write1(ftype==FOREACH_LIST ? 0x75 : 0x76);
+	o.write1(loopVar);
+	o.write1(elemSize);
+	o.write2(targetOffset - _offset - 5);
+}

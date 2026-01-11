@@ -124,4 +124,42 @@ class IfNode : public UniNode
 		IfNode  *elsenode;
 };
 
+class CaseNode : public Node
+{
+	public:
+		CaseNode(const uint32 offset, Node *matchNode);
+		~CaseNode() {};
+
+		void print_unk(Console &o, const uint32 isize) const;
+		void print_asm(Console &o) const;
+		void print_bin(ODequeDataSource &o) const;
+		bool fold(DCUnit * /*unit*/, std::deque<Node *> & /*nodes*/) { return true; };
+
+		std::deque<Node *> &nodes() { return casenodes; };
+
+	private:
+		Node *match;
+		std::deque<Node *> casenodes;
+};
+
+class SwitchNode : public Node
+{
+	public:
+		SwitchNode(const uint32 offset, Node *exprNode);
+		~SwitchNode() {};
+
+		void print_unk(Console &o, const uint32 isize) const;
+		void print_asm(Console &o) const;
+		void print_bin(ODequeDataSource &o) const;
+		bool fold(DCUnit * /*unit*/, std::deque<Node *> & /*nodes*/) { return true; };
+
+		void addCase(CaseNode *node) { cases.push_back(node); };
+		void addOriginalNode(IfNode *node) { originalNodes.push_back(node); };
+
+	private:
+		Node *expr;
+		std::deque<CaseNode *> cases;
+		std::deque<IfNode *> originalNodes;
+};
+
 #endif

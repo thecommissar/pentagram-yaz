@@ -82,21 +82,36 @@ class FuncMutatorNode : public Node
 		uint32 a_initsize() const { assert(opcode()==0x5A && mtype==INIT); return _initsize; };
 };
 
+class StartupNode : public Node
+{
+	public:
+		StartupNode(const uint32 offset)
+			: Node(0xFFFF, offset, Type(Type::T_INVALID)) {};
+		~StartupNode() {};
+
+		void print_unk(Console &o, const uint32 isize) const;
+		void print_asm(Console &o) const;
+		void print_bin(ODequeDataSource &o) const;
+		bool fold(DCUnit * /*unit*/, std::deque<Node *> &/*nodes*/) { return true; };
+};
+
 class DCFuncNode : public ColNode
 {
 	public:
 		DCFuncNode()
 			: ColNode(0xFFFF, 0x0000, Type(Type::T_INVALID)),
 			setinfonode(0),
+			startupnode(0),
 			locals_datasize(0), func_start_offset(0),
 			debug_ret_offset(0), debug_end_offset(0),
 			process_type(0), debug_processtype_offset(0), debug_thisp(false),
-			debug_procexclude_offset(0), has_procexclude(false)
+			debug_procexclude_offset(0), has_procexclude(false),
+			is_startup(false)
 			{
 			};
 		~DCFuncNode() {};
 
-		void print_unk_funcheader(Console &o, const uint32 isize) const;
+		void print_unk_funcheader(Console &o, const uint32 isize, const std::string &className, const uint32 classId) const;
 		void print_unk(Console &o, const uint32 isize) const;
 		void print_asm(Console &o) const;
 		void print_bin(ODequeDataSource &o) const;
@@ -112,6 +127,7 @@ class DCFuncNode : public ColNode
 	protected:
 		std::deque<Node *> funcnodes;
 		DCCallMutatorNode *setinfonode;
+		StartupNode *startupnode;
 
 		uint32	locals_datasize; // from 'init' opcode
 		uint32	func_start_offset; // from 'init' opcode
@@ -124,6 +140,7 @@ class DCFuncNode : public ColNode
 
 		uint32	debug_procexclude_offset; // from 'process exclude' opcode, FIXME: debugging only
 		bool	has_procexclude; // from 'process exclude' opcode
+		bool	is_startup;
 
 	private:
 		void fold_init(DCUnit *unit, std::deque<Node *> &nodes);
@@ -133,4 +150,3 @@ class DCFuncNode : public ColNode
 };
 
 #endif
-

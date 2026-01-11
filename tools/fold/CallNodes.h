@@ -188,5 +188,13 @@ class DCCallNode : public ColNode
 		std::list<DCCallPostfixNode *> freenodes;
 };
 
+class DCSpawnNode : public DCCallNode
+{
+	public:
+		DCSpawnNode(const uint32 opcode, const uint32 offset, const uint32 newValue1, const uint32 newValue2,
+			const uint32 newValue3, const uint32 newValue4)
+			: DCCallNode(opcode, offset, newValue1, newValue2, newValue3, newValue4) {};
+		~DCSpawnNode() {};
+};
 
 #endif
