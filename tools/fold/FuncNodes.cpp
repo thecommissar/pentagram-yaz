@@ -29,6 +29,8 @@
 #include <deque>
 using	std::deque;
 #include <cstdio>
+#include <sstream>
+#include <iomanip>
 
 /****************************************************************************
 	FuncMutatorNode
@@ -164,23 +166,29 @@ static std::string format_process_type(uint32 process_type)
 	{
 		case 0x0000: return "PT_DEFAULT";
 		case 0x00F0: return "PT_ANIM";
-		default:
-			{
-				char buf[16];
-				snprintf(buf, sizeof(buf), "PT_%04X", process_type);
-				return buf;
-			}
+	default:
+		{
+			std::ostringstream formatted;
+			formatted << "PT_" << std::hex << std::uppercase << std::setw(4)
+					  << std::setfill('0') << process_type;
+			return formatted.str();
+		}
 	}
 }
 
 static std::string format_function_name(const std::string &className, const uint32 classId, const uint32 offset)
 {
-	char buf[16];
-	snprintf(buf, sizeof(buf), "%04X", offset);
 	if(!className.empty())
-		return className + "::" + buf;
-	snprintf(buf, sizeof(buf), "class_%04X_function_%04X", classId, offset);
-	return buf;
+	{
+		std::ostringstream formatted;
+		formatted << className << "::" << std::hex << std::uppercase << std::setw(4)
+				  << std::setfill('0') << offset;
+		return formatted.str();
+	}
+	std::ostringstream formatted;
+	formatted << "class_" << std::hex << std::uppercase << std::setw(4) << std::setfill('0')
+			  << classId << "_function_" << std::setw(4) << offset;
+	return formatted.str();
 }
 
 void DCFuncNode::print_unk_funcheader(Console &o, const uint32 isize, const std::string &className, const uint32 classId) const
@@ -533,6 +541,5 @@ void DCFuncNode::fold_procexclude(DCUnit * /*unit*/, std::deque<Node *> &nodes)
 
 	FORGET_OBJECT(procexcludenode);
 }
-
 
 
