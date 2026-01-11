@@ -176,6 +176,7 @@ string	gamelanguage;
 string	gametype;
 string	outputdir;
 string	flagsfile;
+string	classmap_path;
 bool	print_globals=false;
 bool	strings_only=false;
 
@@ -420,7 +421,12 @@ void just_print(TempOp &op, IDataSource *ucfile)
 
 		// Usecode function and intrinsic calls
 		case 0x0F:
-			con_Printf("calli\t\t%02Xh %04Xh (%s)", op.i0, op.i1, convert->intrinsics()[op.i1]);
+			if (convert->intrinsics()[op.i1]) {
+				con_Printf("calli\t\t%02Xh %04Xh (%s)", op.i0, op.i1,
+					convert->intrinsics()[op.i1]);
+			} else {
+				con_Printf("calli\t\t%02Xh %04Xh", op.i0, op.i1);
+			}
 			break;
 		case 0x11:
 			con_Printf("call\t\t%04X:%04X (%s)", op.i0, op.i1,
@@ -826,6 +832,7 @@ int main(int argc, char **argv)
 {
 	if (argc < 3) {
 		perr << "Usage: " << argv[0] << " <file> [<function number>|-a] {--game [u8|crusader]} {--lang [english|german|french|japanese]} {--odir <directory>} {--flags <file>}" << endl;
+		perr << "Usage: " << argv[0] << " <file> [<function number>|-a] {--game [u8|crusader]} {--lang [english|german|french|japanese]} {--odir <directory>} {--classmap <path>}" << endl;
 		perr << "or" << endl;
 		perr << "Usage: " << argv[0] << " <file> -l" << endl;
 		perr << "or" << endl;
@@ -844,6 +851,7 @@ int main(int argc, char **argv)
 	parameters.declare("--game",    &gametype,      "none");
 	parameters.declare("--odir",    &outputdir,     "");
 	parameters.declare("--flags",   &flagsfile,     "Shericode/UNK files/FLAGS.UNK");
+	parameters.declare("--classmap", &classmap_path, "");
 	parameters.declare("--globals", &print_globals, true);
 	#ifdef FOLD
 	parameters.declare("--disasm",  &print_disasm,  true);
@@ -930,6 +938,16 @@ int main(int argc, char **argv)
 		crusader=true;
 		FORGET_OBJECT(convert);
 		convert = new ConvertUsecodeCrusader();
+	}
+
+	bool classmap_from_arg = !classmap_path.empty();
+	if (classmap_path.empty())
+		classmap_path = "Wanderer/usecode_classes.csv";
+
+	if (!classmap_path.empty())
+	{
+		if (!convert->LoadUsecodeClassNames(classmap_path) && classmap_from_arg)
+			perr << "Warning: failed to load usecode class map from " << classmap_path << "." << std::endl;
 	}
 
 	// Read function names from cfg file

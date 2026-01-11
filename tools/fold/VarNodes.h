@@ -24,6 +24,7 @@
 #include "Type.h"
 #include "GenericNodes.h"
 #include <string>
+#include <deque>
 
 class PopVarNode : public UniNode
 {
@@ -74,7 +75,7 @@ class PushVarNode : public Node
 		PushVarNode(const uint32 opcode, const uint32 offset, const uint32 newValue)
 			: Node(opcode, offset)
 		{
-			assert(acceptOp(opcode, 0x0B, 0x3F, 0x40, 0x4B) || acceptOp(opcode, 0x0C, 0x0A));
+			assert(acceptOp(opcode, 0x0B, 0x3F, 0x40, 0x4B) || acceptOp(opcode, 0x0C, 0x0A) || acceptOp(opcode, 0x02, 0x41, 0x43));
 			switch(opcode)
 			{
 				case 0x0A: // pushing a byte (1 byte)
@@ -86,11 +87,18 @@ class PushVarNode : public Node
 				case 0x0C: // pushing a dword (4 bytes)
 					_dtype = DataType(Type::T_DWORD, DataType::DT_BYTES, newValue);
 					break;
+				case 0x02: // pushing a word var (2 bytes)
 				case 0x3F: // pushing a word var (2 bytes)
 					_dtype = DataType(Type::T_WORD, DataType::DT_BP, newValue);
 					break;
 				case 0x40: // pushing a dword var (4 bytes)
 					_dtype = DataType(Type::T_DWORD, DataType::DT_BP, newValue);
+					break;
+				case 0x41: // pushing a string var
+					_dtype = DataType(Type::T_STRING, DataType::DT_BP, newValue);
+					break;
+				case 0x43: // pushing a slist var
+					_dtype = DataType(Type::T_SLIST, DataType::DT_BP, newValue);
 					break;
 				case 0x4B: // pushing an address (4 bytes)
 					_dtype = DataType(Type::T_DWORD, DataType::DT_BPADDR, newValue);
@@ -162,6 +170,97 @@ class PushVarNode : public Node
 		// for global use only
 		uint32 global_offset;
 		uint32 global_size;*/
+};
+
+class CreateListNode : public Node
+{
+	public:
+		CreateListNode(const uint32 opcode, const uint32 offset, const uint32 newCount)
+			: Node(opcode, offset, Type(Type::T_LIST)), count(newCount)
+		{
+			assert(acceptOp(opcode, 0x0E));
+		}
+		~CreateListNode() {};
+
+		void print_unk(Console &o, const uint32 isize) const;
+		void print_asm(Console &o) const;
+		void print_bin(ODequeDataSource &o) const;
+		bool fold(DCUnit *unit, std::deque<Node *> &nodes);
+
+	protected:
+
+	private:
+		uint32 count;
+		std::deque<Node *> elements;
+};
+
+class PopGlobalNode : public UniNode
+{
+	public:
+		PopGlobalNode(const uint32 opcode, const uint32 offset, const uint32 globalOffset, const uint32 globalSize)
+			: UniNode(opcode, offset), gOffset(globalOffset), gSize(globalSize)
+		{
+			assert(acceptOp(opcode, 0x4F));
+			switch(globalSize)
+			{
+				case 1: rtype(Type::T_BYTE); break;
+				case 2: rtype(Type::T_WORD); break;
+				case 4: rtype(Type::T_DWORD); break;
+				default: assert(false);
+			}
+		}
+		~PopGlobalNode() {};
+
+		void print_unk(Console &o, const uint32 isize) const;
+		void print_asm(Console &o) const;
+		void print_bin(ODequeDataSource &o) const;
+		bool fold(DCUnit *unit, std::deque<Node *> &nodes);
+
+	private:
+		uint32 gOffset;
+		uint32 gSize;
+};
+
+class PushProcessResultNode : public Node
+{
+	public:
+		PushProcessResultNode(const uint32 opcode, const uint32 offset)
+			: Node(opcode, offset, Type(Type::T_DWORD))
+		{
+			assert(acceptOp(opcode, 0x6D));
+		}
+		~PushProcessResultNode() {};
+
+		void print_unk(Console &o, const uint32 isize) const;
+		void print_asm(Console &o) const;
+		void print_bin(ODequeDataSource &o) const;
+		bool fold(DCUnit * /*unit*/, std::deque<Node *> &/*nodes*/) { return true; };
+};
+
+class FreeVarNode : public Node
+{
+	public:
+		FreeVarNode(const uint32 opcode, const uint32 offset, const uint32 newValue)
+			: Node(opcode, offset, Type(Type::T_INVALID)), _value(newValue)
+		{
+			assert(acceptOp(opcode, 0x62, 0x63));
+			switch(opcode)
+			{
+				case 0x62: _dtype = DataType(Type::T_STRING, DataType::DT_BP, newValue); break;
+				case 0x63: _dtype = DataType(Type::T_SLIST, DataType::DT_BP, newValue); break;
+				default: assert(false);
+			}
+		}
+		~FreeVarNode() {};
+
+		void print_unk(Console &o, const uint32 isize) const;
+		void print_asm(Console &o) const;
+		void print_bin(ODequeDataSource &o) const;
+		bool fold(DCUnit * /*unit*/, std::deque<Node *> &nodes);
+
+	private:
+		DataType _dtype;
+		uint32 _value;
 };
 
 #endif

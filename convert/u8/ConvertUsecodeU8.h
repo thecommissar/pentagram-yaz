@@ -85,8 +85,6 @@ class ConvertUsecodeU8 : public ConvertUsecode
 
 const char* const ConvertUsecodeU8::_intrinsics[] = {
 	// 0000
-	"process target()",
-	"Item::getNext()",							// Unused
 	"Item::touch()",
 	"word Item::getX()",
 	"word Item::getY()",
@@ -94,270 +92,272 @@ const char* const ConvertUsecodeU8::_intrinsics[] = {
 	"word Item::getCX()",
 	"word Item::getCY()",
 	"word Item::getCZ()",
-	"word Item::getGumpX()",					// Unused
-	"word Item::getGumpY()",					// Unused
-	"void Item::setGumpXY(word x, word y)",		// Unused
 	"Item::getPoint(WorldPoint*)",
-	"uword Item::getType()",
-	"void Item::setType(uword type)",
+	"uword Item::getShape()",
+	"void Item::setShape(uword type)",
 	"uword Item::getFrame()",
-	// 0010
 	"void Item::setFrame(uword frame)",
-	"uword Item::getQuality()",					// Get Q (Not generic familiy)
-	"uword Item::getUnkEggType()",				// Get Q (UnkEgg family)
-	"uword Item::getQuantity()",				// Get Q (Quantity or Reagent family)
-	"Item::getContents()",						// Unused
+	"uword Item::getQuality()",
+	"uword Item::getUnkEggType()",
+	"uword Item::getQuantity()",
+	"void Item::setQuantity(word value)",
+	// 0010
 	"Item::getContainer()",
 	"Item::getRootContainer()",
-	"uword Item::getGlobNum()",					// Get Q (GlobEgg family) - Unused
-	"void Item::setGlobNum(uword)",				// Set Q (GlobEgg family) - Unused
-	"uword Item::getQ()",						// Get Q
-	"void Item::setQ(uword)",					// Set Q
-	"void Item::setQuality(word value)",		// Set Q (Not generic familiy)
-	"void Item::setUnkEggType(word value)",		// Set Q (UnkEgg family) - Unused
-	"void Item::setQuantity(word value)",		// Set Q (Quantity and Reagent families)
+	"Item::destroyContents()",
+	"Item::destroy()",
+	"uword Item::getQ()",
+	"void Item::setQ(uword)",
+	"void Item::setQuality(word value)",
+	"Item::getContents()",
 	"word Item::getFamily()",
-	"bool Item::getTypeFlag(word bit)",			// Get TypeFlag (0 to 63 - not a mask!)
-	// 0020
-	"word Item::getStatus()",					// Get Status Flags
-	"void Item::orStatus(word mask)",			// Status |= mask;
-	"void Item::andStatus(word mask)",			// Status &= mask;
-	"Item::getFootpad(word*, word*, word*)",
-	"Item::touches(uword)",						// Unused
-	"Item::overlaps(uword)",					// boundingbox Overlap in 3d
-	"Item::overlapsXY(uword)",					// Unused
-	"Item::isOn(uword)",						// 3dxy overlaps && other->ztop == this->zbot ???
-	"Item::isCompletelyOn(uword)",				// Unused
-	"Item::isAbove(uword)",						// Unused
-	"Item::isUnder(uword)",						// Unused
-	"Item::ascend(word)",						// used once
+	"bool Item::getTypeFlag(word bit)",
+	"word Item::getStatus()",
+	"void Item::orStatus(word mask)",
+	"void Item::andStatus(word mask)",
+	"Item::ascend(word)",
 	"Item::getWeight()",
 	"Item::getWeightIncludingContents()",
-	"Item::getSurfaceWeight()",
-	"Item::getVolume()",						// Unused
-	// 0030
-	"Item::getCapacity()",						// Unuses
-	"Item::legal_create(uword, uword, uword, uword, uword)",
+	// 0020
+	"Item::getVolume()",
+	"Item::getHeight()",
+	"Item::getFamilyOfType()",
+	"Item::legalCreateAtPoint()",
+	"Item::legalCreateAtCoords()",
+	"Item::legalCreateInCont()",
 	"Item::create(uword, uword)",
-	"Item::legal_create(uword, uword, WorldPoint*)",
-	"Item::legal_create(uword, uword, uword, word)",
-	"Item::push()",
 	"Item::pop(uword, uword, ubyte)",
-	"Item::pop(uword)",
-	"Item::pop()",
+	"Item::popToCoords()",
+	"Item::popToContainer()",
 	"Item::popToEnd(uword)",
-	"Item::destroy()",
-	"Item::removeContents()",
-	"Item::destroyContents()",
-	"Item::isExplosive()",
 	"Item::move(uword, uword, ubyte)",
-	"Item::move(WorldPoint*)",					// Unused
-	// 0040
-	"Item::legal_move(WorldPoint*, uword, uword)",
-	"Item::legal_move(uword*, uword)",
-	"Item::isNpc()",
-	"Item::isInNpc()",							// Unused
-	"process Item::hurl(word, word, word, word)",
-	"Item::shoot(WorldPoint*, word, word)",
-	"Item::fall()",
-	"Item::grab()",
-	"Item::findTarget(word, word)",				// Unused
-	"process Item::bark(char* str)",
-	"strptr process Item::ask(uword slist)",
-	"word Item::getSliderInput(word min, word max, word step)",
-	"Item::openGump(word)",
-	"Item::closeGump()",
-	"Item::isGumpOpen()",						// Unused
-	"Item::getNpcArray()",						// Unused
-	// 0050
+	"Item::legalMoveToPoint()",
+	"Item::legalMoveToContainer()",
+	"Item::legalMoveToParent()",
+	"Item::getEtherealTop()",
+	// 0030
+	"Item::doFormatCollision()",
+	"Item::moveToEtherealVoid()",
+	"Item::moveToFromEtherealVoid()",
+	"Item::isOnScreen()",
+	"Item::getZTop()",
+	"Item::hasFlags()",
+	"Item::getFlags()",
+	"Item::setFlag()",
+	"Item::clearFlag()",
 	"Item::getMapArray()",
-	"Item::setNpcArray(word)",					// Unused
-	"Item::setMapArray(word)",
 	"Item::receiveHit(uword, byte, word, uword)",
 	"Item::explode()",
 	"Item::canReach(uword, word)",
 	"Item::getRange(uword)",
-	"Item::getRange(uword, uword, uword)",		// Unused
+	"Item::getRange2(uword, uword, uword)",
 	"Item::getDirToCoords(uword, uword)",
+	// 0040
 	"Item::getDirFromCoords(uword, uword)",
 	"Item::getDirToItem(uword)",
 	"Item::getDirFromItem(uword)",
-	"process Item::look()",						// Call event 0x0
-	"process Item::use()",						// Call event 0x1
-	"process Item::anim()",						// Unused
-	"process Item::cachein()",					// Unused
+	"Item::getDirFromTo()",
+	"Item::setFrameRotateClockwise()",
+	"Item::setFrameRotateAntiClockwise()",
+	"Item::isMouseDownEvent()",
+	"word Item::getSliderInput(word min, word max, word step)",
+	"Item::openGump(word)",
+	"Item::closeGump()",
+	"Item::getSliderValue()",
+	"Item::setSliderValue()",
+	"Item::setSliderShape()",
+	"Item::sliderSetGumpShape()",
+	"Item::getNpcNum()",
+	"Item::getOwner()",
+	// 0050
+	"Item::getOwnerObjId()",
+	"Item::getMapNum()",
+	"Item::isOnMap()",
+	"Item::getAttrFlags()",
+	"Item::getTalkRange()",
+	"Item::setNpcNum()",
+	"Item::addTargetObjectId()",
+	"Item::removeTargetObjectId()",
+	"Item::clearTargetObjectIds()",
+	"Item::addTargetMapId()",
+	"Item::removeTargetMapId()",
+	"Item::clearTargetMapIds()",
+	"Item::resetRangedTargetTimer()",
+	"Item::setMapNum()",
+	"Item::setAttrFlags()",
+	"Item::setTalkRange()",
 	// 0060
-	"Item::hit(uword, word)",					// Unused
-	"process Item::gotHit(uword, word)",		// Call event ???
-	"process Item::release()",					// Unused
-	"process Item::equip()",					// Unused
-	"process Item::unequip()",					// Unused
-	"process Item::combine()",					// Unused
-	"process Item::calledFromAnim()",			// Unused
-	"process Item::enterFastArea()",			// Call event 0xF
-	"process Item::leaveFastArea()",			// Unused
-	"process Item::cast(uword)",				// Unused
-	"process Item::justMoved()",				// Unused
-	"process Item::AvatarStoleSomething(uword)",// Unused
-	"process Item::animGetHit(uword)",			// Unused
-	"process Item::guardianBark(word)",			// Call event 0x15
-	"process Book::read(char*)",
-	"process Scroll::read(char*)",
+	"Item::getTalkRangeTimer()",
+	"Item::isObjIdTarget()",
+	"Item::isMapIdTarget()",
+	"Actor::isDead()",
+	"Actor::getMap()",
+	"Actor::getNpcNum()",
+	"Actor::getLastActivityNo()",
+	"Actor::getAlignment()",
+	"Actor::setLastActivityNo()",
+	"Actor::setAlignment()",
+	"Actor::setTarget()",
+	"Actor::setMap()",
+	"Actor::getTarget()",
+	"Actor::getMapNum()",
+	"Actor::createActor()",
+	"Actor::setStats()",
 	// 0070
-	"process Grave::read(word,char*)",
-	"process Plaque::read(word,char*)",
+	"Actor::getHp()",
+	"Actor::setHp()",
+	"Actor::getMana()",
+	"Actor::setMana()",
+	"Actor::getStr()",
+	"Actor::setStr()",
+	"Actor::getDex()",
+	"Actor::setDex()",
+	"Actor::getInt()",
+	"Actor::setInt()",
+	"Actor::getMaxHp()",
+	"Actor::getMaxMana()",
+	"Actor::getArmorClass()",
+	"Actor::isOnScreen()",
+	"Actor::createActorFast()",
+	"Actor::schedule()",
+	// 0080
+	"Actor::clownAttack()",
+	"MusicProcess::playMusic()",
+	"MusicProcess::queueMusic()",
+	"MusicProcess::unqueueMusic()",
+	"MusicProcess::restoreMusic()",
+	"MusicProcess::getNextEggMusicTrack()",
+	"MusicProcess::playCombatMusic()",
+	"MusicProcess::isPlayingCombatMusic()",
+	"MusicProcess::setEggMusic()",
+	"Egg::reset()",
+	"Egg::getEggId()",
+	"Egg::setEggId(uword)",
 	"Egg::getEggXRange()",
 	"Egg::getEggYRange()",
 	"Egg::setEggXRange(uword)",
-	"Egg::setEggYRange(uword)",					// Unused
-	"Egg::getEggId()",
-	"Egg::setEggId(uword)",
-	"Egg::hatch()",								// Unused
-	"MonsterEgg::hatch()",
-	"MonsterEgg::getMonId()",
-	"MonsterEgg::getActivity()",				// Unused
-	"MonsterEgg::getShapeType()",				// Unused
-	"MonsterEgg::setMonId(word)",				// Unused
-	"MonsterEgg::setActivity(word)",			// Unused
-	"MonsterEgg::setShapeType(word)",			// Unused
-	// 0080
-	"Npc::isBusy()",
-	"Npc::areEnemiesNear()",
-	"Npc::isInCombat()",
-	"Npc::setInCombat()",
-	"Npc::clrInCombat()",
-	"Npc::setTarget(uword)",
-	"Npc::getTarget()",
-	"Npc::setAlignment(ubyte)",
-	"Npc::getAlignment()",						// Unused
-	"Npc::setEnemyAlignment(ubyte)",
-	"Npc::getEnemyAlignment()",					// Unused
-	"Npc::isEnemy(uword)",
-	"Npc::isDead()",
-	"Npc::setDead()",
-	"Npc::clrDead()",
-	"Npc::isImmortal()",						// Unused
+	"Egg::setEggYRange(uword)",
 	// 0090
-	"Npc::setImmortal()",
-	"Npc::clrImmortal()",
-	"Npc::isWithstandDeath()",					// Unused
-	"Npc::setWithstandDeath()",
-	"Npc::clrWithstandDeath()",
-	"Npc::isFeignDeath()",						// Unused
-	"Npc::setFeignDeath()",
-	"Npc::clrFeignDeath()",						// Unused
-	"Npc::freeEquip(uword)",					// Unused
-	"Npc::clearEquip()",						// Unused
-	"Npc::getNpcSlot()",						// Unused
-	"Npc::freeNpcSlot()",						// Unused
-	"Npc::getDir()",
-	"Npc::getMap()",
-	"Npc::teleport(uword, uword, ubyte, ubyte)",
-	"process Npc::doAnim(AnimSet, word, word, ubyte)",
+	"CameraProcess::getCameraX()",
+	"CameraProcess::getCameraY()",
+	"CameraProcess::getCameraZ()",
+	"CameraProcess::setCameraY()",
+	"CameraProcess::setEarthquake()",
+	"CameraProcess::getEarthquake()",
+	"CameraProcess::setCenterOn()",
+	"CameraProcess::move_to()",
+	"CameraProcess::scrollTo()",
+	"CameraProcess::bark()",
+	"TeleportEgg::teleport()",
+	"Actor::getLastAnimFrame()",
+	"Actor::doAnim()",
+	"Actor::getDir()",
+	"Actor::getLastAnim()",
+	"Actor::setDead()",
 	// 00A0
-	"Npc::getLastAnimSet()",
-	"process Npc::pathfind(uword, uword, uword, uword)",
-	"process Npc::pathfind(uword, uword)",
-	"byte Npc::getStr()",
-	"byte Npc::getInt()",
-	"byte Npc::getDex()",
-	"ubyte Npc::getHp()",
-	"word Npc::getMana()",
-	"void Npc::setStr(byte str)",
-	"void Npc::setInt(byte int)",
-	"void Npc::setDex(byte dex)",
-	"void Npc::setHp(ubyte hp)",
-	"void Npc::setMana(word mana)",
-	"Npc::create(uword, uword)",
-	"process Npc::cSetActivity(Activity)",
-	"Npc::setAirWalkEnabled(ubyte)",
+	"Actor::getMaxEnergy()",
+	"Actor::setMaxEnergy()",
+	"Actor::getEnergy()",
+	"Actor::setEnergy()",
+	"Actor::getMaxStr()",
+	"Actor::setMaxStr()",
+	"Actor::getImmortal()",
+	"Actor::setImmortal()",
+	"Actor::getName()",
+	"Actor::setName()",
+	"Actor::getFlag()",
+	"Actor::setFlag()",
+	"Actor::clearFlag()",
+	"Actor::getInventoryShape()",
+	"Actor::setInventoryShape()",
+	"Actor::getShield()",
 	// 00B0
-	"Npc::getAirWalkEnabled()",
-	"Npc::schedule(ulong)",
-	"Npc::getEquip(word)",
-	"Npc::setEquip(word, uword)",
-	"closeAllGumps()",
-	"process Camera::scrollTo(uword, uword, ubyte, word)",	// probably x, y, z, 'time'
-	"urandom(word)",
-	"rndRange(word,word)",
-	"castGrantPeaceSpell()",
-	"numToStr(uword)",
-	"strToNum(char*)",							// Unused
-	"playMusic(byte)",
-	"getName()",								// Returns the Avatar's name
-	"igniteChaos(uword, uword, ubyte)",
-	"Camera::setCenterOn(uword)",
-	"Camera::move_to(uword, uword, ubyte, word)",
+	"Actor::setShield()",
+	"Actor::getMaxDex()",
+	"Actor::setMaxDex()",
+	"Actor::getMaxInt()",
+	"Actor::setMaxInt()",
+	"Actor::getImmortal()",
+	"Actor::setImmortal()",
+	"Actor::getActiveWeapon()",
+	"Actor::setActiveWeapon()",
+	"Actor::createTimer()",
+	"Actor::getXRange()",
+	"Actor::getYRange()",
+	"Actor::setXRange()",
+	"Actor::setYRange()",
+	"Actor::getDir()",
+	"Actor::getMap()",
 	// 00C0
-	"Camera::move_rel(word, word, word)",		// Unused
-	"Camera::set_roof(word)",					// Unused
-	"Camera::roof()",							// Unused
-	"Camera::getX()",							// Unused
-	"Camera::getY()",							// Unused
-	"Camera::getZ()",							// Unused
-	"Camera::startQuake(word)",
-	"Camera::stopQuake()",
-	"Camera::invertScreen(ubyte)",
-	"U8MousePointer::getDir()",					// Unused
-	"Kernel::getNumProcesses(uword, ProcessType)",
-	"Kernel::resetRef(uword, ProcessType)",
-	"process teleportToEgg(word, word, ubyte)",
-	"resetRef(uword, uword)",
-	"setRef(uword, uword, uword)",
-	"getAvatarInStasis()",
+	"Actor::getAlignment()",
+	"Actor::setAlignment()",
+	"Actor::getEnemyAlignment()",
+	"Actor::setEnemyAlignment()",
+	"Actor::isEnemyAligned()",
+	"Actor::isInParty()",
+	"Actor::getLastActivity()",
+	"Actor::setLastActivity()",
+	"Actor::setInAction()",
+	"Actor::setAirWalkEnabled()",
+	"Actor::schedule()",
+	"Actor::doAnimNo()",
+	"Actor::getDirFacing()",
+	"Actor::getEquip()",
+	"Actor::setEquip()",
+	"Actor::getDefaultActivity()",
 	// 00D0
-	"setAvatarInStasis(word)",
-	"getEtherealTop()",
-	"getCurrentTimerTick()",
-	"canGetThere(uword, uword, uword)",			// Unused
-	"canExistAt(uword, uword, uword, uword, ubyte, uword, word)",
-	"createSprite(word, word, word, word, word, word, uword, uword, ubyte)",
-	"createSprite(word, word, word, word, uword, uword, ubyte)",
-	"word getFamilyOfType(uword type)",
-	"TimeInGameHours()",
-	"TimeInMinutes()",
-	"TimeInSeconds()",							// Unused
-	"SetTimeInGameHours(word)",
-	"SetTimeInMinutes(long)",					// Unused
-	"SetTimeInSeconds(long)",					// unused
-	"process FadeToBlack()",
-	"process FadeFromBlack()",
+	"Actor::setDefaultActivity()",
+	"Actor::setHomePosition()",
+	"Actor::isKneeling()",
+	"Actor::doAnim()",
+	"Actor::isDead()",
+	"Actor::setActivity()",
+	"Actor::getLastAnimFrame()",
+	"Actor::getAlignment()",
+	"Actor::setAlignment()",
+	"Actor::getNpcNum()",
+	"Actor::setNpcNum()",
+	"Actor::setAirWalkEnabled()",
+	"Actor::getMaxEnergy()",
+	"Actor::getEnergy()",
+	"Actor::setEnergy()",
+	"Actor::getMana()",
 	// 00E0
-	"process FadeToPalette(word, word)",
-	"process LightningBolt()",
-	"process FadeToWhite()",
-	"process FadeFromWhite()",
-	"playEndgame()",
-	"FeedAvatar(word)",
-	"AccumulateStrength(word)",					// Unused
-	"AccumulateIntelligence(word)",
-	"AccumulateDexterity(word)",
-	"ClrAvatarInCombat()",
-	"SetAvatarInCombat()",
-	"IsAvatarInCombat()",						// Unused
-	"playSFX(word)",
-	"playSFX(word, ubyte)",
-	"playSFX(word, word, uword)",
-	"playAmbientSFX(word)",						// Unused
+	"Actor::setMana()",
+	"Actor::getStr()",
+	"Actor::setStr()",
+	"Actor::getDex()",
+	"Actor::setDex()",
+	"Actor::getInt()",
+	"Actor::setInt()",
+	"Actor::getMaxHp()",
+	"Actor::getHp()",
+	"Actor::setHp()",
+	"Actor::getName()",
+	"Actor::setName()",
+	"Actor::getFlag()",
+	"Actor::setFlag()",
+	"Actor::clearFlag()",
+	"Actor::teleport()",
 	// 00F0
-	"playAmbientSFX(word, word)",				// Unused
-	"playAmbientSFX(word, word, uword)",
-	"isSFXPlaying(word)",
-	"setVolumeSFX(word, word)",
-	"stopSFX(word)",
-	"stopSFX(word, uword)",
-	"soundInit(word, word, word)",				// Unused
-	"soundDeInit()",							// Unused
-	"musicStop()",
-	"musicSlowStop()",							// Unused
-	"musicPlay(word)",							// Unused
-	"TonysBalls(word, word, uword, uword, uword)",
-	"AvatarCanCheat()",
-	"MakeAvatarACheater()",
-	"isGameRunning()",
-	"unused",
+	"Actor::getMaxDex()",
+	"Actor::setMaxDex()",
+	"Actor::getMaxInt()",
+	"Actor::setMaxInt()",
+	"Actor::getMaxStr()",
+	"Actor::setMaxStr()",
+	"Actor::setTarget()",
+	"Actor::getTarget()",
+	"Actor::isInCombat()",
+	"Actor::setInCombat()",
+	"Actor::terminateCombat()",
+	"Actor::isEnemy()",
+	"Actor::setEnemy()",
+	"Actor::clearEnemy()",
+	"Actor::setInAction()",
+	"Actor::setLastActivity()",
 	// 0100
-	"unused",
+	"Actor::setImmortal()",
 	0
 };
 
