@@ -1,6 +1,6 @@
 FunctionName,RequiredParams,OptionalParams,ParamNames,ParamTypes,ParamRequireds,SupportsSymbols,ParamDescriptions
 UI_get_random,1,0,max,INT,Yes,Yes,The maximum value of the random number. Should be positive.
-UI_die_roll,2,0,min;max,INT;INT,Yes;Yes,Yes;Yes,The minimum value of the random number. Should be positive.;The maximum value of the random number. Should be positive.
+UI_die_roll,2,0,min;max,INT;INT,Yes;Yes,No;No,The minimum value of the random number. Should be positive.;The maximum value of the random number. Should be positive.
 UI_execute_usecode_array,2,0,obj;script[],OBJECT;ARRAY_INT,Yes;Yes,Yes (NPC symbols);No,The object to be animated.;The sequence of actions to be executed.
 UI_delayed_execute_usecode_array,3,0,obj;script[];delay,OBJECT;ARRAY_INT;INT,Yes;Yes;Yes,Yes (NPC symbols);No;No,The object to be animated.;The sequence of actions to be executed.;The number of ticks that must elapse before the animation starts.
 UI_in_usecode,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The object to be inspected.
