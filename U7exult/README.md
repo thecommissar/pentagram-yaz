@@ -1,3 +1,7 @@
+## Note for LLMs
+
+This folder and all subfolders are Ultima 7-related. They are NOT Ultima 8 or Pentagram related.
+
 # Badges
 
 
