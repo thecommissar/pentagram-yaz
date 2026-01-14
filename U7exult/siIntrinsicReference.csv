@@ -1,0 +1,209 @@
+FunctionName,RequiredParams,OptionalParams,ParamNames,ParamTypes,ParamRequireds,SupportsSymbols,ParamDescriptions
+UI_get_random,1,0,max,INT,Yes,Yes,The maximum value of the random number. Should be positive.
+UI_die_roll,2,0,min;max,INT;INT,Yes;Yes,Yes;Yes,The minimum value of the random number. Should be positive.;The maximum value of the random number. Should be positive.
+UI_execute_usecode_array,2,0,obj;script[],OBJECT;ARRAY_INT,Yes;Yes,Yes (NPC symbols);No,The object to be animated.;The sequence of actions to be executed.
+UI_delayed_execute_usecode_array,3,0,obj;script[];delay,OBJECT;ARRAY_INT;INT,Yes;Yes;Yes,Yes (NPC symbols);No;No,The object to be animated.;The sequence of actions to be executed.;The number of ticks that must elapse before the animation starts.
+UI_in_usecode,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The object to be inspected.
+UI_halt_scheduled,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The object whose scripts should be terminated.
+UI_begin_casting_mode,2,0,npc;val,ACTOR;INT,Yes;Yes,Yes (NPC symbols);Yes,The NPC that will enter casting mode.;The shape in SHAPES.VGA that will be used as the casting frame.
+UI_show_npc_face,2,0,face;track,INT;INT,Yes;Yes,Yes;Yes,The shape in FACES.VGA that should be displayed.;The speech track that should be played.
+UI_remove_npc_face,1,0,face,INT,Yes,Yes,The shape in FACES.VGA that should be removed.
+UI_remove_last_face,0,0,,,,,
+UI_show_npc_face0,1,0,track,INT,Yes,Yes,The speech track that should be played. The shape in FACES.VGA is 0.
+UI_show_npc_face1,1,0,track,INT,Yes,Yes,The speech track that should be played. The shape in FACES.VGA is 1.
+UI_remove_face0,0,0,,,,,
+UI_remove_face1,0,0,,,,,
+UI_show_avatar_face0,1,0,track,INT,Yes,Yes,The speech track that should be played. The shape in FACES.VGA is the avatar's.
+UI_show_avatar_face1,1,0,track,INT,Yes,Yes,The speech track that should be played. The shape in FACES.VGA is the avatar's.
+UI_remove_avatar_face0,0,0,,,,,
+UI_remove_avatar_face1,0,0,,,,,
+UI_path_run_usecode,4,1,pos[];usefun;event;findir,ARRAY_INT;FUNCTION;INT;BOOL,Yes;Yes;Yes;Yes,No;No;Yes;No,The location where the avatar should go.;The usecode function to be called when the avatar reaches the destination.;The event id that will be set when the function is called.;Flag specifying whether the avatar should pathfind to the location. Defaults to false.
+UI_si_path_run_usecode,6,1,pos[];usefun;event;itemref;findir;param,ARRAY_INT;FUNCTION;INT;OBJECT;BOOL;INT,Yes;Yes;Yes;Yes;Yes;No,No;No;Yes;Yes (NPC symbols);No;No,The location where the avatar should go.;The usecode function to be called when the avatar reaches the destination.;The event id that will be set when the function is called.;The item reference that will be set when the function is called.;Flag specifying whether the avatar should pathfind to the location.;Optional parameter passed to the called function. Defaults to zero.
+UI_set_path_failure,2,1,usefun;event;itemref,FUNCTION;INT;OBJECT,Yes;Yes;No,No;Yes;Yes (NPC symbols),The usecode function to be called when a pathfinding failure occurs.;The event id that will be set when the function is called.;The item reference that will be set when the function is called. Defaults to the avatar.
+UI_fade_palette,3,0,delay;direction;start,INT;INT;INT,Yes;Yes;Yes,No;Yes;No,"The duration of the fade, in ticks.;Direction of the fade: 0 to fade out, 1 to fade in, 2 to fade out to white, 3 to fade in from white.;The palette index from which to start fading. Can be -1 to fade all colors."
+UI_center_view,1,0,pos[],ARRAY_INT,Yes,No,The new center of the screen.
+UI_display_map,0,0,,,,,
+UI_display_map_exult,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The map object to be displayed.
+UI_book_mode,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The book or scroll to be displayed.
+UI_scroll_mode,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The scroll to be displayed.
+UI_ready_spell,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The spellbook from which the spell will be readied.
+UI_select_spell,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The spellbook from which the spell will be selected.
+UI_play_music,1,1,track;combat,INT;BOOL,Yes;No,Yes;No,The music track to be played.;Flag specifying whether this is a combat track. Defaults to false.
+UI_stop_sfx,0,0,,,,,
+UI_play_sfx,1,1,sound;delay,INT;INT,Yes;No,Yes;No,The sound effect to be played.;Optional delay before playing the sound. Defaults to zero.
+UI_play_midi_music,3,0,track;repeat;combat,INT;BOOL;BOOL,Yes;Yes;Yes,Yes;No;No,The music track to be played.;Flag specifying whether the track should be repeated.;Flag specifying whether this is a combat track.
+UI_get_current_music_track,0,0,,,,,
+UI_start_speech,1,0,track,INT,Yes,Yes,Number indicating what speech track is to be played.
+UI_get_speech_track,0,0,,,,,
+UI_find_nearest,3,0,obj;shape;dist,OBJECT;INT;INT,Yes;Yes;Yes,Yes (NPC symbols);Yes;No,The object around which the search will happen.;The shape we are looking for. Can be SHAPE_ANY = -359 to match any shape.;The maximum distance from 'obj' that will be considered in the search.
+UI_find_object,4,0,cont;shape;qual;frame,OBJECT_INT_ARRAY;INT;INT;INT,Yes;Yes;Yes;Yes,Yes (NPC symbols);Yes;Yes;Yes,"The object or location to be searched. Can be a container or NPC, a (x, y, z) location, PARTY = -357 to search the whole party or FIND_ON_SCREEN = -359 to search a square region around the screen location with size given by the screen's height.;The shape we are looking for.;The quality that is being sought. Can be QUALITY_ANY = -359 to match any quality.;What frame is desired. Can be FRAME_ANY = -359 to match any frame."
+UI_find_nearby,4,0,loc;shape;dist;mask,OBJECT_INT_ARRAY;INT;INT;INT,Yes;Yes;Yes;Yes,Yes (NPC symbols);Yes;No;Yes,"The center of the area to be searched. Can be the return of a 'UI_click_on_item' intrinsic call, an object reference, a (x, y, z) position vector or a (x, y, z, quality, frame) vector.;The shape we are looking for. Can be SHAPE_ANY = -359 to match any shape.;Radius (in tiles) of the area to be searched.;Parameter specifying the classes of objects that can be found."
+UI_npc_nearby,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The object or NPC to be checked.
+UI_npc_nearby2,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The object to be checked.
+UI_count_objects,4,0,obj;shape;qual;frame,OBJECT;INT;INT;INT,Yes;Yes;Yes;Yes,Yes (NPC symbols);Yes;Yes;Yes,"The object whose contents are to be searched. Can be a container, an NPC or PARTY = -357 to search the whole party.;The shape we are looking for. Can be SHAPE_ANY = -359 to match any shape.;The quality that is being sought. Can be QUALITY_ANY = -359 to match any quality.;What frame is desired. Can be FRAME_ANY = -359 to match any frame."
+UI_get_cont_items,4,0,obj;shape;qual;frame,OBJECT;INT;INT;INT,Yes;Yes;Yes;Yes,Yes (NPC symbols);Yes;Yes;Yes,The object whose contents are to be searched. Can be a container or an NPC.;The shape we are looking for. Can be SHAPE_ANY = -359 to match any shape.;The quality that is being sought. Can be QUALITY_ANY = -359 to match any quality.;What frame is desired. Can be FRAME_ANY = -359 to match any frame.
+UI_is_not_blocked,3,0,pos[3];shape;frame,ARRAY_INT;INT;INT,Yes;Yes;Yes,No;Yes;Yes,The location to be checked.;The shape in 'SHAPES.VGA' that is to be checked.;The frame of the given shape that should be checked.
+UI_add_party_items,5,0,count;shape;qual;frame;temp,INT;INT;INT;INT;BOOL,Yes;Yes;Yes;Yes;Yes,No;Yes;Yes;Yes;No,The amount of objects to be created.;The shape in 'SHAPES.VGA' that should be used for the created objects.;The quality of the objects being created. Can be QUALITY_ANY = -359 to create items of any quality.;What frame will be used for the created objects. Can be FRAME_ANY = -359 to create items of any frame.;Flag indicating whether the created items are temporary or not.
+UI_remove_party_items,4,1,count;shape;qual;frame;unk,INT;INT;INT;INT;BOOL,Yes;Yes;Yes;Yes;No,Yes;Yes;Yes;Yes;No,"The amount of objects to be deleted. Can be QUANTITY_ANY = -359 to delete all objects that match the criteria.;The shape we are looking for.;The quality that is being sought. Can be QUALITY_ANY = -359 to match any quality.;What frame is desired. Can be FRAME_ANY = -359 to match any frame.;Flag of unknown meaning. This parameter is ignored by Exult, and can be omitted."
+UI_summon,1,1,shape;unk,INT;BOOL,Yes;No,Yes;No,"The shape in 'SHAPES.VGA' to be used for the summoned monster. It *must* have a 'monster' tab in Exult Studio.;A flag of unknown meaning. Exult ignores this flag, and it is safe to omit it."
+UI_clone,1,0,npc,ACTOR,Yes,Yes (NPC symbols),The NPC that should be cloned.
+UI_create_new_object,1,0,shape,INT,Yes,Yes,"The shape in 'SHAPES.VGA' of the new object. If this is a monster shape, the object is created without any equipment whatsoever, even if the shape has an associated equipment entry."
+UI_create_new_object2,2,0,shape;pos[],INT;ARRAY_INT,Yes;Yes,Yes;No,"The shape in 'SHAPES.VGA' of the new object. If this is a monster shape, the object is created with all equipment specified by the shape's equipment entry.;The location where the new object is to be placed."
+UI_create_barge_object,2,1,width;height;dir,INT;INT;INT,Yes;Yes;No,No;No;Yes,"The width (x), in tiles, of the barge object.;The height (y), in tiles, of the barge object.;This optional parameter sets the barge's initial direction. If missing, it is assumed to be north (0)."
+UI_set_last_created,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The object to be moved to the 'last created' stack.
+UI_update_last_created,1,0,pos[],ARRAY_INT,Yes,No,The location where the new object is to be placed.
+UI_remove_last_created,0,0,,,,,
+UI_give_last_created,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The object or NPC to which the object should be given.
+UI_remove_obj,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The object to be removed.
+UI_remove_cont_items,4,0,obj;shape;qual;frame,OBJECT;INT;INT;INT,Yes;Yes;Yes;Yes,Yes (NPC symbols);Yes;Yes;Yes,The container or NPC whose contents will be searched.;The shape we are looking for. Can be SHAPE_ANY = -359 to match any shape.;The quality that is being sought. Can be QUALITY_ANY = -359 to match any quality.;What frame is desired. Can be FRAME_ANY = -359 to match any frame.
+UI_remove_item,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The object to be removed.
+UI_remove_item,1,0,obj[],ARRAY_OBJECT,Yes,No,The objects to be removed.
+UI_get_object_position,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The object or NPC whose position is desired.
+UI_get_object_position2,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The object or NPC whose position is desired.
+UI_get_distance,2,0,obj1;obj2,OBJECT;OBJECT,Yes;Yes,Yes (NPC symbols);Yes (NPC symbols),The first object or NPC.;The second object or NPC.
+UI_get_npc_number,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The object or NPC whose NPC number is desired.
+UI_set_npc_id,2,0,obj;id,OBJECT;INT,Yes;Yes,Yes (NPC symbols);Yes,The object or NPC whose id is to be set.;The new id for the NPC.
+UI_get_npc_id,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The object or NPC whose id is desired.
+UI_set_item_shape,2,0,obj;shape,OBJECT;INT,Yes;Yes,Yes (NPC symbols);Yes,The object whose shape is to be changed.;The new shape in 'SHAPES.VGA' for the object.
+UI_get_item_shape,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The object whose shape is desired.
+UI_set_item_frame,2,0,obj;frame,OBJECT;INT,Yes;Yes,Yes (NPC symbols);Yes,The object whose frame is to be changed.;The new frame for the object.
+UI_get_item_frame,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The object whose frame is desired.
+UI_set_item_frame_rot,2,0,obj;frame,OBJECT;INT,Yes;Yes,Yes (NPC symbols);Yes,The object whose frame is to be changed.;The new frame for the object.
+UI_get_item_frame_rot,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The object whose frame is desired.
+UI_set_sprite_frame,2,0,obj;frame,OBJECT;INT,Yes;Yes,Yes (NPC symbols);Yes,The object whose frame is to be changed.;The new frame for the object.
+UI_get_item_quality,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The object whose quality is desired.
+UI_set_item_quality,2,0,obj;qual,OBJECT;INT,Yes;Yes,Yes (NPC symbols);Yes,The object whose quality is to be changed.;The new quality for the object.
+UI_set_item_quantity,2,0,obj;quant,OBJECT;INT,Yes;Yes,Yes (NPC symbols);No,The object whose quantity is to be changed.;The new quantity for the object.
+UI_get_item_quantity,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The object whose quantity is desired.
+UI_get_item_weight,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The object whose weight is desired.
+UI_get_cont_weight,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The container or NPC whose contents are to be weighed.
+UI_get_max_weight,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The object or NPC whose carrying capacity is desired.
+UI_get_obj_items,4,0,obj;shape;qual;frame,OBJECT;INT;INT;INT,Yes;Yes;Yes;Yes,Yes (NPC symbols);Yes;Yes;Yes,The container or NPC whose contents are to be searched.;The shape we are looking for. Can be SHAPE_ANY = -359 to match any shape.;The quality that is being sought. Can be QUALITY_ANY = -359 to match any quality.;What frame is desired. Can be FRAME_ANY = -359 to match any frame.
+UI_get_readied,2,0,obj;slot,OBJECT;INT,Yes;Yes,Yes (NPC symbols);Yes,The NPC whose readied items are desired.;The slot whose contents are desired.
+UI_set_readied,3,0,obj;slot;obj,OBJECT;INT;OBJECT,Yes;Yes;Yes,Yes (NPC symbols);Yes;Yes (NPC symbols),The NPC whose readied items are to be changed.;The slot to be changed.;The item to be readied.
+UI_get_usecode_fun,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The object whose usecode function is desired.
+UI_set_usecode_fun,2,0,obj;usefun,OBJECT;FUNCTION,Yes;Yes,Yes (NPC symbols);No,The object whose usecode function is to be changed.;The new usecode function for the object.
+UI_get_item_flag,2,0,obj;flag,OBJECT;INT_STRING,Yes;Yes,Yes (NPC symbols);Yes,The object or NPC whose flag is desired.;String or integer specifying the flag to be inspected.
+UI_set_item_flag,2,0,obj;flag,OBJECT;INT_STRING,Yes;Yes,Yes (NPC symbols);Yes,The object or NPC whose flag is to be set.;String or integer specifying the flag to be set.
+UI_clear_item_flag,2,0,obj;flag,OBJECT;INT_STRING,Yes;Yes,Yes (NPC symbols);Yes,The object or NPC whose flag is to be cleared.;String or integer specifying the flag to be cleared.
+UI_set_item_combination,2,0,obj;target,OBJECT;OBJECT,Yes;Yes,Yes (NPC symbols);Yes (NPC symbols),The first object of the combination.;The second object of the combination.
+UI_get_lift,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The object or NPC whose lift is desired.
+UI_set_lift,2,0,obj;lift,OBJECT;INT,Yes;Yes,Yes (NPC symbols);No,The object or NPC whose lift is to be changed.;The new lift for the object.
+UI_get_alignment,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The NPC whose alignment is desired.
+UI_set_alignment,2,0,obj;align,OBJECT;INT,Yes;Yes,Yes (NPC symbols);Yes,The NPC whose alignment is to be changed.;The new alignment for the NPC.
+UI_move_object,2,0,obj;pos[],OBJECT;ARRAY_INT,Yes;Yes,Yes (NPC symbols);No,The object or NPC to be moved.;The new location of the object.
+UI_get_npc_prop,2,0,obj;prop,OBJECT;INT_STRING,Yes;Yes,Yes (NPC symbols);Yes,The object or NPC whose property is desired.;String or integer specifying the property to be inspected.
+UI_set_npc_prop,3,0,obj;prop;delta,OBJECT;INT_STRING;INT,Yes;Yes;Yes,Yes (NPC symbols);Yes;No,The object or NPC whose property is to be changed.;String or integer specifying the property to be changed.;The desired numeric *change* in the specified property.
+UI_set_polymorph,2,0,npc;shape,ACTOR;INT,Yes;Yes,Yes (NPC symbols);Yes,The NPC to be polymorphed.;The shape in 'SHAPES.VGA' that the NPC will take.
+UI_get_temperature,1,0,npc,ACTOR,Yes,Yes (NPC symbols),The NPC whose temperature is sought.
+UI_set_temperature,2,0,npc;temp,ACTOR;INT,Yes;Yes,Yes (NPC symbols);No,The NPC whose temperature is to be changed.;The new value for the temperature. This is value in the 0-63 range specifying how cold the NPC is; 0 being normal temperature and 63 being freezing cold.
+UI_get_temperature_zone,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The NPC whose temperature zone is sought.
+UI_get_npc_warmth,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The object to be checked.
+UI_add_to_party,1,0,npc,ACTOR,Yes,Yes (NPC symbols),Who should be added to the party.
+UI_remove_from_party,1,0,npc,ACTOR,Yes,Yes (NPC symbols),Who should be removed from the party.
+UI_get_dead_party,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The object around which dead bodies will be searched.
+UI_get_avatar_ref,0,0,,,,,
+UI_in_combat,0,0,,,,,
+UI_is_pc_female,0,0,,,,,
+UI_get_skin_colour,0,0,,,,,
+UI_is_pc_inside,0,0,,,,,
+UI_wearing_fellowship,0,0,,,,,
+UI_approach_avatar,1,2,npc;unk1;unk2,ACTOR;INT;INT,Yes;No;No,Yes (NPC symbols);No;No,"Who should approach the avatar.;Unknown parameter from the original. Exult does not use this parameter, but *this is subject to change*. Ignore this parameter at your own peril.;Unknown parameter from the original. Exult does not use this parameter, but *this is subject to change*. Ignore this parameter at your own peril."
+UI_call_guards,0,0,,,,,
+UI_attack_avatar,0,0,,,,,
+UI_stop_arresting,0,0,,,,,
+UI_save_pos,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The object whose position we want.
+UI_teleport_to_saved_pos,1,1,obj;flag,OBJECT;BOOL,Yes;No,Yes (NPC symbols);No,"If this is not the avatar, nothing happens. Otherwise, the party is teleported to the stored position.;This optional parameter controls whether avatar or party members that are paralyzed or asleep are teleported; if true, these members will be teleported, otherwise, they won't; defaults to false."
+UI_get_npc_object,1,0,npc,INT_ARRAY_INT,Yes,Yes,"The NPC number, or array of NPC numbers, whose object references are desired."
+UI_get_schedule_type,1,0,npc,ACTOR,Yes,Yes (NPC symbols),The NPC whose schedule is desired.
+UI_set_schedule_type,2,0,npc;sched,ACTOR;INT,Yes;Yes,Yes (NPC symbols);Yes,The NPC whose schedule we wish to change.;The new schedule type. Can be any of the values listed as the return of a get_schedule_type intrinsic call.
+UI_modify_schedule,4,0,npc;time;sched;pos[2],ACTOR;INT;INT;ARRAY_INT,Yes;Yes;Yes;Yes,Yes (NPC symbols);Yes;Yes;No,"The NPC whose schedule table is to be changed.;An integer specifying the time period of the new schedule. Must be an integer in the 0-7 range, such as those returned by the part_of_day intrinsic.;An integer specifying the new schedule. Must be an integer in the 0-31 range, such as those returned by the get_schedule_type intrinsic.;A (x, y) location, specifying the location of the new schedule."
+UI_set_new_schedules,3,0,npc;time;sched;loc[2],ACTOR;INT_ARRAY_INT;INT_ARRAY_INT;ARRAY_INT,Yes;Yes;Yes,Yes (NPC symbols);Yes;Yes;No,"The NPC whose schedule table is to be changed.;An integer, or array of integers, specifying the time periods of the new schedules.;An integer, or array of schedules, specifying the new schedules.;An array of (x, y) positions, specifying the new schedule locations."
+UI_run_schedule,1,0,npc,ACTOR,Yes,Yes (NPC symbols),The NPC that should be minding his own business.
+UI_revert_schedule,1,0,npc,ACTOR,Yes,Yes (NPC symbols),The NPC whose schedule is to be reset.
+UI_get_party_list,0,0,,,,,
+UI_get_party_list2,0,0,,,,,
+UI_wait_for_gump,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The gump that should be waited for.
+UI_display_gump,2,0,obj;type,OBJECT;INT,Yes;Yes,Yes (NPC symbols);Yes,The gump data that should be displayed.;The type of the gump.
+UI_display_gump_input,2,0,obj;type,OBJECT;INT,Yes;Yes,Yes (NPC symbols);Yes,The gump data that should be displayed.;The type of the gump.
+UI_close_gumps,0,0,,,,,
+UI_item_say,2,0,obj;text,OBJECT;STRING,Yes;Yes,Yes (NPC symbols);No,The object whose name should be displayed.;The text that should be displayed.
+UI_item_say,2,0,obj;data,OBJECT;INT,Yes;Yes,Yes (NPC symbols);No,The object whose name should be displayed.;The string data index that should be displayed.
+UI_sit_down,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The chair where the avatar should sit. This chair should be unoccupied.
+UI_get_timer,1,0,timer,INT,Yes,Yes,Numeric value indicating the timer to be inspected.
+UI_set_timer,1,0,timer,INT,Yes,Yes,Numeric value indicating the timer to be initialized.
+UI_game_day,0,0,,,,,
+UI_game_hour,0,0,,,,,
+UI_game_minute,0,0,,,,,
+UI_part_of_day,0,0,,,,,
+UI_nap_time,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The bed where the avatar should sleep. This bed should be unoccupied.
+UI_advance_time,1,0,amount,INT,Yes,No,"Number of game ticks that should be advanced; 25 ticks are equal to one game minute, and 1500 ticks are equal to one game hour."
+UI_stop_time,1,0,length,INT,Yes,No,"How long the effect should last. The actual duration, in seconds, is equal to one fourth of this value."
+UI_get_weather,0,0,,,,,
+UI_set_weather,1,0,type,INT,Yes,Yes,Numeric value indicating what the weather should be. Can be any of the values returned by UI_get_weather intrinsic.
+UI_click_on_item,0,0,,,,,
+UI_set_intercept_item,1,0,obj,OBJECT_ARRAY_INT_MIXED,Yes,No,"What we want to set the return of the next the next 'UI_click_on_item' intrinsic' call to. Can be an object reference, a location (2 or 3 coordinates) or even the return of another 'UI_click_on_item' intrinsic' call."
+UI_input_numeric_value,4,0,min;max;step;default,INT;INT;INT;INT,Yes;Yes;Yes;Yes,No;No;No;No,The lowest number allowed.;The highest number allowed.;The distance between any two consecutive numbers that can be chosen.;The initial value selected; this value is forced to conform to the boundaries specified above.
+UI_mouse_exists,0,0,,,,,
+UI_flash_mouse,1,0,cursor,INT,Yes,Yes,Numeric parameter indicating what the new shape will be.
+UI_ambient_light,1,0,onoff,BOOL,Yes,No,"Flag specifying whether we want to turn the light on or off: true to turn it off, false to turn it on."
+UI_cause_light,1,0,length,INT,Yes,No,How long the created light will last. The duration is in game minutes.
+UI_infravision,2,0,npc;onoff,ACTOR;BOOL,Yes;Yes,Yes (NPC symbols);No,"The NPC that should have infravision toggled. This intrinsic has effect only for party members.;Flag specifying whether we want infravision or not: true to turn it on, false to turn it off."
+UI_set_light,2,0,obj;onoff,OBJECT;BOOL,Yes;Yes,Yes (NPC symbols);No,"The light source that is being added or removed.;Flag specifying whether we want to add or remove the light source: true to add it to its containing NPC, false to remove it."
+UI_earthquake,1,0,length,INT,Yes,No,"The earthquake's duration, in ticks."
+UI_armageddon,0,0,,,,,
+UI_restart_game,0,0,,,,,
+UI_run_endgame,1,0,flag,BOOL,Yes,No,"Boolean value specifying the manner in which the game was finished. If it is true, will set the game-completion flag that allows the endgame to be viewed from the title screen."
+UI_is_water,1,0,param,OBJECT_INT_ARRAY_MIXED,Yes,No,The object or location to be tested.
+UI_a_or_an,1,0,text,STRING,Yes,No,The string being inspected.
+UI_is_dest_reachable,2,0,npc;pos[],ACTOR;ARRAY_INT,Yes;Yes,Yes (NPC symbols);No,The NPC we wish to check.;Where we want check if the NPC can go.
+UI_can_avatar_reach_pos,1,0,pos[],ARRAY_INT,Yes,No,"Where we want check if the avatar can go. Must have at least two elements; if it has exactly two elements, Exult will assume the z coordinate of the destination to be zero."
+UI_get_npc_name,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The NPC whose name is desired.
+UI_set_npc_name,2,0,obj;name,OBJECT;STRING,Yes;Yes,Yes (NPC symbols);No,The NPC whose name is to be changed.;The new name for the NPC.
+UI_display_rune,1,0,rune,INT,Yes,Yes,The rune to be displayed.
+UI_play_sound_effect,1,1,sound;delay,INT;INT,Yes;No,Yes;No,The sound effect to be played.;Optional delay before playing the sound. Defaults to zero.
+UI_play_sound_effect2,2,0,sound;obj,INT;OBJECT,Yes;Yes,Yes;Yes (NPC symbols),The sound effect to be played.;The object from which the sound emanates.
+UI_play_object_sound,2,0,obj;sound,OBJECT;INT,Yes;Yes,Yes (NPC symbols);Yes,The object from which the sound emanates.;The sound effect to be played.
+UI_get_direction,2,0,from;to,OBJECT;OBJECT,Yes;Yes,Yes (NPC symbols);Yes (NPC symbols),The first object.;The second object.
+UI_get_direction_from,2,0,from;to,OBJECT;OBJECT,Yes;Yes,Yes (NPC symbols);Yes (NPC symbols),The first object.;The second object.
+UI_estimate_slope,3,0,from;to;direction,OBJECT;OBJECT;INT,Yes;Yes;Yes,Yes (NPC symbols);Yes (NPC symbols);Yes,The first object.;The second object.;The direction to be checked.
+UI_has_keyhole,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The object to be checked.
+UI_get_key_ring,0,0,,,,,
+UI_add_to_keyring,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The key to be added.
+UI_remove_from_keyring,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The key to be removed.
+UI_is_on_keyring,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The key to be checked.
+UI_get_container,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The object whose container is desired.
+UI_find_direction,2,0,from;to,OBJECT;OBJECT,Yes;Yes,Yes (NPC symbols);Yes (NPC symbols),The first object.;The second object.
+UI_find_direction_from,2,0,from;to,OBJECT;OBJECT,Yes;Yes,Yes (NPC symbols);Yes (NPC symbols),The first object.;The second object.
+UI_get_map_objects,3,0,pos[];shape;qual,ARRAY_INT;INT;INT,Yes;Yes;Yes,No;Yes;Yes,The location to be searched.;The shape we are looking for. Can be SHAPE_ANY = -359 to match any shape.;The quality that is being sought. Can be QUALITY_ANY = -359 to match any quality.
+UI_remove_from_area,1,0,pos[],ARRAY_INT,Yes,No,The location to be cleared.
+UI_get_barge,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The object that is part of the barge.
+UI_move_barge_x,2,0,obj;delta_x,OBJECT;INT,Yes;Yes,Yes (NPC symbols);No,The barge to be moved.;The change in the barge's x position.
+UI_move_barge_y,2,0,obj;delta_y,OBJECT;INT,Yes;Yes,Yes (NPC symbols);No,The barge to be moved.;The change in the barge's y position.
+UI_get_array_size,1,0,[special],ARRAY_ANY,Yes,No,A single array of any type or size.
+UI_roll_to_win,2,0,att;def,INT;INT,Yes;Yes,No;No,"What should be added to the die roll, improving the chances of success.;What should be subtracted from the die roll, reducing the chances of success."
+UI_get_true_name,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The NPC whose true name is desired.
+UI_set_true_name,2,0,obj;name,OBJECT;STRING,Yes;Yes,Yes (NPC symbols);No,The NPC whose true name is to be changed.;The new true name for the NPC.
+UI_get_oppressor,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The NPC whose oppressor is desired.
+UI_set_oppressor,2,0,obj;oppressor,OBJECT;ACTOR,Yes;Yes,Yes (NPC symbols);Yes (NPC symbols),The NPC whose oppressor is to be changed.;The new oppressor for the NPC.
+UI_get_flag,1,0,flag,INT_STRING,Yes,Yes,String or integer specifying the flag to be inspected.
+UI_set_flag,1,0,flag,INT_STRING,Yes,Yes,String or integer specifying the flag to be set.
+UI_clear_flag,1,0,flag,INT_STRING,Yes,Yes,String or integer specifying the flag to be cleared.
+UI_si_get_surface_area,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The object whose surface area is desired.
+UI_is_dead,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The object or NPC to be checked.
+UI_resurrect,1,0,obj,OBJECT,Yes,Yes (NPC symbols),"The body that is to be resurrected. Monsters cannot be brought back to life in this manner, so it must be the body of a true NPC."
+UI_resurrect_npc,1,0,npc,ACTOR,Yes,Yes (NPC symbols),Who is to be resurrected.
+UI_attack_object,3,0,attacker;target;weapon,OBJECT;OBJECT;INT,Yes;Yes;Yes,Yes (NPC symbols);Yes (NPC symbols);Yes,"Who is attacking.;What is being attacked. Must be an object or NPC.;What shape in 'SHAPES.VGA' to use as the source of the weapon information in the attack, or -1 for an unarmed attack."
+UI_fire_projectile,6,0,obj;dir;proj;attpts;weapon;ammo,OBJECT;INT;INT;INT;INT;INT,Yes;Yes;Yes;Yes;Yes;Yes,Yes (NPC symbols);Yes;Yes;No;Yes;Yes,The object that will fire the projectile.;Numeric value indicating the direction in which the projectile will be fired.;The shape in 'SHAPES.VGA' of the projectile to be fired.;Numeric value determining the likelihood that the missile will hit.;The shape in 'SHAPES.VGA' whose weapon information will be used when the missile hits.;The shape in 'SHAPES.VGA' whose ammunition information will be used when the missile hits.
+UI_attack_object,3,0,attacker;target;weapon,OBJECT;OBJECT;INT,Yes;Yes;Yes,Yes (NPC symbols);Yes (NPC symbols);Yes,"Who is attacking.;What is being attacked. Must be an object or NPC.;What shape in 'SHAPES.VGA' to use as the source of the weapon information in the attack, or -1 for an unarmed attack."
+UI_reduce_health,3,0,obj;hits;type,OBJECT;INT;INT,Yes;Yes;Yes,Yes (NPC symbols);No;Yes,The object to be damaged.;How much damage is to be caused.;The type of the damage.
+UI_get_attack,3,0,obj;base;hits;type,OBJECT;INT;INT;INT,Yes;Yes;Yes;Yes,Yes (NPC symbols);No;No;Yes,"The object to be damaged.;The 'base' of the attack. If this parameter is equal to 127 or more, this intrinsic will ignore all armor and deal a fixed 127 points of damage of the specified type, ignoring the 'base' parameter.;The 'weapon points' of the attack.;The type of the damage."
+UI_sprite_effect,3,1,obj;sprite;delay,OBJECT;INT;INT,Yes;Yes;No,Yes (NPC symbols);Yes;No,The object around which the effect will happen.;The shape in 'SPRITES.VGA' to be displayed.;The delay before the effect is played. Defaults to zero.
+UI_explosion_effect,4,0,obj;loc[];shape;delay,OBJECT;ARRAY_INT;INT;INT,Yes;Yes;Yes;No,Yes (NPC symbols);No;Yes;No,The object around which the explosion will happen.;The location where the explosion will happen.;The shape in 'SPRITES.VGA' to be displayed.;The delay before the effect is played. Defaults to zero.
+UI_animate_object,5,0,obj;sprite;rel_x;rel_y;reps,OBJECT;INT;INT;INT;INT,Yes;Yes;Yes;Yes;Yes,Yes (NPC symbols);Yes;No;No;No,The object about which the animation will happen.;The shape in 'SPRITES.VGA' to be displayed.;The initial horizontal offset from the object at which the sprite will be displayed.;The initial vertical offset from the object at which the sprite will be displayed.;Number of repetitions to execute.
+UI_obj_sprite_effect,8,0,obj;sprite;rel_x;rel_y;vel_x;vel_y;frnum;reps,OBJECT;INT;INT;INT;INT;INT;INT;INT,Yes;Yes;Yes;Yes;Yes;Yes;Yes;Yes,Yes (NPC symbols);Yes;No;No;No;No;Yes;No,The object about which the effect will happen.;The shape in 'SPRITES.VGA' to be displayed.;The initial horizontal offset from the object at which the sprite will be displayed.;The initial vertical offset from the object at which the sprite will be displayed.;The horizontal speed at which the sprite will move.;The vertical speed at which the sprite will move.;The initial frame in 'SPRITES.VGA' of the sprite.;Number of repetitions to execute.
+UI_play_scene,1,2,text;fade_out;fade_in,STRING;BOOL;BOOL,Yes;No;No,No;No;No,The base name of the cutscene files.;This optional parameter controls whether the game fades out to the scene; defaults to true.;This optional parameter controls whether the the scene fades in to the game; defaults to true.
+UI_add_spell,3,0,index;unk;obj,INT;INT;OBJECT,Yes;Yes;Yes,No;No;Yes (NPC symbols),"The spell to be added. This index starts at zero, and must be in the 0-71 range.;Reserved, must be zero.;What spellbook the spell should be added to."
+UI_has_spell,2,0,obj;index,OBJECT;INT,Yes;Yes,Yes (NPC symbols);No,"The spellbook to be inspected.;The spell to be checked. This index starts at zero, and must be in the 0-71 range."
+UI_remove_spell,2,0,obj;index,OBJECT;INT,Yes;Yes,Yes (NPC symbols);No,"The spellbook that will be modified.;The spell to be removed. This index starts at zero, and must be in the 0-71 range."
+UI_remove_all_spells,1,0,obj,OBJECT,Yes,Yes (NPC symbols),The spellbook to be cleared. This intrinsic has no effect if this is not a valid spellbook.
